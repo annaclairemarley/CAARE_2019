@@ -11,8 +11,10 @@ knitr::opts_chunk$set(echo = TRUE)
 Load the packages:
 
 ```{r, message=FALSE}
+
 library(tidyverse)
 library(janitor)
+library(lubridate)
 
 ```
 
@@ -48,7 +50,7 @@ write.csv(carrizo_swe_03_19, "carrizo_swe_03_19.csv", row.names = FALSE)
 Initial data exploration:
 ```{r, message=FALSE}
 
-carrizo_swe_graph <-carrizo_swe_03_19 %>% 
+carrizo_swe_graph <- carrizo_swe_03_19 %>% 
   ggplot(aes(x = date_time, y = SWE_mm)) +
   geom_line() +
   scale_y_continuous(expand = c(0,0)) +
@@ -59,15 +61,127 @@ carrizo_swe_graph <-carrizo_swe_03_19 %>%
   ) +
   theme_classic() 
 
+carrizo_swe_graph
 
 ```
 
 Annual Max SWE
 
-```{r}
+```{r, message = FALSE}
+
+# dataframe of annual maximum SWE
+carr_swe_yr_max <- carrizo_swe_03_19 %>% 
+  group_by(year = floor_date(date_time, "year"))  %>% 
+  summarize(max_swe = max(SWE_mm))
+
+# graph it:
+carr_yr_graph <- carr_swe_yr_max %>% 
+  ggplot(aes(x = year, y = max_swe)) + 
+  geom_line() +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(
+    x = "Year",
+    y = "SWE (mm)",
+    title = "Carrizo Yearly Max SWE"
+  ) +
+  theme_classic() 
+
+carr_yr_graph
+
 
 ```
 
 
 Weekly Max SWE
 
+```{r, message = FALSE}
+# weekly max dataframe
+carr_wk_max <- carrizo_swe_03_19 %>%
+  group_by(year_week = floor_date(date_time, "1 week")) %>% 
+  summarize(max_swe = max(SWE_mm)) 
+
+# weekly max graph
+carr_wk_max_graph <- carr_wk_max %>% 
+  ggplot(aes(x = year_week, y = max_swe)) + 
+  geom_line() +
+   scale_y_continuous(expand = c(0,0)) +
+  labs(
+    x = "Year",
+    y = "SWE (mm)",
+    title = "Carrizo Weekly Max SWE"
+  ) +
+  theme_classic()
+
+carr_wk_max_graph
+```
+
+Weekly mean SWE
+
+```{r, message = FALSE}
+# weekly mean dataframe
+carr_wk_mean <- carrizo_swe_03_19 %>%
+  group_by(year_week = floor_date(date_time, "1 week")) %>% 
+  summarize(mean_swe = mean(SWE_mm)) 
+
+#weekly mean graph
+carr_wk_mean_graph <- carr_wk_mean %>% 
+  ggplot(aes(x = year_week, y = mean_swe)) + 
+  geom_line() +
+   scale_y_continuous(expand = c(0,0)) +
+  labs(
+    x = "Year",
+    y = "SWE (mm)",
+    title = "Carrizo Weekly Mean SWE"
+  ) +
+  theme_classic()
+
+carr_wk_mean_graph
+
+
+```
+
+Monthly mean
+```{r, message = FALSE}
+# monthly mean dataframe
+carr_mn_mean <- carrizo_swe_03_19 %>%
+  group_by(year_month = floor_date(date_time, "month")) %>% 
+  summarize(mean_swe = mean(SWE_mm)) 
+
+#weekly mean graph
+carr_mn_mean_graph <- carr_mn_mean %>% 
+  ggplot(aes(x = year_month, y = mean_swe)) + 
+  geom_line() +
+   scale_y_continuous(expand = c(0,0)) +
+  labs(
+    x = "Year",
+    y = "SWE (mm)",
+    title = "Carrizo Monthly Mean SWE"
+  ) +
+  theme_classic()
+
+carr_mn_mean_graph
+
+```
+
+Monthly max
+```{r, message = FALSE}
+# monthly mean dataframe
+carr_mn_max <- carrizo_swe_03_19 %>%
+  group_by(year_month = floor_date(date_time, "month")) %>% 
+  summarize(max_swe = max(SWE_mm)) 
+
+#weekly mean graph
+carr_mn_max_graph <- carr_mn_max %>% 
+  ggplot(aes(x = year_month, y = max_swe)) + 
+  geom_line() +
+   scale_y_continuous(expand = c(0,0)) +
+  labs(
+    x = "Year",
+    y = "SWE (mm)",
+    title = "Carrizo Monthly Max SWE"
+  ) +
+  theme_classic()
+
+carr_mn_max_graph
+
+```
