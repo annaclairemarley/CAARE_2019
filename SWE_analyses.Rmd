@@ -1,0 +1,73 @@
+---
+title: "SWE Analyses"
+output: html_document
+Author: AnnaClaire Marley
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load the packages:
+
+```{r, message=FALSE}
+library(tidyverse)
+library(janitor)
+
+```
+
+
+# Carrizo
+
+- first I need to join all the different date ranges together into one big file
+
+```{r, message=FALSE}
+# read in the files & clean up
+car_03_09 <- read_csv("Carrizo/03-09-swe.csv") %>% 
+  clean_names() %>% 
+  rename(SWE_mm = mm_swe_snodas_at_carrizo_2003_10_01_to_2009_10_01)
+
+car_09_15 <- read_csv("Carrizo/09-15-swe.csv")%>% 
+  clean_names() %>% 
+  rename(SWE_mm = mm_swe_snodas_at_carrizo_2009_10_02_to_2015_10_01)
+
+car_15_19 <- read_csv("Carrizo/15-19-swe.csv") %>% 
+  clean_names() %>% 
+  rename(SWE_mm = mm_swe_snodas_at_carrizo_2015_10_02_to_2019_06_01)
+
+# now join them together to make one big file
+
+carrizo_bind_most <- rbind(car_03_09, car_09_15)
+carrizo_swe_03_19 <- rbind(carrizo_bind_most, car_15_19)
+
+# export csv
+write.csv(carrizo_swe_03_19, "carrizo_swe_03_19.csv", row.names = FALSE)
+
+```
+
+Initial data exploration:
+```{r, message=FALSE}
+
+carrizo_swe_graph <-carrizo_swe_03_19 %>% 
+  ggplot(aes(x = date_time, y = SWE_mm)) +
+  geom_line() +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(
+    x = "Year",
+    y = "SWE (mm)",
+    title = "Carrizo Raw SWE"
+  ) +
+  theme_classic() 
+
+
+```
+
+Annual Max SWE
+
+```{r}
+
+```
+
+
+Weekly Max SWE
+
