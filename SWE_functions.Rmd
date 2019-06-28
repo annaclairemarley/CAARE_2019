@@ -1,6 +1,7 @@
 ---
 title: "SWE Functions"
 output: html_document
+Author: AnnaClaire Marley
 ---
 
 ```{r setup, include=FALSE}

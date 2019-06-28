@@ -132,7 +132,7 @@ carr_wk_mean_graph <- carr_wk_mean %>%
     x = "Year",
     y = "SWE (mm)",
     title = "Carrizo Weekly Mean SWE"
-  ) +
+  ) + 
   theme_classic()
 
 carr_wk_mean_graph
@@ -163,25 +163,119 @@ carr_mn_mean_graph
 
 ```
 
-Monthly max
+March of each year- need to work on this
 ```{r, message = FALSE}
-# monthly mean dataframe
-carr_mn_max <- carrizo_swe_03_19 %>%
-  group_by(year_month = floor_date(date_time, "month")) %>% 
-  summarize(max_swe = max(SWE_mm)) 
+# monthly max dataframe
+carr_test <- carrizo_swe_03_19 %>%
+  mutate(month = format(date_time,"%m")) %>% 
+  filter(month == "03") %>% 
+  group_by(year_week = floor_date(date_time, "1 week"))
 
-#weekly mean graph
-carr_mn_max_graph <- carr_mn_max %>% 
-  ggplot(aes(x = year_month, y = max_swe)) + 
-  geom_line() +
-   scale_y_continuous(expand = c(0,0)) +
+#March 
+carr_march_graph <- carr_test %>% 
+  ggplot(aes(x = date_time, y = SWE_mm)) + 
+  geom_point() +
   labs(
     x = "Year",
-    y = "SWE (mm)",
-    title = "Carrizo Monthly Max SWE"
+    y = "SWE (mm)"
   ) +
   theme_classic()
 
-carr_mn_max_graph
+carr_march_graph
 
 ```
+
+
+
+# Chuska
+
+read in the files to make one file
+```{r}
+
+ch_03_05 <- read_csv("Chuska/ch_03-05_swe.csv") %>% 
+  clean_names() %>% 
+  rename(SWE_mm = mm_swe_snodas_at_chuska_2003_10_01_to_2005_10_01)
+
+
+ch_05_09 <- read_csv("Chuska/ch_swe_05-09.csv") %>% 
+  clean_names() %>% 
+  rename(SWE_mm =mm_swe_snodas_at_chuska_2005_10_02_to_2009_10_01)
+
+ch_09_13 <- read_csv("Chuska/ch_swe_09-13.csv") %>% 
+  clean_names() %>% 
+  rename(SWE_mm = mm_swe_snodas_at_chuska_2009_10_02_to_2013_10_01)
+
+ch_13_16 <- read_csv("Chuska/ch_swe_13-16.csv") %>% 
+  clean_names() %>% 
+  rename(SWE_mm = mm_swe_snodas_at_chuska_2013_10_02_to_2016_10_01)
+
+ch_16_19 <- read_csv("Chuska/ch_swe_16-19.csv") %>% 
+  clean_names() %>% 
+  rename(SWE_mm = mm_swe_snodas_at_chuska_2016_10_02_to_2019_06_01)
+
+# make one big dataset
+chuska_swe_03_19 <- rbind(ch_03_05, ch_05_09, ch_09_13, ch_13_16, ch_16_19)
+
+# write it as a csv
+write.csv(chuska_swe_03_19, "chuska_swe_03_19.csv", row.names = FALSE)
+
+```
+
+
+Read data in:
+```{r, message = FALSE}
+
+# insert your csv here 
+NN_region <- read_csv("Chuska/chuska_swe_03_19.csv")
+
+```
+
+### Graph the daily SWE data
+```{r}
+source('Functions/graph_swe_daily.R') # this command just sources the function
+
+graph_swe_daily(NN_region)
+
+```
+
+### Get dataframe and graph for: Monthly **max** SWE
+```{r, message = FALSE}
+source('Functions/calc_max_mn_swe.R')
+
+calc_max_mn_swe(NN_region)
+
+```
+
+### Get dataframe and graph: Monthly **mean** SWE
+```{r, message = FALSE}
+source('Functions/calc_av_mn_swe.R')
+
+calc_av_mn_swe(NN_region)
+
+```
+
+### Get dataframe and graph: Weekly **max** SWE
+```{r, message = FALSE}
+source('Functions/calc_max_wk_swe.R')
+
+calc_max_wk_swe(NN_region)
+
+```
+
+### Get dataframe and graph: Weekly **mean** SWE
+```{r, message = FALSE}
+source('~/github/CAARE_2019/Functions/calc_av_wk_swe.R')
+
+calc_av_wk_swe(NN_region)
+
+```
+
+
+#  Black Mesa
+
+```{r}
+
+
+
+```
+
