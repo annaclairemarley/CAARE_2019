@@ -27,58 +27,22 @@ Read your data in:
 ```{r, message = FALSE}
 
 # insert your csv here 
-NN_region <- read_csv("carrizo_swe_03_19.csv")
+NN_region <- read_csv("Black Mesa/BM_swe_03_19.csv")
 
 ```
 
-### Graph the daily SWE data
+This is how you can do summary statistics on your dataset. Enter in your cleaned csv file, the time period you want, ("1 week", "month", "year") *making sure it's in quotes*, and then the summary statistic (ie mean, max, min)
 ```{r}
-source('Functions/graph_swe_daily.R') # this command just sources the function
+source('Functions/calc_swe_metrics.R')
 
-graph_swe_daily(NN_region)
-
-```
-
-### Get dataframe and graph for: Annual **Max** SWE
-```{r, message = FALSE}
-source('Functions/calc_max_yr_swe.R')
-
-calc_max_yr_swe(NN_region)
-
-# if you want just the dataframe or just the plot, put $ sign at end to just call and name that
-# example <- calc_max_yr_swe(carrizo_swe_03_19)$swe_yr_max
+test <- calc_swe_metrics(NN_region, "year", mean)
 
 ```
 
-### Get dataframe and graph for: Monthly **max** SWE
-```{r, message = FALSE}
-source('Functions/calc_max_mn_swe.R')
+Now graph and visualize what you found. Enter in the dataframe you created above, and then what kind of plot you want to make (ie geom_line, geom_point, geom_col etc)
+```{r}
+source('Functions/graph_swe_metric.R')
 
-calc_max_mn_swe(NN_region)
-
-```
-
-### Get dataframe and graph: Monthly **mean** SWE
-```{r, message = FALSE}
-source('Functions/calc_av_mn_swe.R')
-
-calc_av_mn_swe(NN_region)
-
-```
-
-### Get dataframe and graph: Weekly **max** SWE
-```{r, message = FALSE}
-source('Functions/calc_max_wk_swe.R')
-
-calc_max_wk_swe(NN_region)
-
-```
-
-### Get dataframe and graph: Weekly **mean** SWE
-```{r, message = FALSE}
-source('~/github/CAARE_2019/Functions/calc_av_wk_swe.R')
-
-calc_av_wk_swe(NN_region)
-
+graph_swe_metric(test, geom_line)
 ```
 

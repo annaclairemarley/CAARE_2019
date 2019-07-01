@@ -273,9 +273,38 @@ calc_av_wk_swe(NN_region)
 
 #  Black Mesa
 
+Turn all the little dataframes into big ones
 ```{r}
 
+BM_03_06 <- read_csv("Black Mesa/BM_swe_03-06.csv") %>% 
+  clean_names() %>% 
+  rename(SWE_mm = mm_swe_snodas_at_black_mesa_2003_10_01_to_2006_10_01)
 
+BM_06_09 <- read_csv("Black Mesa/BM_swe_06-09.csv") %>% 
+  clean_names() %>% 
+  rename(SWE_mm = mm_swe_snodas_at_black_mesa_2006_10_02_to_2009_10_01)
+
+BM_09_12 <- read_csv("Black Mesa/BM_swe_09-12.csv") %>% 
+  clean_names() %>%
+  rename(SWE_mm = mm_swe_snodas_at_black_mesa_2009_10_02_to_2012_10_01)
+
+BM_12_15 <- read_csv("Black Mesa/BM_swe_12-15.csv") %>% 
+  clean_names() %>%
+  rename(SWE_mm = mm_swe_snodas_at_black_mesa_2012_10_02_to_2015_10_01)
+
+BM_15_18 <- read_csv("Black Mesa/BM_swe_15-18.csv") %>% 
+  clean_names() %>%
+  rename(SWE_mm = mm_swe_snodas_at_black_mesa_2015_10_02_to_2018_10_01)
+
+BM_18_19 <- read_csv("Black Mesa/BM_swe_18-19.csv") %>% 
+  clean_names() %>%
+  rename(SWE_mm = mm_swe_snodas_at_black_mesa_2018_10_02_to_2019_06_01)
+
+# make one dataframe
+
+BM_swe_03_19 <- rbind(BM_03_06, BM_06_09, BM_09_12, BM_12_15, BM_15_18, BM_18_19)
+
+write.csv(BM_swe_03_19, "BM_swe_03_19.csv", row.names = FALSE)
 
 ```
 
