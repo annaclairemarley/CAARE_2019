@@ -2,6 +2,7 @@
 #'
 #' This function visualizes the raw daily SWE data from a region 
 #'
+#' @param 
 #' @param region NN Mountain region
 #'
 #' @return graphs the daily SWE values
@@ -9,15 +10,16 @@
 #'
 #' @examples
 
-graph_swe_daily = function(region){
+graph_swe_daily = function(df, region){
   
-  swe_daily_graph = region %>% 
+  swe_daily_graph = df %>% 
     ggplot(aes(x = date_time, y = SWE_mm)) +
     geom_line() +
     scale_y_continuous(expand = c(0,0)) +
     labs(
       x = "Year",
-      y = "SWE (mm)"
+      y = "SWE (mm)",
+      title = sprintf("%s", region)
     ) +
     theme_classic() 
   

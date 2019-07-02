@@ -35,7 +35,7 @@ This is how you can do summary statistics on your dataset. Enter in your cleaned
 ```{r}
 source('Functions/calc_swe_metrics.R')
 
-test <- calc_swe_metrics(NN_region, "year", mean)
+test <- calc_swe_metrics(NN_region, "month", mean)
 
 ```
 
@@ -44,5 +44,31 @@ Now graph and visualize what you found. Enter in the dataframe you created above
 source('Functions/graph_swe_metric.R')
 
 graph_swe_metric(test, geom_line)
+```
+
+Plot anomalies made from average over the year:
+
+```{r}
+
+
+BM_monthly <- calc_swe_metrics(NN_region, "month", mean)
+
+source('Functions/plot_swe_anomaly.R')
+
+plot_swe_anomaly(BM_monthly)
+
+```
+
+
+Plot anomalies from average for each month:
+```{r}
+source('Functions/calc_month_anom.R')
+
+# makes the dataframe of intramonth means and anomalies
+BM_intra_month <- calc_month_anom(BM_monthly)
+
+# plots it
+plot_swe_anomaly(BM_intra_month)
+
 ```
 

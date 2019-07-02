@@ -15,6 +15,7 @@ Load the packages:
 library(tidyverse)
 library(janitor)
 library(lubridate)
+library(anomalize)
 
 ```
 
@@ -305,6 +306,80 @@ BM_18_19 <- read_csv("Black Mesa/BM_swe_18-19.csv") %>%
 BM_swe_03_19 <- rbind(BM_03_06, BM_06_09, BM_09_12, BM_12_15, BM_15_18, BM_18_19)
 
 write.csv(BM_swe_03_19, "BM_swe_03_19.csv", row.names = FALSE)
+
+```
+
+Messing around with what stats I want to do:
+```{r}
+
+NN_stats <- NN_region %>% 
+  time_decompose(SWE_mm) %>% 
+  anomalize(remainder) %>% 
+  plot_anomaly_decomposition()
+
+NN_stats
+
+test2 <- NN_stats %>% 
+  ggplot(aes(x = date_time, y = remainder)) +
+  geom_col()
+
+test2
+
+# do it myself for daily anomaly
+
+BM_stats <- NN_region %>% 
+  mutate(swe_w_na = na_if(SWE_mm, 0)) %>% 
+  mutate(anomaly = swe_w_na - mean(swe_w_na, na.rm = TRUE)) %>% 
+  mutate(sign = ifelse(anomaly < 0, "negative", "positive") )
+
+
+BM_stats_plot <- BM_stats %>% 
+  ggplot(aes(x = date_time, y = anomaly)) +
+  geom_col(aes(fill = sign), show.legend = FALSE) +
+  scale_y_continuous(limits = c(-20, 100)) +
+  scale_fill_manual(values = c("negative" = "red", "positive" = "dark green")) +
+  theme_classic()
+
+BM_stats_plot
+
+
+
+
+
+```
+
+```{r}
+
+source('Functions/calc_swe_metrics.R')
+
+# now let's look at weekly
+
+BM_weekly <- calc_swe_metrics(NN_region, "1 week", mean)
+
+BM_monthly <- calc_swe_metrics(NN_region, "month", mean)
+
+source('Functions/plot_swe_anomaly.R')
+
+plot_swe_anomaly(BM_monthly)
+
+
+```
+
+Correlations
+
+```{r}
+
+chuska <- read_csv("Chuska/chuska_swe_03_19.csv")
+chuska_monthly <- calc_swe_metrics(chuska, "month", mean)
+
+carrizo <- read_csv("carrizo/carrizo_swe_03_19.csv")
+carrizo_monthly <- calc_swe_metrics(carrizo, "month", mean)
+
+plot(chuska_monthly$swe_mm, BM_monthly$swe_mm)
+plot(carrizo_monthly$swe_mm, BM_monthly$swe_mm)
+plot(carrizo_monthly$swe_mm, chuska_monthly$swe_mm)
+
+cor.test(chuska_monthly$swe_mm, BM_monthly$swe_mm, method = "spearman")
 
 ```
 
