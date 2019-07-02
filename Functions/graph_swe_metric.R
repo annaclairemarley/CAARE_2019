@@ -14,7 +14,7 @@ graph_swe_metric = function(grouped_region, type, region){
   graph = grouped_region %>% 
     ggplot(aes(x = date, y = swe_mm)) + 
     type() +
-    scale_y_continuous(expand = c(0,0))+
+    scale_y_continuous(expand = c(0,0)) +
     labs(
       x = "Year",
       y = "SWE (mm)",

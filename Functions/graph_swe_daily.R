@@ -13,9 +13,10 @@
 graph_swe_daily = function(df, region){
   
   swe_daily_graph = df %>% 
-    ggplot(aes(x = date_time, y = SWE_mm)) +
+    ggplot(aes(x = date, y = SWE_mm)) +
     geom_line() +
     scale_y_continuous(expand = c(0,0)) +
+    scale_x_date(date_breaks = "2 year") +
     labs(
       x = "Year",
       y = "SWE (mm)",

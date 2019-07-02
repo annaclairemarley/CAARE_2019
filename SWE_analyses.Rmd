@@ -16,6 +16,8 @@ library(tidyverse)
 library(janitor)
 library(lubridate)
 library(anomalize)
+library(tseries)
+library(forecast)
 
 ```
 
@@ -364,6 +366,34 @@ plot_swe_anomaly(BM_monthly)
 
 
 ```
+Monthly anomalies
+```{r}
+
+BM_monthly <- BM_monthly %>%
+  mutate(month = month(date))  
+ 
+intra_month <- BM_monthly %>% 
+  group_by(month) %>% 
+  summarize(mean_swe = mean(swe_mm))
+
+intra_month_anomaly <- merge(BM_monthly, intra_month, by = "month")%>%
+  mutate(anomaly = swe_mm - mean_swe) %>% 
+  mutate(sign = ifelse(anomaly < 0, "negative", "positive") )
+  
+  
+  plot <- intra_month_anomaly %>% 
+    ggplot(aes(x = date, y = anomaly)) +
+    geom_col(aes(fill = sign), show.legend = FALSE) +
+    #scale_y_continuous(limits = c(-20, 100)) +
+    scale_fill_manual(values = c("negative" = "red", "positive" = "dark green")) +
+    theme_classic()
+  
+  plot
+
+  
+```
+
+
 
 Correlations
 
@@ -382,4 +412,57 @@ plot(carrizo_monthly$swe_mm, chuska_monthly$swe_mm)
 cor.test(chuska_monthly$swe_mm, BM_monthly$swe_mm, method = "spearman")
 
 ```
+
+Trends time series analysis
+
+```{r}
+
+BM_daily <- read_csv("Black Mesa/BM_swe_03_19.csv")
+
+bm_monthly$date <- as.Date(bm_monthly$date)
+
+BM_ts <- ts(bm_monthly$swe_mm, frequency = 12,  start = c(2003,1))
+
+# decompose(bm_monthly) doesn't work because not long enough time series
+
+# daily moving average:
+BM_ts_daily <- ts(BM_daily$SWE_mm, frequency = 7,  start = c(2003,1))
+BM_daily_ma <- ma(BM_ts_daily, order = 5)
+plot(BM_ts_daily)
+lines(BM_daily_ma, col = "red")
+
+# monthly moving average:
+sma_res <- ma(BM_ts, order = 5)
+plot(sma_res)
+# in combo with the original data:
+plot(BM_ts)
+lines(sma_res, col = "red")
+
+# exploring autocorrelation:
+BM_mn_acf <- acf(BM_ts)
+# More information: 
+ggtsdisplay(BM_ts)
+
+```
+
+find the monthly max and then compare
+```{r}
+source('Functions/calc_swe_metrics.R')
+
+BM_month_max <- calc_swe_metrics(BM_daily, "month", max)
+
+BM_wy <- BM_month_max %>% 
+  mutate(wy = water_year(BM_month_max$date, origin = "usgs"))
+
+BM_max <- BM_month_max %>% 
+  ungroup() %>% 
+  mutate(year = year(date),
+         month = month(date)) %>% 
+  group_by(month, year) %>% 
+  summarize(max = max(swe_mm))
+
+z <- ts(carr_monthly, start = month(10))
+plot(z)
+```
+
 

@@ -17,8 +17,8 @@ calc_swe_metrics = function(region, period, statistic){
   
   # dataframe of SWE metric desired
   av = region %>% 
-    group_by(date = floor_date(date_time, period))  %>% 
-    summarize(swe_mm = statistic(SWE_mm))
+    group_by(date = floor_date(date, period))  %>% 
+    summarize(swe_mm = statistic(SWE_mm)) 
 
   return(swe_mn_av = av)
   
