@@ -73,7 +73,7 @@ source('Functions/add_water_year.R')
 ```{r, echo = FALSE, warning=FALSE}
 # graph it
 source('Functions/graph_swe_daily.R')
-carr_daily <- graph_swe_daily(car_wint_cal, "Carrizo")
+carr_daily <- graph_swe_daily(car_wint_wy, "Carrizo")
 ch_daily <- graph_swe_daily(ch_wint_cal, "Chuska")
 bm_daily <- graph_swe_daily(bm_wint_cal, "Black Mesa")
 
