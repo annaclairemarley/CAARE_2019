@@ -22,7 +22,7 @@ plot_swe_anomaly = function(df, region){
     geom_col(aes(fill = sign), show.legend = FALSE) +
     #scale_y_continuous(limits = c(-20, 100)) +
     scale_fill_manual(values = c("negative" = "red", "positive" = "dark green")) +
-    scale_x_date(date_breaks = "2 years") +
+    scale_x_date(date_breaks = "2 years", date_labels = "%b%Y") +
     labs(
       x = "Date",
       y = "Anomaly",

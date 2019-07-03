@@ -32,9 +32,6 @@ library(dataRetrieval)
 - Monthly medians seem pretty similar to month means
 
 
-### Raw daily time series (November - April Calendar Year)
-**Note that months are designated 01 for November through to 06 for April **
-
 ```{r, include = FALSE}
 
 # read in the data:
@@ -60,15 +57,23 @@ bm_wint_cal <- black_mesa %>%
    filter(month(date) %in% c(11, 12, 1, 2, 3, 4))
 
 #Changes the date column to be in water years, you don't have to do this step if you already have the dates in water year format
-
 source('Functions/add_water_year.R')
-
-# **NOTE** this function changes the month in the date column to be nov = 1 and april = 6
  bm_wint_wy <- add_water_year(bm_wint_cal)
+ 
  car_wint_wy <- add_water_year(car_wint_cal)
  ch_wint_wy <- add_water_year(ch_wint_cal)
+ 
+ # turn these into csv
+ 
+ write.csv(bm_wint_wy, "Black Mesa/bm_wint_wy_04-19", row.names = FALSE)
+ write.csv(car_wint_wy, "Carrizo/car_wint_wy_04-19", row.names = FALSE)
+ write.csv(ch_wint_wy, "Chuska/ch_wint_wy_04-19", row.names = FALSE)
 
 ```
+
+
+
+### Raw daily time series (November - April Calendar Year)
 
 ```{r, echo = FALSE, warning=FALSE}
 # graph it
@@ -84,11 +89,12 @@ grid.arrange(carr_daily, ch_daily, bm_daily, heights = c(3, 3, 3))
 
 ```
 
-## Anual average 
+```{r, echo = FALSE, include=FALSE, error = TRUE}
 
-```{r, echo = FALSE}
+## This will have to be for calendar year
+
 source('Functions/calc_swe_metrics.R')
-source('Functions/graph_swe_metric.R')
+
 
 # create the yearly mean dataframes
 
@@ -101,21 +107,47 @@ ch_yr <- calc_swe_metrics(ch_wint_cal, "year", mean)%>%
 bm_yr <- calc_swe_metrics(bm_wint_cal, "year", mean)%>% 
   mutate(date = year(date))
 
-# graph it
-carr_mn_graph <- graph_swe_metric(carr_yr, geom_col, "Carrizo")
-ch_mn_graph <- graph_swe_metric(ch_yr, geom_col, "Chuska")
-bm_mn_graph <- graph_swe_metric(bm_yr, geom_col, "Black Mesa")
+
+
+```
+
+
+## Anual average - (November-April Water Year)
+
+```{r}
+# This is for water years
+
+source('Functions/calc_anwy_metrics.R')
+
+carr_anwy <- calc_anwy_metrics(car_wint_wy, mean)
+ch_anwy <- calc_anwy_metrics(ch_wint_wy, mean)
+bm_anwy <- calc_anwy_metrics(bm_wint_wy, mean)
+
+
+
+```
+
+```{r}
+source('Functions/graph_swe_metric.R')
+# graph metrics
+  #put in what type of graph you want and then the name of the region in quotes
+
+carr_wy_graph <- graph_swe_metric(carr_anwy, "waterYear", geom_col,  "Carrizo")
+
+ch_wy_graph <- graph_swe_metric(ch_anwy, "waterYear", geom_col, "Chuska")
+
+bm_wy_graph <- graph_swe_metric(bm_anwy, "waterYear", geom_col, "Black Mesa")
 
 # visualize all next to each other 
 
-grid.arrange(carr_mn_graph, ch_mn_graph, bm_mn_graph)
+grid.arrange(carr_wy_graph, ch_wy_graph, bm_wy_graph)
 
 ```
 
 
 ### Monthly mean time series
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, error=TRUE}
 source('Functions/calc_swe_metrics.R')
 source('Functions/graph_swe_metric.R')
 
@@ -160,7 +192,7 @@ Carrizo: green
 
 ### Monthly medians
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, error=TRUE}
 # create the monthly mean dataframes
 
 carr_mnth_median <- calc_swe_metrics(car_wint_cal, "month", median)
