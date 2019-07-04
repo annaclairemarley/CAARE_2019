@@ -18,7 +18,7 @@ library(gridExtra)
 library(grid)
 library(dataRetrieval)
 source("Functions/util.R")
-source('Functions/graph_swe_daily.R')
+source('Functions/graphing.R')
 ```
 
 ```{r, include = FALSE}
@@ -43,17 +43,37 @@ bm_wint_wy <- add_water_year(bm_wint_cal)
 
 ## Daily SWE variability November - April 
 ```{r, fig.width=20,fig.height=5}
-carr_daily <- graph_swe_daily(car_wint_wy, "Carrizo")
+carr_daily <- graph_SWE_with_wateryear(car_wint_wy, "Carrizo")
 carr_daily
 ```
 
 ```{r, fig.width=20,fig.height=5}
-ch_daily <- graph_swe_daily(ch_wint_wy, "Chuska")
+ch_daily <- graph_SWE_with_wateryear(ch_wint_wy, "Chuska")
 ch_daily
 ```
 
 ```{r, fig.width=20,fig.height=5}
-bm_daily <- graph_swe_daily(bm_wint_wy, "Black Mesa")
+bm_daily <- graph_SWE_with_wateryear(bm_wint_wy, "Black Mesa")
 bm_daily
+```
+```{r}
+# create the monthly mean dataframes
+carr_monthly <- calc_swe_metrics(car_wint_wy, "month", mean)
+ch_monthly <- calc_swe_metrics(ch_wint_wy, "month", mean)
+bm_monthly <- calc_swe_metrics(bm_wint_wy, "month", mean)
+```
+
+```{r,fig.width=20,fig.height=5}
+carr_mn_graph <- graph_SWE_with_wateryear(carr_monthly, "Carrizo")
+carr_mn_graph
+```
+
+```{r,fig.width=20,fig.height=5}
+ch_mn_graph <- graph_SWE_with_wateryear(ch_monthly, "Chuska")
+ch_mn_graph
+```
+```{r,fig.width=20,fig.height=5}
+bm_mn_graph <- graph_SWE_with_wateryear(bm_monthly, "Black Mesa")
+bm_mn_graph
 ```
 

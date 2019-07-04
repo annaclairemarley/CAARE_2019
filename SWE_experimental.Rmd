@@ -1,0 +1,35 @@
+---
+title: "SWE_experimental"
+author: "AnnaClaire Marley"
+date: "03/07/2019"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+# load the packages
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(gridExtra)
+library(grid)
+library(dataRetrieval)
+source("Functions/util.R")
+source('Functions/graphing.R')
+```
+
+```{r, include = FALSE}
+# read in the data:
+carrizo <- read_csv("Carrizo/carrizo_swe_03_19.csv") 
+chuska <- read_csv("Chuska/chuska_swe_03_19.csv")
+black_mesa <- read_csv("Black Mesa/BM_swe_03_19.csv")
+```
+
+```{r}
+
+```
+
