@@ -1,0 +1,59 @@
+---
+title: "SWE_clean"
+author: "AnnaClaire Marley"
+date: "03/07/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+# load the packages
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(gridExtra)
+library(grid)
+library(dataRetrieval)
+source("Functions/util.R")
+source('Functions/graph_swe_daily.R')
+```
+
+```{r, include = FALSE}
+# read in the data:
+carrizo <- read_csv("Carrizo/carrizo_swe_03_19.csv") 
+chuska <- read_csv("Chuska/chuska_swe_03_19.csv")
+black_mesa <- read_csv("Black Mesa/BM_swe_03_19.csv")
+```
+
+
+```{r, include = FALSE}
+# clean and make it just winter data
+car_wint_cal <- extract_winter_months(carrizo)
+ch_wint_cal <- extract_winter_months(chuska)
+bm_wint_cal <- extract_winter_months(black_mesa)
+
+# Adds water year. Renames column date to Date
+car_wint_wy <- add_water_year(car_wint_cal)
+ch_wint_wy <- add_water_year(ch_wint_cal)
+bm_wint_wy <- add_water_year(bm_wint_cal)
+```
+
+## Daily SWE variability November - April 
+```{r, fig.width=20,fig.height=5}
+carr_daily <- graph_swe_daily(car_wint_wy, "Carrizo")
+carr_daily
+```
+
+```{r, fig.width=20,fig.height=5}
+ch_daily <- graph_swe_daily(ch_wint_wy, "Chuska")
+ch_daily
+```
+
+```{r, fig.width=20,fig.height=5}
+bm_daily <- graph_swe_daily(bm_wint_wy, "Black Mesa")
+bm_daily
+```
+
