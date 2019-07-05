@@ -1,5 +1,7 @@
 
-
+#####################################################################
+# SWE FUNCTIONS
+#####################################################################
 
 #' extract_winter_months
 #' 
@@ -18,6 +20,9 @@ extract_winter_months = function (df) {
     filter(month(date) %in% c(11, 12, 1, 2, 3, 4))
   return(filteredDF)
 }
+
+#####################################################################
+#####################################################################
 
 #' add_water_year
 #' 
@@ -39,6 +44,9 @@ add_water_year = function(df) {
   
   return(wy_df)
 }
+
+#####################################################################
+#####################################################################
 
 #' calc_swe_metrics
 #'
@@ -63,5 +71,92 @@ calc_swe_metrics = function(region, period, statistic){
     summarize(swe_mm = statistic(swe_mm), waterYear=min(waterYear)) 
   
   return(av)
+  
+}
+
+#####################################################################
+#####################################################################
+
+#' calc_month_anom
+#'
+#' @param df dataframe of monthly means or max
+#'
+#' @return dataframe that has anomaly averaged from each month across years
+#' @export
+#'
+#' @examples
+
+calc_month_anom = function(df){
+  
+  df_month = df %>%
+    mutate(month = month(date))  
+  
+  intra_month = df_month %>% 
+    group_by(month) %>% 
+    summarize(mean_swe = mean(swe_mm))
+  
+  intra_month_anomaly = merge(df_month, intra_month, by = "month")%>%
+    mutate(anomaly = swe_mm - mean_swe) %>% 
+    mutate(sign = ifelse(anomaly < 0, "negative", "positive") )
+  
+  return(intra_month_anomaly = intra_month_anomaly)
+}
+
+#####################################################################
+#####################################################################
+
+#' month_ts
+#'
+#' @param df dataframe of monthly means or max
+#' @param month month you want to create the dataframe for
+#'
+#' @return dataframe that has anomaly averaged from each month across years
+#' @export
+#'
+#' @examples
+
+month_ts = function(df, month) {
+  df = df %>% 
+    filter(month(date) %in% c(month))
+  
+  return(df) 
+}
+
+
+#####################################################################
+#####################################################################
+
+#' join_month
+#'
+#' @param df combines dataframes of the single months for each region into one df
+#'  need to input name you want the df to be called and the df
+#' 
+#' @return dataframe that has anomaly averaged from each month across years
+#' @export
+#'
+#' @examples join_months(carrizo = car_nov, chuska = ch_nov)
+
+
+join_months = function(...) {
+  kwargs = list(...) # key word arguents 
+  placeNames = names(kwargs) # grabs the name of what you input
+  
+  mergerdDF = NULL
+  for (i in 1:length(placeNames)) { # for each placename
+    df = kwargs[[placeNames[i]]] %>% # gets the df for that placename
+      select(waterYear, swe_mm) %>% #select water year and swe_mm
+      rename(!!placeNames[i] := swe_mm) #renames swe_mm to the placename for joining
+    if (i == 1){ # if it's the 1st df, don't need to merge
+      mergedDF = df
+    } else{
+      mergedDF = merge(mergedDF, df, by="waterYear") #all the subsequent ones you merge together
+    }
+  }
+  
+  result = mergedDF %>% 
+    melt(id.vars="waterYear") %>% # then you just melt and rename
+    rename(region = variable,
+           swe_mm = value)
+  return(result)
   
 }

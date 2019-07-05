@@ -1,5 +1,5 @@
 ---
-title: "SWE_clean"
+title: "SWE Analysis"
 author: "AnnaClaire Marley"
 date: "03/07/2019"
 output: html_document
@@ -17,6 +17,7 @@ library(lubridate)
 library(gridExtra)
 library(grid)
 library(dataRetrieval)
+library(reshape2)
 source("Functions/util.R")
 source('Functions/graphing.R')
 ```
@@ -41,39 +42,281 @@ ch_wint_wy <- add_water_year(ch_wint_cal)
 bm_wint_wy <- add_water_year(bm_wint_cal)
 ```
 
-## Daily SWE variability November - April 
-```{r, fig.width=20,fig.height=5}
+## Analyses:
+- All three regions generally follow the same trends in SWE over time
+- 2010 was a high SWE year
+- Black Mesa and Carrizo are the most closely correlated
+
+## Daily SWE variability (November - April Water Year)
+```{r, fig.width=20,fig.height=5, echo= FALSE}
 carr_daily <- graph_SWE_with_wateryear(car_wint_wy, "Carrizo")
 carr_daily
 ```
 
-```{r, fig.width=20,fig.height=5}
+```{r, fig.width=20,fig.height=5, echo= FALSE}
 ch_daily <- graph_SWE_with_wateryear(ch_wint_wy, "Chuska")
 ch_daily
 ```
 
-```{r, fig.width=20,fig.height=5}
+```{r, fig.width=20,fig.height=5, echo= FALSE}
 bm_daily <- graph_SWE_with_wateryear(bm_wint_wy, "Black Mesa")
 bm_daily
 ```
-```{r}
+
+```{r, include = FALSE}
+## weekly mean variability
+carr_weekly <- calc_swe_metrics(car_wint_wy, "1 week", mean)
+ch_weekly <- calc_swe_metrics(ch_wint_wy, "1 week", mean)
+bm_weekly <- calc_swe_metrics(bm_wint_wy, "1 week", mean)
+
+```
+
+## Annual Mean SWE variability (November - April Water Year)
+```{r, include=FALSE}
+# create the monthly mean dataframes
+carr_annual <- calc_swe_metrics(car_wint_wy, "year", mean)
+ch_annual <- calc_swe_metrics(ch_wint_wy, "year", mean)
+bm_annual <- calc_swe_metrics(bm_wint_wy, "year", mean)
+
+# insert code below for annual with just water year
+```
+
+## Monthly Mean SWE variability (November - April Water Year)
+```{r, include=FALSE}
 # create the monthly mean dataframes
 carr_monthly <- calc_swe_metrics(car_wint_wy, "month", mean)
 ch_monthly <- calc_swe_metrics(ch_wint_wy, "month", mean)
 bm_monthly <- calc_swe_metrics(bm_wint_wy, "month", mean)
 ```
 
-```{r,fig.width=20,fig.height=5}
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+# graph it
 carr_mn_graph <- graph_SWE_with_wateryear(carr_monthly, "Carrizo")
 carr_mn_graph
 ```
 
-```{r,fig.width=20,fig.height=5}
+```{r,fig.width=20,fig.height=5, echo= FALSE}
 ch_mn_graph <- graph_SWE_with_wateryear(ch_monthly, "Chuska")
 ch_mn_graph
 ```
-```{r,fig.width=20,fig.height=5}
+```{r,fig.width=20,fig.height=5, echo= FALSE}
 bm_mn_graph <- graph_SWE_with_wateryear(bm_monthly, "Black Mesa")
 bm_mn_graph
+```
+
+# Monthly Median
+
+```{r, include=FALSE}
+# create the monthly mean dataframes
+carr_mnth_med <- calc_swe_metrics(car_wint_wy, "month", median)
+ch_mnth_med <- calc_swe_metrics(ch_wint_wy, "month", median)
+bm_mnth_med <- calc_swe_metrics(bm_wint_wy, "month", median)
+```
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+# graph it
+carr_med_graph <- graph_SWE_with_wateryear(carr_mnth_med, "Carrizo")
+carr_med_graph
+```
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+ch_med_graph <- graph_SWE_with_wateryear(ch_mnth_med, "Chuska")
+ch_med_graph
+```
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+bm_med_graph <- graph_SWE_with_wateryear(bm_mnth_med, "Black Mesa")
+bm_med_graph
+```
+
+
+## Monthly Anomalies (November - April Water Year)
+
+```{r,include = FALSE}
+# create anomaly dataframes
+car_anom <- calc_month_anom(carr_monthly)
+ch_anom <- calc_month_anom(ch_monthly)
+bm_anom <- calc_month_anom(bm_monthly)
+
+```
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+#graph it
+car_anom_graph <- plot_swe_anomaly(car_anom, title = "Carrizo")
+car_anom_graph
+```
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+ch_anom_graph <- plot_swe_anomaly(ch_anom, title = "Chuska")
+ch_anom_graph
+
+```
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+bm_anom_graph <- plot_swe_anomaly(bm_anom, title = "Black Mesa")
+bm_anom_graph
+
+```
+
+## Correlations Between locations
+
+### Weekly mean correlation November - April 
+
+```{r, include = FALSE}
+# pearson's correlation
+corr_chu_bm <- cor.test(bm_weekly$swe_mm, ch_weekly$swe_mm)
+corr_chu_carr <- cor.test(carr_weekly$swe_mm, ch_weekly$swe_mm)
+corr_carr_bm <- cor.test(bm_weekly$swe_mm, carr_weekly$swe_mm)
+
+# linear models
+corr_chu_bm_lm <- lm(bm_weekly$swe_mm ~ ch_weekly$swe_mm)
+  chu_bm_r2 <- summary(corr_chu_bm_lm)$r.squared
+
+corr_chu_carr_lm <- lm(carr_weekly$swe_mm ~ ch_weekly$swe_mm)
+  chu_carr_r2 <- summary(corr_chu_carr_lm)$r.squared 
+
+corr_carr_bm_lm <- lm(bm_weekly$swe_mm ~ carr_weekly$swe_mm)
+  carr_bm_r2 <- summary(corr_carr_bm_lm)$r.squared 
+
+```
+
+```{r, echo = FALSE}
+# graph it
+plot(ch_weekly$swe_mm, bm_weekly$swe_mm)
+abline(corr_chu_bm_lm)
+
+```
+
+Chuska vs Black Mesa R squared: `r chu_bm_r2`
+
+```{r, echo = FALSE}
+plot(ch_weekly$swe_mm, carr_weekly$swe_mm)
+abline(corr_chu_carr_lm)
+```
+
+Chuska vs Carrizo R squared: `r chu_carr_r2`
+
+```{r, echo = FALSE}
+plot(carr_weekly$swe_mm, bm_weekly$swe_mm)
+abline(corr_carr_bm_lm)
+
+```
+
+Black Mesa vs Carrizo R squared: `r carr_bm_r2`
+
+
+## Month specific time series
+
+# November
+
+```{r, include = FALSE, echo = FALSE}
+# filter just for November
+car_nov <- month_ts(carr_monthly, 11)
+ch_nov <- month_ts(ch_monthly, 11)
+bm_nov <- month_ts(bm_monthly, 11)
+
+nov_swe <- join_months(carrizo = car_nov, chuska = ch_nov, black_mesa = bm_nov)
+
+```
+
+```{r, echo = FALSE}
+# plot it
+
+plot_months(nov_swe, month = "November")
+
+```
+
+# December 
+
+```{r, include = FALSE}
+
+car_dec <- month_ts(carr_monthly, 12)
+ch_dec <- month_ts(ch_monthly, 12)
+bm_dec <- month_ts(bm_monthly, 12)
+
+dec_swe <- join_months(carrizo = car_dec, chuska = ch_dec, black_mesa = bm_dec)
+
+```
+
+```{r, echo = FALSE}
+
+plot_months(dec_swe, month = "December")
+
+```
+
+
+# January
+
+
+```{r, include = FALSE}
+
+car_jan <- month_ts(carr_monthly, 1)
+ch_jan <- month_ts(ch_monthly, 1)
+bm_jan <- month_ts(bm_monthly, 1)
+
+jan_swe <- join_months(carrizo = car_jan, chuska = ch_jan, black_mesa = bm_jan)
+
+```
+
+```{r, echo = FALSE}
+
+plot_months(jan_swe, month = "January")
+
+```
+
+
+
+# February
+```{r, include = FALSE}
+
+car_feb <- month_ts(carr_monthly, 2)
+ch_feb <- month_ts(ch_monthly, 2)
+bm_feb <- month_ts(bm_monthly, 2)
+
+feb_swe <- join_months(carrizo = car_feb, chuska = ch_feb, black_mesa = bm_feb)
+
+```
+
+```{r, echo = FALSE}
+
+plot_months(feb_swe, month = "February")
+
+```
+
+
+
+# March
+```{r, include = FALSE}
+
+car_mar <- month_ts(carr_monthly, 3)
+ch_mar <- month_ts(ch_monthly, 3)
+bm_mar <- month_ts(bm_monthly, 3)
+
+mar_swe <- join_months(carrizo = car_mar, chuska = ch_mar, black_mesa = bm_mar)
+
+```
+
+```{r, echo = FALSE}
+
+plot_months(mar_swe, month = "March")
+
+```
+
+# April
+
+```{r, include = FALSE}
+
+car_apr <- month_ts(carr_monthly, 4)
+ch_apr <- month_ts(ch_monthly, 4)
+bm_apr <- month_ts(bm_monthly, 4)
+
+apr_swe <- join_months(carrizo = car_apr, chuska = ch_apr, black_mesa = bm_apr)
+
+```
+
+```{r, echo = FALSE}
+
+plot_months(apr_swe, month = "April")
+
 ```
 
