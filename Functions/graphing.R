@@ -11,7 +11,7 @@
 #'
 #' @examples
 #' 
-graph_SWE_with_wateryear = function(df, title = "", type=geom_line) {
+graph_with_wateryear = function(df, title = "", type=geom_line, variable = "swe_mm", ylab = "SWE (mm)") {
   
   # calculate start and end water year for graphing
   startWaterYear = min(df$waterYear)
@@ -21,7 +21,7 @@ graph_SWE_with_wateryear = function(df, title = "", type=geom_line) {
   breakDates = seq.Date(from = ymd(paste(startWaterYear,1,1, sep='-')), length.out = endWaterYear - startWaterYear + 1, by = "1 year")
   
   swe_daily_graph = df %>% 
-    ggplot(aes(x = date, y = swe_mm)) +
+    ggplot(aes_string("date", variable)) +
     type() +
     scale_x_date(date_breaks = "3 month", date_labels="%b", name="Month",
                  sec.axis = sec_axis(~. , name="Water Year",  breaks= breakDates, labels=seq(startWaterYear,endWaterYear,by=1))
@@ -29,7 +29,7 @@ graph_SWE_with_wateryear = function(df, title = "", type=geom_line) {
     scale_y_continuous(expand = c(0,0)) +
     labs(
       x = "Month",
-      y = "SWE (mm)",
+      y = ylab,
       title = sprintf("%s", title)
     ) +
     theme_classic()
@@ -103,7 +103,7 @@ plot_months = function(df, month = "") {
   scale_y_continuous(expand = c(0,0)) +
   labs(x = "Water Year",
        y = "SWE (mm)",
-       title = sprintf("SWE %s Month", month)
+       title = sprintf("SWE %s Month``", month)
        ) +
   theme_classic()
 

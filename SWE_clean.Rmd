@@ -49,17 +49,17 @@ bm_wint_wy <- add_water_year(bm_wint_cal)
 
 ## Daily SWE variability (November - April Water Year)
 ```{r, fig.width=20,fig.height=5, echo= FALSE}
-carr_daily <- graph_SWE_with_wateryear(car_wint_wy, "Carrizo")
+carr_daily <- graph_with_wateryear(car_wint_wy, "Carrizo")
 carr_daily
 ```
 
 ```{r, fig.width=20,fig.height=5, echo= FALSE}
-ch_daily <- graph_SWE_with_wateryear(ch_wint_wy, "Chuska")
+ch_daily <- graph_with_wateryear(ch_wint_wy, "Chuska")
 ch_daily
 ```
 
 ```{r, fig.width=20,fig.height=5, echo= FALSE}
-bm_daily <- graph_SWE_with_wateryear(bm_wint_wy, "Black Mesa")
+bm_daily <- graph_with_wateryear(bm_wint_wy, "Black Mesa")
 bm_daily
 ```
 

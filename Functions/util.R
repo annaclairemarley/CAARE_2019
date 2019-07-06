@@ -1,7 +1,31 @@
 
 #####################################################################
-# SWE FUNCTIONS
+# FUNCTIONS
 #####################################################################
+
+#' read_depth_chunks
+#' 
+#' function to read in date and depth data from separate files & join to one dataframe
+#'
+#' @param folder name of folder in your working directory, ie "Chuska" 
+#'
+#' @return dataframe
+#' @export
+#'
+#' @examples read_depth_chunks("Carrizo")
+
+read_depth_chunks = function(folder) {
+  df = NULL
+  for (file in list.files(folder, pattern = ".*_snodas_depth_.*")) {
+    readFile = read_csv(paste(folder, file, sep="/"), col_names=c("date", "depth_mm"), skip = 1)
+    if (is.null(df)) { # don't merge the first one
+      df = readFile
+    } else {
+      df = rbind(df, readFile) # bind the files together
+    }
+  }
+  return(df)
+}
 
 #' extract_winter_months
 #' 

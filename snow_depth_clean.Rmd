@@ -1,0 +1,68 @@
+---
+title: "Snow Depth Analyses"
+author: "AnnaClaire Marley"
+date: "7/5/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include = FALSE}
+# load the packages
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(gridExtra)
+library(grid)
+library(dataRetrieval)
+library(reshape2)
+source("Functions/util.R")
+source('Functions/graphing.R')
+```
+
+```{r, include = FALSE}
+# clean into usable files from climate engine
+
+# CARRIZO
+car_snodas_depth <- read_depth_chunks("Carrizo")
+
+# CHUSKA
+ch_snodas_depth <- read_depth_chunks("Chuska")
+
+# BLACK MESA
+bm_snodas_depth <- read_depth_chunks("Black Mesa")
+```
+
+```{r, include = FALSE}
+# extract winter months & add water year
+car_depth_wy <- month_ts(car_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
+ch_depth_wy <- month_ts(ch_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
+bm_depth_wy <- month_ts(bm_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
+```
+
+
+## Daily Snow Depth variability (November - April Water Year)
+```{r, fig.width=20,fig.height=5, echo= FALSE}
+carr_dpth_daily <- graph_with_wateryear(car_depth_wy, "Carrizo", variable = "depth_mm", ylab = "Snow depth (mm)")
+carr_dpth_daily
+```
+
+```{r, fig.width=20,fig.height=5, echo= FALSE}
+ch_dpth_daily <- graph_with_wateryear(ch_depth_wy, "Chuska", variable = "depth_mm", ylab = "Snow depth (mm)")
+ch_dpth_daily
+```
+
+```{r, fig.width=20,fig.height=5, echo= FALSE}
+bm_dpth_daily <- graph_with_wateryear(bm_depth_wy, "Black Mesa", variable = "depth_mm", ylab = "Snow depth (mm)")
+bm_dpth_daily
+```
+
