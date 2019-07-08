@@ -437,6 +437,7 @@ apr_swe_plot <- apr_swe %>%
 
 ```
 
+### November - April Averaged SWE values
 
 ```{r, echo = FALSE}
 
