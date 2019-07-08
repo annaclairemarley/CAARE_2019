@@ -72,6 +72,22 @@ add_water_year = function(df) {
 #####################################################################
 #####################################################################
 
+# just to make merging snow depth and snow water equivalent easier
+
+merge_snow = function(df1, df2) {
+  
+ new_df =  merge(df1, df2, by = "date") %>% 
+    select(-waterYear.y) %>% 
+    rename(waterYear = waterYear.x) %>% 
+    mutate(month = month(date)) 
+ 
+  return(new_df)
+}
+
+
+#####################################################################
+#####################################################################
+
 #' calc_swe_metrics
 #'
 #' Makes a dataframe of the summary statistic over the time period you want

@@ -25,6 +25,7 @@ source('Functions/graphing.R')
 
 ```{r, include = FALSE}
 # clean into usable files from climate engine
+# filter to just winter years
 
 # CARRIZO
 car_snodas_depth <- read_depth_chunks("Carrizo")
@@ -47,25 +48,6 @@ ch_depth_wy <- month_ts(ch_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
 bm_depth_wy <- month_ts(bm_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
   add_water_year()
 
-```
-## Correlation SWE and Snow Depth (November - April Water Year)
-
-Chuska 
-```{r, include=FALSE}
-# SWE
-chuska_swe <- read_csv("Chuska/chuska_swe_03_19.csv")
-ch_swe_wint <- extract_winter_months(chuska_swe)
-
-# linear regression
-ch_swe_v_depth_lm <- lm(ch_swe_wint$swe_mm ~ ch_depth_wy$depth_mm)
-ch_swedepth_r2 <- summary(ch_swe_v_depth_lm)$r.squared 
-
-```
-
-```{r, echo = FALSE}
-# plot it
-plot(ch_depth_wy$depth_mm, ch_swe_wint$swe_mm)
-abline(ch_swe_v_depth_lm)
 ```
 
 Chuska SWE vs snow depth R2: `r ch_swedepth_r2`
@@ -109,15 +91,16 @@ bm_mn_av_graph
 
 ## Anomalies
 
-```{r, echo=FALSE}
+```{r, fig.width=20,fig.height=5,echo = FALSE}
 
 car_dpth_anom <- calc_mnth_depth_anom(car_mn_av)
 plot_anomaly(car_dpth_anom)
 
 ch_dpth_anom <- calc_mnth_depth_anom(ch_mn_av)
-ch_dpth_anom 
+plot_anomaly(ch_dpth_anom)
+
 bm_dpth_anom<- calc_mnth_depth_anom(bm_mn_av)
-bm_dpth_anom
+plot_anomaly(bm_dpth_anom)
 
 ```
 

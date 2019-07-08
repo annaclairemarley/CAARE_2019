@@ -112,3 +112,45 @@ plot_months = function(df, month = "") {
 }
 
 
+#####################################################################
+#####################################################################
+#' plot_cor
+#' 
+#' Plots the correlation between snow depth and swe
+#'
+#' @param df needs to be combined df of swe and snow depth 
+#' @param adjr2 the name of the adjusted r2 value of the swe and depth correlation of that region
+#'
+#' @return correlation graph
+#' @export
+#'
+#' @examples plot_cor(df, car_r2, region = "Carrizo)
+
+plot_cor = function(df, adjr2, region = "") {
+  
+  graph = df %>% 
+    ggplot(aes(x = depth_mm, y = swe_mm)) +
+    geom_point(aes(color = as.factor(month))) +
+    labs(x = "Snow Depth (mm)",
+         y = "SWE (mm)",
+         fill = "Month",
+         color = "Month",
+         title = sprintf("%s", region),
+         subtitle = paste("Adj R2 = ", round(adjr2, 3))) +
+    geom_smooth(method = "lm", color = "black",) +
+    theme_classic()
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

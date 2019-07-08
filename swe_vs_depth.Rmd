@@ -1,0 +1,83 @@
+---
+title: "SWE & Snow Depth"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include = FALSE}
+# load the packages
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(gridExtra)
+library(grid)
+library(dataRetrieval)
+library(reshape2)
+source("Functions/util.R")
+source('Functions/graphing.R')
+```
+
+## Correlation between SWE and Snow Depth (November - April Water Year)
+
+### Carrizo
+
+```{r, include = FALSE}
+# read in the daily data files
+car_swe <- read_csv("winter_wy/car_swe_wy_03_19.csv")
+car_dpth <- read_csv("winter_wy/car_dpth_wy_03_19.csv")
+
+# combine to make a dataframe of swe and dpth daily data
+car_swe_dpth <- merge_snow(car_swe, car_dpth)
+
+# monthly means correlation
+car_swe_av <- calc_swe_metrics(car_swe, "month", mean)
+car_dpth_av <- calc_depth_metrics(car_dpth, "month", mean)
+
+```
+
+```{r, echo=FALSE}
+# daily data linear regression:
+
+car_swe_dpth_lm <- lm(car_swe_dpth$swe_mm ~ car_swe_dpth$depth_mm)
+car_swedpth_r2 <- summary(car_swe_dpth_lm)$adj.r.squared
+
+```
+
+```{r, echo = FALSE}
+# graph it 
+
+car_daily_cor_swe_dpth <- plot_cor(car_swe_dpth, car_swedpth_r2, region = "Carrizo")
+car_daily_cor_swe_dpth  
+
+```
+
+
+### Chuska 
+```{r, include=FALSE}
+# read in the files
+ch_swe <- read_csv("winter_wy/ch_swe_wy_03_19.csv")
+ch_dpth <- read_csv("winter_wy/ch_dpth_wy_03_19.csv")
+
+```
+
+```{r, echo = FALSE}
+# linear regression
+ch_swe_v_depth_lm <- lm(ch_swe_wint$swe_mm ~ ch_depth_wy$depth_mm)
+ch_swedepth_r2 <- summary(ch_swe_v_depth_lm)$r.squared 
+
+
+# plot it
+plot(ch_depth_wy$depth_mm, ch_swe_wint$swe_mm)
+abline(ch_swe_v_depth_lm)
+```
+
+### Black Mesa
+
+
+
+
+
