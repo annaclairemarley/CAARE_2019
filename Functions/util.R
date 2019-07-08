@@ -79,7 +79,8 @@ merge_snow = function(df1, df2) {
  new_df =  merge(df1, df2, by = "date") %>% 
     select(-waterYear.y) %>% 
     rename(waterYear = waterYear.x) %>% 
-    mutate(month = month(date)) 
+    mutate(month = month(date)) %>% 
+    mutate(snow_ratio = swe_mm/depth_mm)
  
   return(new_df)
 }

@@ -109,9 +109,9 @@ bm_mn_graph
 
 ```{r, include=FALSE}
 # create the monthly mean dataframes
-carr_mnth_med <- calc_snow_metrics(car_wint_wy, "month", median)
-ch_mnth_med <- calc_snow_metrics(ch_wint_wy, "month", median)
-bm_mnth_med <- calc_snow_metrics(bm_wint_wy, "month", median)
+carr_mnth_med <- calc_swe_metrics(car_wint_wy, "month", median)
+ch_mnth_med <- calc_swe_metrics(ch_wint_wy, "month", median)
+bm_mnth_med <- calc_swe_metrics(bm_wint_wy, "month", median)
 ```
 
 ```{r,fig.width=20,fig.height=5, echo= FALSE}
@@ -227,6 +227,24 @@ plot_months(nov_swe, month = "November")
 
 ```
 
+```{r, echo = FALSE}
+# plot box plot for each month
+
+nov_swe_plot <- nov_swe %>% 
+  ggplot(aes(region, swe_mm))+
+  geom_boxplot(aes(fill = region), show.legend = FALSE) +
+  labs(
+    x = "Region",
+    y = "SWE (mm)",
+    title = "November"
+  ) +
+  theme_classic() 
+
+
+
+```
+
+
 # December 
 
 ```{r, include = FALSE}
@@ -244,6 +262,25 @@ dec_swe <- join_months(carrizo = car_dec, chuska = ch_dec, black_mesa = bm_dec)
 plot_months(dec_swe, month = "December")
 
 ```
+
+
+```{r, echo = FALSE}
+# plot box plot for each month
+
+dec_swe_plot <- dec_swe %>% 
+  ggplot(aes(region, swe_mm))+
+  geom_boxplot(aes(fill = region), show.legend = FALSE) +
+  labs(
+    x = "Region",
+    y = "SWE (mm)",
+    title = "December"
+  ) +
+  theme_classic() 
+
+
+
+```
+
 
 
 # January
@@ -266,6 +303,26 @@ plot_months(jan_swe, month = "January")
 ```
 
 
+```{r, echo = FALSE}
+# plot box plot for each month
+
+jan_swe_plot <- jan_swe %>% 
+  ggplot(aes(region, swe_mm))+
+  geom_boxplot(aes(fill = region), show.legend = FALSE) +
+  labs(
+    x = "Region",
+    y = "SWE (mm)",
+    title = "January"
+  ) +
+  theme_classic() 
+
+
+
+```
+
+
+
+
 
 # February
 ```{r, include = FALSE}
@@ -283,6 +340,26 @@ feb_swe <- join_months(carrizo = car_feb, chuska = ch_feb, black_mesa = bm_feb)
 plot_months(feb_swe, month = "February")
 
 ```
+
+
+```{r, echo = FALSE}
+# plot box plot for each month
+
+feb_swe_plot <- feb_swe %>% 
+  ggplot(aes(region, swe_mm))+
+  geom_boxplot(aes(fill = region), show.legend = FALSE) +
+  labs(
+    x = "Region",
+    y = "SWE (mm)",
+    title = "February"
+  ) +
+  theme_classic() 
+
+
+
+```
+
+
 
 
 
@@ -303,6 +380,27 @@ plot_months(mar_swe, month = "March")
 
 ```
 
+
+```{r, echo = FALSE}
+# plot box plot for each month
+
+mar_swe_plot <- mar_swe %>% 
+  ggplot(aes(region, swe_mm))+
+  geom_boxplot(aes(fill = region), show.legend = FALSE) +
+  labs(
+    x = "Region",
+    y = "SWE (mm)",
+    title = "March"
+  ) +
+  theme_classic() 
+
+
+
+```
+
+
+
+
 # April
 
 ```{r, include = FALSE}
@@ -318,6 +416,31 @@ apr_swe <- join_months(carrizo = car_apr, chuska = ch_apr, black_mesa = bm_apr)
 ```{r, echo = FALSE}
 
 plot_months(apr_swe, month = "April")
+
+```
+
+
+```{r, echo = FALSE}
+# plot box plot for each month
+
+apr_swe_plot <- apr_swe %>% 
+  ggplot(aes(region, swe_mm))+
+  geom_boxplot(aes(fill = region), show.legend = FALSE) +
+  labs(
+    x = "Region",
+    y = "SWE (mm)",
+    title = "April"
+  ) +
+  theme_classic() 
+
+
+
+```
+
+
+```{r, echo = FALSE}
+
+grid.arrange(nov_swe_plot, dec_swe_plot, jan_swe_plot, feb_swe_plot, mar_swe_plot, apr_swe_plot, ncol = 3)
 
 ```
 

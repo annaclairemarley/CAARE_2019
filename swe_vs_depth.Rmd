@@ -21,7 +21,9 @@ source("Functions/util.R")
 source('Functions/graphing.R')
 ```
 
-## Correlation between SWE and Snow Depth (November - April Water Year)
+
+
+### Correlation between SWE and Snow Depth (November - April Water Year)
 
 ### Carrizo
 
@@ -39,6 +41,24 @@ car_dpth_av <- calc_depth_metrics(car_dpth, "month", mean)
 
 ```
 
+
+```{r, include = FALSE}
+# average swe - depth metric (from swe/depth)
+av_ratio <- car_swe_dpth %>% 
+  filter(snow_ratio != "NaN") %>% 
+  filter(snow_ratio != "Inf") %>% 
+  group_by(month) %>% 
+  summarize(
+    mean_ratio = mean(snow_ratio)
+  )
+  
+
+car_av_snow_ratio <- mean(av_ratio$mean_ratio)
+  
+
+```
+
+
 ```{r, echo=FALSE}
 # daily data linear regression:
 
@@ -51,7 +71,7 @@ car_swedpth_r2 <- summary(car_swe_dpth_lm)$adj.r.squared
 # graph it 
 
 car_daily_cor_swe_dpth <- plot_cor(car_swe_dpth, car_swedpth_r2, region = "Carrizo")
-car_daily_cor_swe_dpth  
+ car_daily_cor_swe_dpth
 
 ```
 
@@ -62,21 +82,145 @@ car_daily_cor_swe_dpth
 ch_swe <- read_csv("winter_wy/ch_swe_wy_03_19.csv")
 ch_dpth <- read_csv("winter_wy/ch_dpth_wy_03_19.csv")
 
+# merge them together 
+ch_swe_dpth <- merge_snow(ch_swe, ch_dpth)
+
 ```
+
+
+```{r, include = FALSE}
+# average swe - depth metric (from swe/depth)
+ch_av_ratio <- ch_swe_dpth %>% 
+  filter(snow_ratio != "NaN") %>% 
+  filter(snow_ratio != "Inf") %>% 
+  group_by(month) %>% 
+  summarize(
+    mean_ratio = mean(snow_ratio)
+  )
+  
+
+ch_av_snow_ratio <- mean(ch_av_ratio$mean_ratio)
+  
+
+
+```
+
+
+
 
 ```{r, echo = FALSE}
 # linear regression
-ch_swe_v_depth_lm <- lm(ch_swe_wint$swe_mm ~ ch_depth_wy$depth_mm)
-ch_swedepth_r2 <- summary(ch_swe_v_depth_lm)$r.squared 
+ch_swe_v_depth_lm <- lm(ch_swe_dpth$swe_mm ~ ch_swe_dpth$depth_mm)
+ch_swedepth_r2 <- summary(ch_swe_v_depth_lm)$adj.r.squared 
 
 
 # plot it
-plot(ch_depth_wy$depth_mm, ch_swe_wint$swe_mm)
-abline(ch_swe_v_depth_lm)
+ch_swe_v_depth_graph <- plot_cor(ch_swe_dpth, ch_swedepth_r2, region = "Chuska")
+ch_swe_v_depth_graph 
 ```
 
 ### Black Mesa
 
+```{r, include=FALSE}
+# read in the files
+bm_swe <- read_csv("winter_wy/bm_swe_wy_03_19.csv")
+bm_dpth <- read_csv("winter_wy/bm_dpth_wy_03_19.csv")
+
+# merge them together 
+bm_swe_dpth <- merge_snow(bm_swe, bm_dpth)
+
+```
+
+
+```{r, include = FALSE}
+# average swe - depth metric (from swe/depth)
+bm_av_ratio <- bm_swe_dpth %>% 
+  filter(snow_ratio != "NaN") %>% 
+  filter(snow_ratio != "Inf") %>% 
+  group_by(month) %>% 
+  summarize(
+    mean_ratio = mean(snow_ratio)
+  )
+  
+
+bm_av_snow_ratio <- mean(bm_av_ratio$mean_ratio)
+  
+
+
+```
+
+
+```{r, echo = FALSE}
+# linear regression
+bm_swe_v_depth_lm <- lm(bm_swe_dpth$swe_mm ~ bm_swe_dpth$depth_mm)
+bm_swedepth_r2 <- summary(bm_swe_v_depth_lm)$adj.r.squared 
+
+
+# plot it
+bm_swe_v_depth_graph <- plot_cor(bm_swe_dpth, bm_swedepth_r2, region = "Black Mesa")
+bm_swe_v_depth_graph
+```
+
+### SWE-depth ratio - annual averaged metric 
+
+- **Carrizo**: `r round(car_av_snow_ratio, 3)`
+
+- **Chuska**: `r round(ch_av_snow_ratio, 3)`
+
+- **Black Mesa**: `r round(bm_av_snow_ratio, 3)`
+
+
+### SWE and Snow depth (November - April Water Year)
+```{r, fig.width=20,fig.height=5, echo = FALSE, warning=FALSE, message=FALSE}
+# carrizo 
+graph_with_wateryear(car_swe_dpth, title = "Carrizo") +
+  geom_line(aes(y = depth_mm), color = "blue") +
+  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "Snow Depth (mm)")) +
+  theme(axis.line.y.right = element_line(color = "blue"),
+        axis.text.y.right = element_text(color = "blue"),
+        axis.title.y.right = element_text(color = "blue"))
+  
+
+```
+
+
+```{r, fig.width=20,fig.height=5, echo = FALSE, warning=FALSE, message=FALSE}
+# carrizo 
+graph_with_wateryear(ch_swe_dpth, title = "Chuska") +
+  geom_line(aes(y = depth_mm), color = "blue") +
+  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "Snow Depth (mm)")) +
+  theme(axis.line.y.right = element_line(color = "blue"),
+        axis.text.y.right = element_text(color = "blue"),
+        axis.title.y.right = element_text(color = "blue"))
+  
+
+```
+
+```{r, fig.width=20,fig.height=5,echo = FALSE, warning=FALSE, message=FALSE}
+# carrizo 
+graph_with_wateryear(bm_swe_dpth, title = "Black Mesa") +
+  geom_line(aes(y = depth_mm), color = "blue") +
+  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "Snow Depth (mm)")) +
+  theme(axis.line.y.right = element_line(color = "blue"),
+        axis.text.y.right = element_text(color = "blue"),
+        axis.title.y.right = element_text(color = "blue")) 
+  
+
+```
+
+Depth scaled (depth*0.2) by swe/depth metric
+
+```{r, fig.width=20,fig.height=5, echo = FALSE}
+
+graph_with_wateryear(bm_swe_dpth, title = "Black Mesa") +
+  geom_line(aes(y = depth_mm*0.2), color = "blue") +
+  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "Snow Depth (mm)")) +
+  theme(axis.line.y.right = element_line(color = "blue"),
+        axis.text.y.right = element_text(color = "blue"),
+        axis.title.y.right = element_text(color = "blue")) 
+  
+
+```
 
 
 
