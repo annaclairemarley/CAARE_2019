@@ -71,8 +71,9 @@ bm_weekly <- calc_swe_metrics(bm_wint_wy, "1 week", mean)
 
 ```
 
-## Annual Mean SWE variability (November - April Water Year)
+
 ```{r, include=FALSE}
+## Annual Mean SWE variability (November - April Water Year)
 # create the monthly mean dataframes
 carr_annual <- calc_swe_metrics(car_wint_wy, "year", mean)
 ch_annual <- calc_swe_metrics(ch_wint_wy, "year", mean)
@@ -91,16 +92,16 @@ bm_monthly <- calc_swe_metrics(bm_wint_wy, "month", mean)
 
 ```{r,fig.width=20,fig.height=5, echo= FALSE}
 # graph it
-carr_mn_graph <- graph_SWE_with_wateryear(carr_monthly, "Carrizo")
+carr_mn_graph <- graph_with_wateryear(carr_monthly, "Carrizo")
 carr_mn_graph
 ```
 
 ```{r,fig.width=20,fig.height=5, echo= FALSE}
-ch_mn_graph <- graph_SWE_with_wateryear(ch_monthly, "Chuska")
+ch_mn_graph <- graph_with_wateryear(ch_monthly, "Chuska")
 ch_mn_graph
 ```
 ```{r,fig.width=20,fig.height=5, echo= FALSE}
-bm_mn_graph <- graph_SWE_with_wateryear(bm_monthly, "Black Mesa")
+bm_mn_graph <- graph_with_wateryear(bm_monthly, "Black Mesa")
 bm_mn_graph
 ```
 
@@ -108,24 +109,24 @@ bm_mn_graph
 
 ```{r, include=FALSE}
 # create the monthly mean dataframes
-carr_mnth_med <- calc_swe_metrics(car_wint_wy, "month", median)
-ch_mnth_med <- calc_swe_metrics(ch_wint_wy, "month", median)
-bm_mnth_med <- calc_swe_metrics(bm_wint_wy, "month", median)
+carr_mnth_med <- calc_snow_metrics(car_wint_wy, "month", median)
+ch_mnth_med <- calc_snow_metrics(ch_wint_wy, "month", median)
+bm_mnth_med <- calc_snow_metrics(bm_wint_wy, "month", median)
 ```
 
 ```{r,fig.width=20,fig.height=5, echo= FALSE}
 # graph it
-carr_med_graph <- graph_SWE_with_wateryear(carr_mnth_med, "Carrizo")
+carr_med_graph <- graph_with_wateryear(carr_mnth_med, "Carrizo")
 carr_med_graph
 ```
 
 ```{r,fig.width=20,fig.height=5, echo= FALSE}
-ch_med_graph <- graph_SWE_with_wateryear(ch_mnth_med, "Chuska")
+ch_med_graph <- graph_with_wateryear(ch_mnth_med, "Chuska")
 ch_med_graph
 ```
 
 ```{r,fig.width=20,fig.height=5, echo= FALSE}
-bm_med_graph <- graph_SWE_with_wateryear(bm_mnth_med, "Black Mesa")
+bm_med_graph <- graph_with_wateryear(bm_mnth_med, "Black Mesa")
 bm_med_graph
 ```
 
@@ -142,18 +143,18 @@ bm_anom <- calc_month_anom(bm_monthly)
 
 ```{r,fig.width=20,fig.height=5, echo= FALSE}
 #graph it
-car_anom_graph <- plot_swe_anomaly(car_anom, title = "Carrizo")
+car_anom_graph <- plot_anomaly(car_anom, title = "Carrizo")
 car_anom_graph
 ```
 
 ```{r,fig.width=20,fig.height=5, echo= FALSE}
-ch_anom_graph <- plot_swe_anomaly(ch_anom, title = "Chuska")
+ch_anom_graph <- plot_anomaly(ch_anom, title = "Chuska")
 ch_anom_graph
 
 ```
 
 ```{r,fig.width=20,fig.height=5, echo= FALSE}
-bm_anom_graph <- plot_swe_anomaly(bm_anom, title = "Black Mesa")
+bm_anom_graph <- plot_anomaly(bm_anom, title = "Black Mesa")
 bm_anom_graph
 
 ```

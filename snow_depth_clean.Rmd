@@ -48,7 +48,27 @@ bm_depth_wy <- month_ts(bm_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
   add_water_year()
 
 ```
+## Correlation SWE and Snow Depth (November - April Water Year)
 
+Chuska 
+```{r, include=FALSE}
+# SWE
+chuska_swe <- read_csv("Chuska/chuska_swe_03_19.csv")
+ch_swe_wint <- extract_winter_months(chuska_swe)
+
+# linear regression
+ch_swe_v_depth_lm <- lm(ch_swe_wint$swe_mm ~ ch_depth_wy$depth_mm)
+ch_swedepth_r2 <- summary(ch_swe_v_depth_lm)$r.squared 
+
+```
+
+```{r, echo = FALSE}
+# plot it
+plot(ch_depth_wy$depth_mm, ch_swe_wint$swe_mm)
+abline(ch_swe_v_depth_lm)
+```
+
+Chuska SWE vs snow depth R2: `r ch_swedepth_r2`
 
 ## Daily Snow Depth variability (November - April Water Year)
 ```{r, fig.width=20,fig.height=5, echo= FALSE}
@@ -65,4 +85,49 @@ ch_dpth_daily
 bm_dpth_daily <- graph_with_wateryear(bm_depth_wy, "Black Mesa", variable = "depth_mm", ylab = "Snow depth (mm)")
 bm_dpth_daily
 ```
+
+## Monthly Mean Snow Depth variability (November - April Water Year)
+
+```{r, include = FALSE}
+car_mn_av <- calc_depth_metrics(car_depth_wy, "month", mean)
+ch_mn_av <- calc_depth_metrics(ch_depth_wy, "month", mean)
+bm_mn_av <- calc_depth_metrics(bm_depth_wy, "month", mean)
+```
+
+```{r,fig.width=20,fig.height=5, echo = FALSE}
+# graph it
+
+car_mn_av_graph <- graph_with_wateryear(car_mn_av, "Carrizo", variable = "depth_mm", ylab = "Snow depth (mm)")
+car_mn_av_graph
+
+ch_mn_av_graph <- graph_with_wateryear(ch_mn_av, "Chuska", variable = "depth_mm", ylab = "Snow depth (mm)")
+ch_mn_av_graph
+
+bm_mn_av_graph <- graph_with_wateryear(bm_mn_av, "Black Mesa", variable = "depth_mm", ylab = "Snow depth (mm)")
+bm_mn_av_graph
+```
+
+## Anomalies
+
+```{r, echo=FALSE}
+
+car_dpth_anom <- calc_mnth_depth_anom(car_mn_av)
+plot_anomaly(car_dpth_anom)
+
+ch_dpth_anom <- calc_mnth_depth_anom(ch_mn_av)
+ch_dpth_anom 
+bm_dpth_anom<- calc_mnth_depth_anom(bm_mn_av)
+bm_dpth_anom
+
+```
+
+
+
+
+
+
+
+
+
+
 

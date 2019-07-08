@@ -98,6 +98,18 @@ calc_swe_metrics = function(region, period, statistic){
   
 }
 
+# same thing but for depth
+calc_depth_metrics = function(region, period, statistic){
+  
+  # dataframe of SWE metric desired
+  av = region %>% 
+    group_by(date = floor_date(date, period))  %>% 
+    summarize(depth_mm = statistic(depth_mm), waterYear=min(waterYear)) 
+  
+  return(av)
+  
+}
+
 #####################################################################
 #####################################################################
 
@@ -121,6 +133,23 @@ calc_month_anom = function(df){
   
   intra_month_anomaly = merge(df_month, intra_month, by = "month")%>%
     mutate(anomaly = swe_mm - mean_swe) %>% 
+    mutate(sign = ifelse(anomaly < 0, "negative", "positive") )
+  
+  return(intra_month_anomaly = intra_month_anomaly)
+}
+
+## same but for depth
+calc_mnth_depth_anom = function(df){
+  
+  df_month = df %>%
+    mutate(month = month(date))  
+  
+  intra_month = df_month %>% 
+    group_by(month) %>% 
+    summarize(mean_depth = mean(depth_mm))
+  
+  intra_month_anomaly = merge(df_month, intra_month, by = "month")%>%
+    mutate(anomaly = depth_mm - mean_depth) %>% 
     mutate(sign = ifelse(anomaly < 0, "negative", "positive") )
   
   return(intra_month_anomaly = intra_month_anomaly)

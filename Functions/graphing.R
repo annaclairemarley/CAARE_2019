@@ -54,7 +54,7 @@ graph_with_wateryear = function(df, title = "", type=geom_line, variable = "swe_
 #'
 #' @examples
 
-plot_swe_anomaly = function(df, title = ""){
+plot_anomaly = function(df, title = ""){
   
   startWaterYear = min(df$waterYear)
   endWaterYear = max(df$waterYear)
