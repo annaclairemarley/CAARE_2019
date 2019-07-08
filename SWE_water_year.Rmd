@@ -53,7 +53,7 @@ ch_daily
 
 source('Functions/calc_anwy_metrics.R')
 
-carr_anwy <- calc_anwy_metrics(carrizo, mean)
+carr_anwy <- calc_anwy_metrics(carrizo, mean) 
 ch_anwy <- calc_anwy_metrics(chuska, mean)
 bm_anwy <- calc_anwy_metrics(black_mesa, mean)
 

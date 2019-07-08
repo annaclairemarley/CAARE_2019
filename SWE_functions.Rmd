@@ -43,7 +43,7 @@ Now graph and visualize what you found. Enter in the dataframe you created above
 ```{r}
 source('Functions/graph_swe_metric.R')
 
-graph_swe_metric(test, geom_line)
+graph_swe_metric(test, geom_line) 
 ```
 
 Plot anomalies made from average over the year:

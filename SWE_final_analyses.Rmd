@@ -18,7 +18,7 @@ library(tidyverse)
 library(janitor)
 library(lubridate)
 library(gridExtra)
-library(grid)
+library(grid) 
 library(dataRetrieval)
 
 
