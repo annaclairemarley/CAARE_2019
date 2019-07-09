@@ -41,7 +41,7 @@ graph_with_wateryear = function(df, title = "", type=geom_line, variable = "swe_
 #####################################################################
 #####################################################################
 
-#' plot_swe_anomaly
+#' plot_anomaly
 #' 
 #' Plots the anomaly of the dataframe. Best if input the monthly mean dataframe into this as it
 #' will calculate the mean of all the monthly means and then make an anomaly
@@ -80,6 +80,26 @@ plot_anomaly = function(df, title = ""){
   return(anomaly_plot = plot)
 }
 
+## if you just want to plot monthly anomalies
+plot_monthly_anomaly = function(df, month_no, title = ""){
+
+  df = df %>% 
+    filter(month == month_no)
+  
+plot = df %>% 
+  ggplot(aes(x = waterYear, y = anomaly)) +
+  geom_col(aes(fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "red", "positive" = "dark green")) +
+  labs(
+    x = "Water Year",
+    y = "Anomaly",
+    title = sprintf("%s", title)
+  ) +
+  theme_classic()
+
+return(plot)
+
+}
 #####################################################################
 #####################################################################
 
@@ -111,6 +131,42 @@ plot_months = function(df, month = "") {
 
 }
 
+#####################################################################
+#####################################################################
+
+#' graph_anwy_metrics
+#'
+#' For annual water year metrics
+#'
+#' @param region water year dataframe
+#' @param statistic mean, median, max etc
+#'
+#' @return
+#' @export
+#'
+#' @examples
+
+graph_anwy_metrics = function(region, statistic, title = ""){
+  
+  # dataframe of SWE metric desired
+  av = region %>% 
+    group_by(waterYear)  %>% 
+    summarize(depth_mm = statistic(depth_mm)) 
+  
+  graph = av %>% 
+    ggplot(aes(x = waterYear, y = depth_mm )) +
+    geom_col() +
+    labs(
+      x = "Water Year",
+      y = "Snow Depth (mm)",
+      title = sprintf("%s", title)
+    ) +
+    scale_y_continuous(expand = c(0,0)) +
+    theme_classic()
+  
+  return(graph)
+  
+}
 
 #####################################################################
 #####################################################################

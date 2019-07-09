@@ -25,7 +25,10 @@ source('Functions/graphing.R')
 
 ### Correlation between SWE and Snow Depth (November - April Water Year)
 
-### Carrizo
+- SWE and snow depth are highly correlated across regions (>0.9)
+- Generally, as snow depth and swe values get larger, they become less closely correlated
+
+
 
 ```{r, include = FALSE}
 # read in the daily data files
@@ -41,10 +44,14 @@ car_dpth_av <- calc_depth_metrics(car_dpth, "month", mean)
 
 ```
 
+### Carrizo
+
+- Generally, January, February, and March swe and depth values are less correlated than other months
+
 
 ```{r, include = FALSE}
 # average swe - depth metric (from swe/depth)
-av_ratio <- car_swe_dpth %>% 
+car_av_ratio <- car_swe_dpth %>% 
   filter(snow_ratio != "NaN") %>% 
   filter(snow_ratio != "Inf") %>% 
   group_by(month) %>% 
@@ -53,7 +60,7 @@ av_ratio <- car_swe_dpth %>%
   )
   
 
-car_av_snow_ratio <- mean(av_ratio$mean_ratio)
+car_av_snow_ratio <- mean(car_av_ratio$mean_ratio)
   
 
 ```
@@ -77,6 +84,9 @@ car_daily_cor_swe_dpth <- plot_cor(car_swe_dpth, car_swedpth_r2, region = "Carri
 
 
 ### Chuska 
+
+- Generally, January, February, March, amd some April swe and depth values are less correlated than other months
+
 ```{r, include=FALSE}
 # read in the files
 ch_swe <- read_csv("winter_wy/ch_swe_wy_03_19.csv")
@@ -120,6 +130,8 @@ ch_swe_v_depth_graph
 ```
 
 ### Black Mesa
+
+- Generally, January, February, and March swe and depth values are less correlated than other months
 
 ```{r, include=FALSE}
 # read in the files
@@ -169,8 +181,30 @@ bm_swe_v_depth_graph
 
 - **Black Mesa**: `r round(bm_av_snow_ratio, 3)`
 
+### SWE-depth ratio monthly average:
+
+- Generally, the ratio increases through the water year (starting at november). This corroborates the trend seen in the correlation graph where depth and swe becomes less correlated as the water year progresses
+
+```{r, echo = FALSE}
+
+all_swe_dpth <- merge(bm_av_ratio, ch_av_ratio, by = "month") %>% 
+  merge(car_av_ratio, by = "month") %>% 
+  rename(black_mesa = mean_ratio.x, chuska = mean_ratio.y, carrizo = mean_ratio) %>% 
+  mutate(black_mesa = round(black_mesa, 3))  %>% 
+  mutate(carrizo = round(carrizo, 3))  %>% 
+  mutate(chuska = round(chuska, 3)) 
+all_swe_dpth
+
+  
+
+```
+
+
 
 ### SWE and Snow depth (November - April Water Year)
+
+- Generally, snow depth is much greater than SWE, but follows the same general patter
+
 ```{r, fig.width=20,fig.height=5, echo = FALSE, warning=FALSE, message=FALSE}
 # carrizo 
 graph_with_wateryear(car_swe_dpth, title = "Carrizo") +
@@ -208,20 +242,21 @@ graph_with_wateryear(bm_swe_dpth, title = "Black Mesa") +
 
 ```
 
-Depth scaled (depth*0.2) by swe/depth metric
+### Depth scaled (depth*0.2) by swe/depth metric
 
-```{r, fig.width=20,fig.height=5, echo = FALSE}
+- shows how well correlated SWE and snow depth are
 
-graph_with_wateryear(bm_swe_dpth, title = "Black Mesa") +
+```{r, fig.width=20,fig.height=5, echo = FALSE, message = FALSE}
+
+graph_with_wateryear(bm_swe_dpth, title = "Black Mesa", type = geom_col) +
   geom_line(aes(y = depth_mm*0.2), color = "blue") +
-  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "Snow Depth (mm)")) +
+  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "Snow Depth (mm)"), expand = c(0,0)) +
   theme(axis.line.y.right = element_line(color = "blue"),
         axis.text.y.right = element_text(color = "blue"),
         axis.title.y.right = element_text(color = "blue")) 
   
 
 ```
-
 
 
 

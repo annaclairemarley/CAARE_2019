@@ -85,6 +85,10 @@ merge_snow = function(df1, df2) {
   return(new_df)
 }
 
+#####################################################################
+#####################################################################
+
+
 
 #####################################################################
 #####################################################################
@@ -227,6 +231,33 @@ join_months = function(...) {
     melt(id.vars="waterYear") %>% # then you just melt and rename
     rename(region = variable,
            swe_mm = value)
+  return(result)
+  
+}
+
+
+
+## same but for depth
+join_depth_months = function(...) {
+  kwargs = list(...) # key word arguents 
+  placeNames = names(kwargs) # grabs the name of what you input
+  
+  mergerdDF = NULL
+  for (i in 1:length(placeNames)) { # for each placename
+    df = kwargs[[placeNames[i]]] %>% # gets the df for that placename
+      select(waterYear, depth_mm) %>% #select water year and swe_mm
+      rename(!!placeNames[i] := depth_mm) #renames swe_mm to the placename for joining
+    if (i == 1){ # if it's the 1st df, don't need to merge
+      mergedDF = df
+    } else{
+      mergedDF = merge(mergedDF, df, by="waterYear") #all the subsequent ones you merge together
+    }
+  }
+  
+  result = mergedDF %>% 
+    melt(id.vars="waterYear") %>% # then you just melt and rename
+    rename(region = variable,
+           depth_mm = value)
   return(result)
   
 }

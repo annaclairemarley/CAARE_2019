@@ -50,9 +50,12 @@ bm_depth_wy <- month_ts(bm_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
 
 ```
 
-Chuska SWE vs snow depth R2: `r ch_swedepth_r2`
+### Daily Snow Depth Variability for Each Region (November - April Water Year)
 
-## Daily Snow Depth variability (November - April Water Year)
+- 2004-2007, 2012, and 2018 were especially dry years across all regions
+  - 2004 & 2005 experienced almost no snow
+- Carrizo has the smallest snow depths and Chuska has the higest
+
 ```{r, fig.width=20,fig.height=5, echo= FALSE}
 carr_dpth_daily <- graph_with_wateryear(car_depth_wy, "Carrizo", variable = "depth_mm", ylab = "Snow depth (mm)")
 carr_dpth_daily
@@ -68,6 +71,66 @@ bm_dpth_daily <- graph_with_wateryear(bm_depth_wy, "Black Mesa", variable = "dep
 bm_dpth_daily
 ```
 
+### Annual Mean Snow Depth variability (November - April Water Year)
+
+- Lowest average snow depth across all three regions = 2004-2007 WY and 2018
+- Chuska on average always has the deepest snow
+
+```{r, echo = FALSE, include = FALSE}
+car_an_av <- graph_anwy_metrics(car_depth_wy, mean, title = "Carrizo")
+ch_an_av <- graph_anwy_metrics(ch_depth_wy, mean, title = "Chuska")
+bm_an_av <- graph_anwy_metrics(bm_depth_wy, mean, title = "Black Mesa")
+
+#graphs
+
+car_an_av
+ch_an_av
+bm_an_av
+
+```
+
+```{r, echo = FALSE}
+# graph annual average stacked on top of each other
+
+# quick function to calculate annual averages
+calc_an_region = function(df) {
+
+  av = df %>% 
+    group_by(waterYear)  %>% 
+    summarize(depth_mm = mean(depth_mm))
+
+return(av)
+}
+
+# make the annual average dataframes
+car_an <- calc_an_region(car_depth_wy)
+ch_an <- calc_an_region(ch_depth_wy)
+bm_an <- calc_an_region(bm_depth_wy)
+
+# join together
+an_av_all <- join_depth_months(carrizo = car_an, chuska = ch_an, black_mesa = bm_an)
+
+# graph it
+
+an_av_depth_graph <- an_av_all %>% 
+  ggplot(aes(x = waterYear, y = depth_mm)) +
+  geom_col(aes(fill = region)) +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_fill_discrete(name = "Region", labels = c("Carrizo", "Chuska", "Black Mesa")) +
+  labs(
+    x = "Water Year",
+    y = "Snow depth (mm)",
+    region = "Region"
+  ) +
+  theme_classic()
+
+an_av_depth_graph
+
+```
+
+
+
+
 ## Monthly Mean Snow Depth variability (November - April Water Year)
 
 ```{r, include = FALSE}
@@ -76,41 +139,136 @@ ch_mn_av <- calc_depth_metrics(ch_depth_wy, "month", mean)
 bm_mn_av <- calc_depth_metrics(bm_depth_wy, "month", mean)
 ```
 
+Carrizo: 
+
+- Low years: 2004-2009,, 2012, 2015, 2018
+
 ```{r,fig.width=20,fig.height=5, echo = FALSE}
 # graph it
-
+# carrizo 
 car_mn_av_graph <- graph_with_wateryear(car_mn_av, "Carrizo", variable = "depth_mm", ylab = "Snow depth (mm)")
 car_mn_av_graph
 
+```
+
+Chuska:
+
+- low years: 2004-2007, 2014, 2018
+
+```{r,fig.width=20,fig.height=5, echo = FALSE}
+# graph it
+# chuska
 ch_mn_av_graph <- graph_with_wateryear(ch_mn_av, "Chuska", variable = "depth_mm", ylab = "Snow depth (mm)")
 ch_mn_av_graph
 
+```
+
+Black Mesa:
+
+- low years: 2004-2007, 2011-2012, 2014-2015, 2018
+
+
+```{r,fig.width=20,fig.height=5, echo = FALSE}
+# graph it
+# BLack Mesa
 bm_mn_av_graph <- graph_with_wateryear(bm_mn_av, "Black Mesa", variable = "depth_mm", ylab = "Snow depth (mm)")
 bm_mn_av_graph
 ```
 
+
 ## Anomalies
 
+Difference from the monthly mean for each region
+
+
+Carrizo:
+
+- Anomalously dry years: 2004-2008, 2011-2012, 2018
+  - most of 2009, 2014 and 2015 also mostly negatively anomalous
 ```{r, fig.width=20,fig.height=5,echo = FALSE}
 
+# Carrizo
 car_dpth_anom <- calc_mnth_depth_anom(car_mn_av)
 plot_anomaly(car_dpth_anom)
 
+```
+
+
+```{r, include = FALSE}
+# if you want to look closely at any one month use this code:
+
+# carrizo december anomaly:
+
+# plot_monthly_anomaly(car_dpth_anom, 12, title = "Carrizo December")
+
+
+```
+
+
+Chuska:
+
+- Anomalously dry years: 2004-2007, 2015, 2018
+
+```{r, fig.width=20,fig.height=5,echo = FALSE}
+# chuska
 ch_dpth_anom <- calc_mnth_depth_anom(ch_mn_av)
 plot_anomaly(ch_dpth_anom)
 
+```
+
+Black Mesa:
+
+- Anomalously dry years: 2004-2007, 2011, 2012, 2014, 2015, 2018
+
+
+```{r, fig.width=20,fig.height=5,echo = FALSE}
+# black mesa
 bm_dpth_anom<- calc_mnth_depth_anom(bm_mn_av)
 plot_anomaly(bm_dpth_anom)
 
 ```
 
+### Weekly Mean Correlations between sites
+
+```{r, include = FALSE}
+
+car_wk_av <- calc_depth_metrics(car_depth_wy, "1 week", mean)
+ch_wk_av <- calc_depth_metrics(ch_depth_wy, "1 week", mean)
+bm_wk_av <- calc_depth_metrics(bm_depth_wy, "1 week", mean)
+
+```
+
+```{r, include = FALSE}
+## Correlation tests to find r2 values
+
+# carrizo vs chuska
+
+car_v_ch_wk_av_cor <- cor.test(car_wk_av$depth_mm, ch_wk_av$depth_mm)$estimate # r value
+
+car_v_ch_wk_av_r2 <- (car_v_ch_wk_av_cor)^2 # r squared
+
+# carrizo vs black mesa
+car_v_bm_wk_av_cor <- cor.test(car_wk_av$depth_mm, bm_wk_av$depth_mm)$estimate
+
+car_v_bm_wk_av_r2 <- (car_v_bm_wk_av_cor)^2 # r squared
 
 
+# black mesa vs chuska
+bm_v_ch_wk_av_cor <- cor.test(bm_wk_av$depth_mm, ch_wk_av$depth_mm)$estimate
 
+bm_v_ch_wk_av_r2 <- (bm_v_ch_wk_av_cor)^2
 
+```
 
+Pearson's R Squared values:
 
+*Black Mesa and Carrizo most closely correlated even though Carrizo and the Chuskas are closer and have more similar elevations. Black Mesa and Chuska least closely correlated*
 
+- Carrizo vs Chuska: `r round(car_v_ch_wk_av_r2, 2)`
+
+- Carrizo vs Black Mesa: `r round(car_v_bm_wk_av_r2, 2)`
+
+- Black Mesa vs Chuska: `r round(bm_v_ch_wk_av_r2, 2)`
 
 
 
