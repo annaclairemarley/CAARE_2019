@@ -117,9 +117,9 @@ return(plot)
 plot_months = function(df, month = "") {
 
   plot = df %>% 
-  ggplot(aes(x = waterYear, y = swe_mm, fill = region)) +
-  geom_bar(position = "dodge", stat = "identity") +
-  scale_x_continuous(breaks=seq(2004,2019, by = 1)) +
+  ggplot(aes(x = waterYear, y = swe_mm)) +
+  geom_col(aes(fill = region)) +
+  scale_x_continuous(breaks=seq(2004,2019, by = 2)) +
   scale_y_continuous(expand = c(0,0)) +
   labs(x = "Water Year",
        y = "SWE (mm)",

@@ -64,8 +64,9 @@ return(av)
 car_an_swe <- calc_an_region_swe(car_wint_wy)
 ch_an_swe <- calc_an_region_swe(ch_wint_wy)
 bm_an_swe <- calc_an_region_swe(bm_wint_wy)
-mp_an_swe <- calc_an_region_swe(mp_swe_wy)
-dp_an_swe <- calc_an_region_swe(dp_swe_wy)
+mp_an_swe <- calc_an_region_swe(mp_wint_wy)
+dp_an_swe <- calc_an_region_swe(dp_wint_wy)
+nm_an_swe <- calc_an_region_swe(nm_wint_wy)
 
 
 ```
@@ -74,7 +75,7 @@ dp_an_swe <- calc_an_region_swe(dp_swe_wy)
 
 # graph annual average stacked on top of each other
 # join together
-an_av_all <- join_months(carrizo = car_an_swe, chuska = ch_an_swe, black_mesa = bm_an_swe)
+an_av_all <- join_months(carrizo = car_an_swe, chuska = ch_an_swe, black_mesa = bm_an_swe, mt_powell = mp_an_swe, defiance_plateau = dp_an_swe, navajo_mt = nm_an_swe)
 
 # graph it
 
@@ -82,7 +83,8 @@ an_av_swe_graph <- an_av_all %>%
   ggplot(aes(x = waterYear, y = swe_mm)) +
   geom_col(aes(fill = region)) +
   scale_y_continuous(expand = c(0,0)) +
-  scale_fill_discrete(name = "Region", labels = c("Carrizo", "Chuska", "Black Mesa")) +
+  scale_x_continuous(breaks = seq(2004, 2019, by = 2)) +
+  scale_fill_discrete(name = "Region", labels = c("Carrizo", "Chuska", "Black Mesa", "Mt. Powell", "Defiance Plateau", "Navajo Mt.")) +
   labs(
     x = "Water Year",
     y = "SWE (mm)"
@@ -91,10 +93,20 @@ an_av_swe_graph <- an_av_all %>%
 
 an_av_swe_graph
 
+# list of nice colors 
+# 
+
+#003f5c
+#444e86
+#955196
+#dd5182
+#ff6e54
+#ffa600
+
 ```
 
 - low swe 2004-2007 and 2018
-- chuska always has highest average SWE value
+- Carrizo always has highest average SWE value, while Navajo mountain usually has the least 
 
 ## Daily SWE variability (November - April Water Year)
 ```{r, fig.width=20,fig.height=5, echo= FALSE}
@@ -137,6 +149,9 @@ bm_annual <- calc_swe_metrics(bm_wint_wy, "year", mean)
 carr_monthly <- calc_swe_metrics(car_wint_wy, "month", mean)
 ch_monthly <- calc_swe_metrics(ch_wint_wy, "month", mean)
 bm_monthly <- calc_swe_metrics(bm_wint_wy, "month", mean)
+nm_monthly <- calc_swe_metrics(nm_wint_wy, "month", mean)
+mp_monthly <- calc_swe_metrics(mp_wint_wy, "month", mean)
+dp_monthly <- calc_swe_metrics(dp_wint_wy, "month", mean)
 ```
 
 ```{r,fig.width=20,fig.height=5, echo= FALSE}
@@ -187,6 +202,9 @@ bm_med_graph
 car_anom <- calc_month_anom(carr_monthly)
 ch_anom <- calc_month_anom(ch_monthly)
 bm_anom <- calc_month_anom(bm_monthly)
+nm_anom <- calc_month_anom(nm_monthly)
+mp_anom <- calc_month_anom(mp_monthly)
+dp_anom <- calc_month_anom(dp_monthly)
 
 ```
 
@@ -207,6 +225,14 @@ bm_anom_graph <- plot_anomaly(bm_anom, title = "Black Mesa")
 bm_anom_graph
 
 ```
+
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+nm_anom_graph <- plot_anomaly(nm_anom, title = "Navajo Mountain")
+nm_anom_graph
+
+```
+
 
 ## Correlations Between locations
 
@@ -285,15 +311,18 @@ Black Mesa vs Carrizo R squared: `r carr_bm_r2`
 car_nov <- month_ts(carr_monthly, 11)
 ch_nov <- month_ts(ch_monthly, 11)
 bm_nov <- month_ts(bm_monthly, 11)
+nm_nov <- month_ts(nm_monthly, 11)
+dp_nov <- month_ts(dp_monthly, 11) 
+mp_nov <- month_ts(mp_monthly, 11)
 
-nov_swe <- join_months(carrizo = car_nov, chuska = ch_nov, black_mesa = bm_nov)
+nov_swe <- join_months(carrizo = car_nov, chuska = ch_nov, black_mesa = bm_nov, defiance_plateau = dp_nov, mt_powell = mp_nov, navajo_mt = nm_nov)
 
 ```
 
 ```{r, echo = FALSE}
-# plot it
+# plot it BE CAREFUL WITH THESE, NOT ENTIRELY SURE WHAT THIS SHOWS
 
-plot_months(nov_swe, month = "November")
+# plot_months(nov_swe, month = "November")
 
 ```
 
@@ -322,14 +351,17 @@ nov_swe_plot <- nov_swe %>%
 car_dec <- month_ts(carr_monthly, 12)
 ch_dec <- month_ts(ch_monthly, 12)
 bm_dec <- month_ts(bm_monthly, 12)
+nm_dec <- month_ts(nm_monthly, 12)
+dp_dec <- month_ts(dp_monthly, 12) 
+mp_dec <- month_ts(mp_monthly, 12)
 
-dec_swe <- join_months(carrizo = car_dec, chuska = ch_dec, black_mesa = bm_dec)
+dec_swe <- join_months(carrizo = car_dec, chuska = ch_dec, black_mesa = bm_dec, defiance_plateau = dp_dec, mt_powell = mp_dec, navajo_mt = nm_dec)
 
 ```
 
 ```{r, echo = FALSE}
 
-plot_months(dec_swe, month = "December")
+# plot_months(dec_swe, month = "December")
 
 ```
 
@@ -355,20 +387,22 @@ dec_swe_plot <- dec_swe %>%
 
 # January
 
-
 ```{r, include = FALSE}
 
 car_jan <- month_ts(carr_monthly, 1)
 ch_jan <- month_ts(ch_monthly, 1)
 bm_jan <- month_ts(bm_monthly, 1)
+nm_jan <- month_ts(nm_monthly, 1)
+dp_jan <- month_ts(dp_monthly, 1) 
+mp_jan <- month_ts(mp_monthly, 1)
 
-jan_swe <- join_months(carrizo = car_jan, chuska = ch_jan, black_mesa = bm_jan)
+jan_swe <- join_months(carrizo = car_jan, chuska = ch_jan, black_mesa = bm_jan, defiance_plateau = dp_jan, mt_powell = mp_jan, navajo_mt = nm_jan)
 
 ```
 
 ```{r, echo = FALSE}
 
-plot_months(jan_swe, month = "January")
+# plot_months(jan_swe, month = "January")
 
 ```
 
@@ -400,14 +434,17 @@ jan_swe_plot <- jan_swe %>%
 car_feb <- month_ts(carr_monthly, 2)
 ch_feb <- month_ts(ch_monthly, 2)
 bm_feb <- month_ts(bm_monthly, 2)
+nm_feb <- month_ts(nm_monthly, 2)
+dp_feb <- month_ts(dp_monthly, 2) 
+mp_feb <- month_ts(mp_monthly, 2)
 
-feb_swe <- join_months(carrizo = car_feb, chuska = ch_feb, black_mesa = bm_feb)
+feb_swe <- join_months(carrizo = car_feb, chuska = ch_feb, black_mesa = bm_feb, defiance_plateau = dp_feb, mt_powell = mp_feb, navajo_mt = nm_feb)
 
 ```
 
 ```{r, echo = FALSE}
 
-plot_months(feb_swe, month = "February")
+# plot_months(feb_swe, month = "February")
 
 ```
 
@@ -439,14 +476,17 @@ feb_swe_plot <- feb_swe %>%
 car_mar <- month_ts(carr_monthly, 3)
 ch_mar <- month_ts(ch_monthly, 3)
 bm_mar <- month_ts(bm_monthly, 3)
+nm_mar <- month_ts(nm_monthly, 3)
+dp_mar <- month_ts(dp_monthly, 3) 
+mp_mar <- month_ts(mp_monthly, 3)
 
-mar_swe <- join_months(carrizo = car_mar, chuska = ch_mar, black_mesa = bm_mar)
+mar_swe <- join_months(carrizo = car_mar, chuska = ch_mar, black_mesa = bm_mar, defiance_plateau = dp_mar, mt_powell = mp_mar, navajo_mt = nm_mar)
 
 ```
 
 ```{r, echo = FALSE}
 
-plot_months(mar_swe, month = "March")
+# plot_months(mar_swe, month = "March")
 
 ```
 
@@ -478,14 +518,18 @@ mar_swe_plot <- mar_swe %>%
 car_apr <- month_ts(carr_monthly, 4)
 ch_apr <- month_ts(ch_monthly, 4)
 bm_apr <- month_ts(bm_monthly, 4)
+nm_apr <- month_ts(nm_monthly, 4)
+dp_apr <- month_ts(dp_monthly, 4) 
+mp_apr <- month_ts(mp_monthly, 4)
 
-apr_swe <- join_months(carrizo = car_apr, chuska = ch_apr, black_mesa = bm_apr)
+apr_swe <- join_months(carrizo = car_apr, chuska = ch_apr, black_mesa = bm_apr, defiance_plateau = dp_apr, mt_powell = mp_apr, navajo_mt = nm_apr)
+
 
 ```
 
 ```{r, echo = FALSE}
 
-plot_months(apr_swe, month = "April")
+# plot_months(apr_swe, month = "April")
 
 ```
 
@@ -509,11 +553,14 @@ apr_swe_plot <- apr_swe %>%
 
 ### November - April Averaged SWE values
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.width=20}
 
 grid.arrange(nov_swe_plot, dec_swe_plot, jan_swe_plot, feb_swe_plot, mar_swe_plot, apr_swe_plot, ncol = 3)
 
 ```
+
+- Chuska and Defiance plateau frequently have the higest av swe values, navajo mt usually has the least. 
+- most everything is melted by april
 
 ### SWE compared to Suzanne's SCA
 
