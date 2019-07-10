@@ -3,21 +3,21 @@
 # FUNCTIONS
 #####################################################################
 
-#' read_depth_chunks
+#' read_chunks
 #' 
-#' function to read in date and depth data from separate files & join to one dataframe
+#' function to read in date and data from separate files & join to one dataframe
 #'
 #' @param folder name of folder in your working directory, ie "Chuska" 
 #'
 #' @return dataframe
 #' @export
 #'
-#' @examples read_depth_chunks("Carrizo")
+#' @examples read_depth_chunks("Carrizo", fil_pattern = ".*_snodas_depth_.*", variable = "depth_mm")
 
-read_depth_chunks = function(folder) {
+read_chunks = function(folder, fill_pattern = ".*_snodas_depth_.*", variable = "depth_mm") {
   df = NULL
-  for (file in list.files(folder, pattern = ".*_snodas_depth_.*")) {
-    readFile = read_csv(paste(folder, file, sep="/"), col_names=c("date", "depth_mm"), skip = 1)
+  for (file in list.files(folder, pattern = fill_pattern)) {
+    readFile = read_csv(paste(folder, file, sep="/"), col_names=c("date", variable), skip = 1)
     if (is.null(df)) { # don't merge the first one
       df = readFile
     } else {

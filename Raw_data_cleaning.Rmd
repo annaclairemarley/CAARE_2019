@@ -1,0 +1,135 @@
+---
+title: "Raw data cleaning"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include = FALSE}
+# packages you need to clean the data
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(reshape2)
+source("Functions/util.R")
+```
+
+
+# Snodas SWE Raw data
+
+```{r, include = FALSE}
+# read in the data:
+carrizo <- read_csv("Carrizo/carrizo_swe_03_19.csv") 
+chuska <- read_csv("Chuska/chuska_swe_03_19.csv")
+black_mesa <- read_csv("Black Mesa/BM_swe_03_19.csv")
+```
+
+```{r, include = FALSE}
+# Extract winter data
+car_wint_cal <- extract_winter_months(carrizo)
+ch_wint_cal <- extract_winter_months(chuska)
+bm_wint_cal <- extract_winter_months(black_mesa)
+
+# Adds water year. Renames column date to Date
+car_wint_wy <- add_water_year(car_wint_cal)
+ch_wint_wy <- add_water_year(ch_wint_cal)
+bm_wint_wy <- add_water_year(bm_wint_cal)
+```
+
+```{r, include=FALSE}
+# read in data
+mt_powell_swe <- read_chunks("mt_powell", fill_pattern = ".*_swe_.*", variable = "swe_mm")
+
+defiance_plat_swe <- read_chunks("defiance_plateau", fill_pattern = ".*_swe_.*", variable = "swe_mm")
+
+navajo_mt_swe <- read_chunks("navajo_mtn", fill_pattern = ".*_snodas_swe_.*", variable = "swe_mm")
+
+```
+
+```{r, include = FALSE}
+# extract winter months and add water year
+
+mp_swe_wy <- month_ts(mt_powell_swe, c(11, 12, 1, 2, 3, 4)) %>%
+            add_water_year()
+
+dp_swe_wy <- month_ts(defiance_plat_swe, c(11, 12, 1, 2, 3, 4)) %>%
+            add_water_year()
+
+nm_swe_wy <- month_ts(navajo_mt_swe, c(11, 12, 1, 2, 3, 4)) %>%
+            add_water_year()
+
+```
+
+```{r}
+# now write the winter water year data as csv files
+
+write.csv(bm_wint_wy, "Black Mesa/bm_swe_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(ch_wint_wy, "Chuska/ch_swe_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(car_wint_wy, "Carrizo/car_swe_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(mp_swe_wy, "mt_powell/mp_swe_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(dp_swe_wy, "defiance_plateau/dp_swe_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(nm_swe_wy, "navajo_mtn/nm_swe_wint_wy_03_19.csv", row.names = FALSE)
+
+```
+
+# Snodas snow Depth raw data
+
+```{r, include = FALSE}
+# clean into usable files from climate engine
+# filter to just winter years
+
+# CARRIZO
+car_snodas_depth <- read_chunks("Carrizo")
+
+# CHUSKA
+ch_snodas_depth <- read_chunks("Chuska")
+
+# BLACK MESA
+bm_snodas_depth <- read_chunks("Black Mesa")
+```
+
+```{r, include = FALSE}
+# extract winter months & add water year
+car_depth_wy <- month_ts(car_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
+ch_depth_wy <- month_ts(ch_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
+bm_depth_wy <- month_ts(bm_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
+```
+
+```{r}
+# now write the winter water year data as csv files
+write.csv(bm_depth_wy, "Black Mesa/bm_dpth_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(ch_depth_wy, "Chuska/ch_dpth_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(car_depth_wy, "Carrizo/car_dpth_wint_wy_03_19.csv", row.names = FALSE)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

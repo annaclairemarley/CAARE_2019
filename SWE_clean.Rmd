@@ -22,25 +22,23 @@ source("Functions/util.R")
 source('Functions/graphing.R')
 ```
 
-```{r, include = FALSE}
-# read in the data:
-carrizo <- read_csv("Carrizo/carrizo_swe_03_19.csv") 
-chuska <- read_csv("Chuska/chuska_swe_03_19.csv")
-black_mesa <- read_csv("Black Mesa/BM_swe_03_19.csv")
+```{r}
+# read in csv files - they are already processed as winter months and have a water year column. refer to "Raw_data_cleaning" for code 
+
+car_wint_wy <- read_csv("Carrizo/car_swe_wint_wy_03_19.csv") #Carrizo
+
+ch_wint_wy <- read_csv("Chuska/ch_swe_wint_wy_03_19.csv") # Chuska
+
+bm_wint_wy <- read_csv("Black Mesa/bm_swe_wint_wy_03_19.csv") # Black Mesa
+
+mp_wint_wy <- read_csv("mt_powell/mp_swe_wint_wy_03_19.csv") # Mt Powell
+
+dp_wint_wy <- read_csv("defiance_plateau/dp_swe_wint_wy_03_19.csv") # Defiance Plateau
+
+nm_wint_wy <- read_csv("navajo_mtn/nm_swe_wint_wy_03_19.csv") # Navajo Mountain
+
 ```
 
-
-```{r, include = FALSE}
-# clean and make it just winter data
-car_wint_cal <- extract_winter_months(carrizo)
-ch_wint_cal <- extract_winter_months(chuska)
-bm_wint_cal <- extract_winter_months(black_mesa)
-
-# Adds water year. Renames column date to Date
-car_wint_wy <- add_water_year(car_wint_cal)
-ch_wint_wy <- add_water_year(ch_wint_cal)
-bm_wint_wy <- add_water_year(bm_wint_cal)
-```
 
 ## Analyses:
 - All three regions generally follow the same trends in SWE over time
@@ -49,8 +47,8 @@ bm_wint_wy <- add_water_year(bm_wint_cal)
 
 
 ### Annual avereage SWE
-```{r}
-# graph annual average stacked on top of each other
+```{r, include = FALSE}
+
 
 # quick function to calculate annual averages
 calc_an_region_swe = function(df) {
@@ -66,7 +64,15 @@ return(av)
 car_an_swe <- calc_an_region_swe(car_wint_wy)
 ch_an_swe <- calc_an_region_swe(ch_wint_wy)
 bm_an_swe <- calc_an_region_swe(bm_wint_wy)
+mp_an_swe <- calc_an_region_swe(mp_swe_wy)
+dp_an_swe <- calc_an_region_swe(dp_swe_wy)
 
+
+```
+
+```{r, echo = FALSE}
+
+# graph annual average stacked on top of each other
 # join together
 an_av_all <- join_months(carrizo = car_an_swe, chuska = ch_an_swe, black_mesa = bm_an_swe)
 
@@ -84,6 +90,7 @@ an_av_swe_graph <- an_av_all %>%
   theme_classic()
 
 an_av_swe_graph
+
 ```
 
 - low swe 2004-2007 and 2018

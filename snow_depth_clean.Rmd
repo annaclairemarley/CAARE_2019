@@ -24,31 +24,11 @@ source('Functions/graphing.R')
 ```
 
 ```{r, include = FALSE}
-# clean into usable files from climate engine
-# filter to just winter years
+# read in csv files - they are already processed as winter months and have a water year column. refer to "Raw_data_cleaning" for code 
 
-# CARRIZO
-car_snodas_depth <- read_depth_chunks("Carrizo")
-
-# CHUSKA
-ch_snodas_depth <- read_depth_chunks("Chuska")
-
-# BLACK MESA
-bm_snodas_depth <- read_depth_chunks("Black Mesa")
-```
-
-```{r, include = FALSE}
-# extract winter months & add water year
-car_depth_wy <- month_ts(car_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
-  add_water_year()
-
-ch_depth_wy <- month_ts(ch_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
-  add_water_year()
-
-bm_depth_wy <- month_ts(bm_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
-  add_water_year()
 
 ```
+
 
 ### Daily Snow Depth Variability for Each Region (November - April Water Year)
 
