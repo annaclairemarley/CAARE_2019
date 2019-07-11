@@ -173,6 +173,85 @@ bm_swe_v_depth_graph <- plot_cor(bm_swe_dpth, bm_swedepth_r2, region = "Black Me
 bm_swe_v_depth_graph
 ```
 
+### Navajo Mt
+
+- March, January, and some december most often less correlated
+```{r, include=FALSE}
+# read in the files
+nm_swe <- read_csv("winter_wy/nm_swe_wy_03_19.csv")
+nm_dpth <- read_csv("winter_wy/nm_dpth_wy_03_19.csv")
+
+# merge them together 
+nm_swe_dpth <- merge_snow(nm_swe, nm_dpth)
+
+```
+
+
+```{r, echo = FALSE}
+# linear regression
+nm_swe_v_depth_lm <- lm(nm_swe_dpth$swe_mm ~ nm_swe_dpth$depth_mm)
+nm_swedepth_r2 <- summary(nm_swe_v_depth_lm)$adj.r.squared 
+
+
+# plot it
+nm_swe_v_depth_graph <- plot_cor(nm_swe_dpth, nm_swedepth_r2, region = "Navajo Mt")
+nm_swe_v_depth_graph
+```
+
+### Mt Powell
+
+- Jn, Feb and March seem to be outliers
+
+```{r, include=FALSE}
+# read in the files
+mp_swe <- read_csv("winter_wy/mp_swe_wy_03_19.csv")
+mp_dpth <- read_csv("winter_wy/mp_dpth_wy_03_19.csv")
+
+# merge them together 
+mp_swe_dpth <- merge_snow(mp_swe, mp_dpth)
+
+```
+
+
+
+```{r, echo = FALSE}
+# linear regression
+mp_swe_v_depth_lm <- lm(mp_swe_dpth$swe_mm ~ mp_swe_dpth$depth_mm)
+mp_swedepth_r2 <- summary(mp_swe_v_depth_lm)$adj.r.squared 
+
+
+# plot it
+mp_swe_v_depth_graph <- plot_cor(mp_swe_dpth, mp_swedepth_r2, region = "Mt Powell")
+mp_swe_v_depth_graph
+```
+
+### Defiance Plateau 
+
+- March seems to be least correlated
+
+```{r, include=FALSE}
+# read in the files
+dp_swe <- read_csv("winter_wy/dp_swe_wy_03_19.csv")
+dp_dpth <- read_csv("winter_wy/dp_dpth_wy_03_19.csv")
+
+# merge them together 
+dp_swe_dpth <- merge_snow(dp_swe, dp_dpth)
+
+```
+
+
+
+```{r, echo = FALSE}
+# linear regression
+dp_swe_v_depth_lm <- lm(dp_swe_dpth$swe_mm ~ dp_swe_dpth$depth_mm)
+dp_swedepth_r2 <- summary(dp_swe_v_depth_lm)$adj.r.squared 
+
+
+# plot it
+dp_swe_v_depth_graph <- plot_cor(dp_swe_dpth, dp_swedepth_r2, region = "Defiance Plateau")
+dp_swe_v_depth_graph
+```
+
 ### SWE-depth ratio - annual averaged metric 
 
 - **Carrizo**: `r round(car_av_snow_ratio, 3)`

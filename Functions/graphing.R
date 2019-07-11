@@ -199,8 +199,24 @@ plot_cor = function(df, adjr2, region = "") {
 }
 
 
+#####################################################################
+#####################################################################
 
+# to make the averaged month over region boxplots
 
+month_bplot_dpth = function(df, title = "") {
+  plot = df %>% 
+    ggplot(aes(x = region, y = depth_mm))+
+    geom_boxplot(aes(fill = region), show.legend = FALSE) +
+    labs(
+      x = "Region",
+      y = "Depth (mm)",
+      title = sprintf("%s", title)
+    ) +
+    theme_classic() 
+  
+  return(plot)
+}
 
 
 

@@ -18,11 +18,12 @@ library(gridExtra)
 library(grid)
 library(dataRetrieval)
 library(reshape2)
+library(corrplot)
 source("Functions/util.R")
 source('Functions/graphing.R')
 ```
 
-```{r}
+```{r, include = FALSE}
 # read in csv files - they are already processed as winter months and have a water year column. refer to "Raw_data_cleaning" for code 
 
 car_wint_wy <- read_csv("Carrizo/car_swe_wint_wy_03_19.csv") #Carrizo
@@ -168,6 +169,41 @@ ch_mn_graph
 bm_mn_graph <- graph_with_wateryear(bm_monthly, "Black Mesa")
 bm_mn_graph
 ```
+
+### Correlation matrix of all monthly mean swe
+```{r, echo = FALSE}
+# correlation matrix of monthly variability
+
+# first make the dataframe
+av_month_swe_all <- carr_monthly %>% 
+  rename(carrizo = swe_mm) %>% 
+  merge(ch_monthly, by = "date") %>% 
+  rename(chuska = swe_mm) %>% 
+  merge(bm_monthly, by = "date") %>% 
+  rename(black_mesa = swe_mm) %>% 
+  select(-waterYear, -waterYear.x, -waterYear.y) %>% 
+  merge(nm_monthly, by = "date") %>% 
+  rename(navajo_mt = swe_mm) %>% 
+  merge(mp_monthly, by = "date") %>% 
+  rename(mt_powell = swe_mm) %>% 
+  merge(dp_monthly, by = "date") %>% 
+  rename(defiance_plateau = swe_mm) %>% 
+  select(-waterYear, -waterYear.x, -waterYear.y) %>% 
+  remove_rownames() %>% 
+  column_to_rownames(var = "date")
+
+
+```
+
+```{r, echo = FALSE}
+# correlation matrix
+cor <- cor(av_month_swe_all)
+corrplot(cor, method = "ellipse", type = "upper", 
+         addCoef.col = "black", tl.col = "black")
+
+```
+- Black Mesa to Mt. Powell, Black Mesa to Defiance Plateau and Defiance Plateau and Mt Powell all have the highest correlations between each other 
+- Least correlated are Black Mesa and Navajo Mt, Navajo Mt and Mt Powell, Navajo Mt and Defiance Plateau
 
 # Monthly Median
 
@@ -553,7 +589,7 @@ apr_swe_plot <- apr_swe %>%
 
 ### November - April Averaged SWE values
 
-```{r, echo = FALSE, fig.width=20}
+```{r, echo = FALSE, fig.width=20, fig.height=5}
 
 grid.arrange(nov_swe_plot, dec_swe_plot, jan_swe_plot, feb_swe_plot, mar_swe_plot, apr_swe_plot, ncol = 3)
 
@@ -564,7 +600,7 @@ grid.arrange(nov_swe_plot, dec_swe_plot, jan_swe_plot, feb_swe_plot, mar_swe_plo
 
 ### SWE compared to Suzanne's SCA
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, warning=FALSE, echo = FALSE}
 
 # read in SG
 ch_sca_month <- read_csv("Chuska/ch_sca_sg.csv") %>% 
