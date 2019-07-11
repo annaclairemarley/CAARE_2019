@@ -336,7 +336,7 @@ ggplot(pcs, aes(x = PC1, y = PC2, color = group)) +
 
 ```
 
-  
+   
 ```{r, echo = FALSE}
 # December
 
