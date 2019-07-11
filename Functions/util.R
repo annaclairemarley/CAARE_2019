@@ -267,7 +267,3 @@ join_depth_months = function(...) {
 
 
 
-# for making the averaged over all month graphs
-
-
-for (i in )
