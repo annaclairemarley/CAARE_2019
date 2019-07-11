@@ -84,7 +84,6 @@ write.csv(nm_swe_wy, "navajo_mtn/nm_swe_wint_wy_03_19.csv", row.names = FALSE)
 
 ```{r, include = FALSE}
 # clean into usable files from climate engine
-# filter to just winter years
 
 # CARRIZO
 car_snodas_depth <- read_chunks("Carrizo")
@@ -94,6 +93,17 @@ ch_snodas_depth <- read_chunks("Chuska")
 
 # BLACK MESA
 bm_snodas_depth <- read_chunks("Black Mesa")
+
+# Navajo Mt
+nm_snodas_depth <- read_chunks("navajo_mtn", fill_pattern = ".*_snodas_dpth_.*")
+
+# Mt Powell
+
+mp_snodas_depth <- read_chunks("mt_powell")
+
+# Defiance Plateau
+dp_snodas_depth <- read_chunks("defiance_plateau")
+
 ```
 
 ```{r, include = FALSE}
@@ -107,6 +117,15 @@ ch_depth_wy <- month_ts(ch_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
 bm_depth_wy <- month_ts(bm_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
   add_water_year()
 
+nm_depth_wy <- month_ts(nm_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
+mp_depth_wy <- month_ts(mp_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
+dp_depth_wy <- month_ts(dp_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
 ```
 
 ```{r}
@@ -116,6 +135,12 @@ write.csv(bm_depth_wy, "Black Mesa/bm_dpth_wint_wy_03_19.csv", row.names = FALSE
 write.csv(ch_depth_wy, "Chuska/ch_dpth_wint_wy_03_19.csv", row.names = FALSE)
 
 write.csv(car_depth_wy, "Carrizo/car_dpth_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(nm_depth_wy, "navajo_mtn/nm_dpth_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(mp_depth_wy, "mt_powell/mp_dpth_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(dp_depth_wy, "defiance_plateau/dp_dpth_wint_wy_03_19.csv", row.names = FALSE)
 
 ```
 

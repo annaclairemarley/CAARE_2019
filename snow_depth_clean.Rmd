@@ -26,7 +26,17 @@ source('Functions/graphing.R')
 ```{r, include = FALSE}
 # read in csv files - they are already processed as winter months and have a water year column. refer to "Raw_data_cleaning" for code 
 
+car_depth_wy <- read_csv("Carrizo/car_dpth_wint_wy_03_19.csv") # Carrizo
 
+ch_depth_wy <- read_csv("Chuska/ch_dpth_wint_wy_03_19.csv") # Chuska
+
+bm_depth_wy <- read_csv("Black Mesa/bm_dpth_wint_wy_03_19.csv") # Black Mesa
+
+nm_depth_wy <- read_csv("navajo_mtn/nm_dpth_wint_wy_03_19.csv") # Navajo Mt
+
+mp_depth_wy <- read_csv("mt_powell/mp_dpth_wint_wy_03_19.csv") # Mt Powell
+  
+dp_depth_wy <- read_csv("defiance_plateau/dp_dpth_wint_wy_03_19.csv") # Defiance Plateau
 ```
 
 
@@ -93,8 +103,8 @@ an_av_all <- join_depth_months(carrizo = car_an, chuska = ch_an, black_mesa = bm
 # graph it
 
 an_av_depth_graph <- an_av_all %>% 
-  ggplot(aes(x = waterYear, y = depth_mm)) +
-  geom_col(aes(fill = region)) +
+  ggplot(aes(x = waterYear, y = depth_mm, fill = region)) +
+  geom_bar(stat = "identity", position = "identity") +
   scale_y_continuous(expand = c(0,0)) +
   scale_fill_discrete(name = "Region", labels = c("Carrizo", "Chuska", "Black Mesa")) +
   labs(
@@ -121,7 +131,7 @@ bm_mn_av <- calc_depth_metrics(bm_depth_wy, "month", mean)
 
 Carrizo: 
 
-- Low years: 2004-2009,, 2012, 2015, 2018
+- Low years: 2004-2009, 2012, 2015, 2018
 
 ```{r,fig.width=20,fig.height=5, echo = FALSE}
 # graph it
