@@ -307,7 +307,6 @@ Pearson's R Squared values:
 
 ```{r, echo = FALSE}
 # november
-
 car_nov_dpth <- month_ts(car_mn_av, 11)
 ch_nov_dpth <- month_ts(ch_mn_av, 11)
 bm_nov_dpth <- month_ts(bm_mn_av, 11)
@@ -330,9 +329,9 @@ summary(pcs)
 
 group <-  nov_dpth_swe$region
 
-ggplot(pcs, aes(x = PC1, y = PC2, color = group)) +
-  geom_point()+
-  theme_classic()
+ggbiplot(pcs, groups = group)
+
+fviz_pca_ind(pcs, col.ind = group)
 
 ```
 
@@ -340,18 +339,19 @@ ggplot(pcs, aes(x = PC1, y = PC2, color = group)) +
 ```{r, echo = FALSE}
 # December
 
-car_dec <- month_ts(car_mn_av, 12)
-ch_dec <- month_ts(ch_mn_av, 12)
-bm_dec <- month_ts(bm_mn_av, 12)
-nm_dec <- month_ts(nm_mn_av, 12)
-dp_dec <- month_ts(dp_mn_av, 12) 
-mp_dec <- month_ts(mp_mn_av, 12)
+car_dec_dpth <- month_ts(car_mn_av, 12)
+ch_dec_dpth <- month_ts(ch_mn_av, 12)
+bm_dec_dpth <- month_ts(bm_mn_av, 12)
+nm_dec_dpth <- month_ts(nm_mn_av, 12)
+dp_dec_dpth <- month_ts(dp_mn_av, 12) 
+mp_dec_dpth <- month_ts(mp_mn_av, 12)
 
-dec_dpth <- join_depth_months(carrizo = car_dec, chuska = ch_dec, black_mesa = bm_dec, defiance_plateau = dp_dec, mt_powell = mp_dec, navajo_mt = nm_dec)
+dec_dpth <- join_depth_months(carrizo = car_dec_dpth, chuska = ch_dec_dpth, black_mesa = bm_dec_dpth, defiance_plateau = dp_dec_dpth, mt_powell = mp_dec_dpth, navajo_mt = nm_dec_dpth)
 
 dec_dpth_graph <- month_bplot_dpth(dec_dpth, title = "December")
 
 ```
+
 
 
 ```{r, echo = FALSE}
@@ -367,6 +367,7 @@ jan_dpth <- join_depth_months(carrizo = month_ts(car_mn_av, 1),
 jan_dpth_graph <- month_bplot_dpth(jan_dpth, title = "January")
 
 ```
+
 
 
 ```{r, echo = FALSE}

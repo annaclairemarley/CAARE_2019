@@ -191,7 +191,7 @@ calc_mnth_depth_anom = function(df){
 
 month_ts = function(df, month) {
   df = df %>% 
-    filter(month(date) %in% c(month))
+    dplyr::filter(month(date) %in% c(month))
   
   return(df) 
 }
