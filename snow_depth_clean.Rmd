@@ -20,6 +20,7 @@ library(grid)
 library(dataRetrieval)
 library(reshape2)
 library(corrplot)
+library(factoextra)
 source("Functions/util.R")
 source('Functions/graphing.R')
 ```
@@ -307,18 +308,34 @@ Pearson's R Squared values:
 ```{r, echo = FALSE}
 # november
 
-car_nov <- month_ts(car_mn_av, 11)
-ch_nov <- month_ts(ch_mn_av, 11)
-bm_nov <- month_ts(bm_mn_av, 11)
-nm_nov <- month_ts(nm_mn_av, 11)
-dp_nov <- month_ts(dp_mn_av, 11) 
-mp_nov <- month_ts(mp_mn_av, 11)
+car_nov_dpth <- month_ts(car_mn_av, 11)
+ch_nov_dpth <- month_ts(ch_mn_av, 11)
+bm_nov_dpth <- month_ts(bm_mn_av, 11)
+nm_nov_dpth <- month_ts(nm_mn_av, 11)
+dp_nov_dpth <- month_ts(dp_mn_av, 11) 
+mp_nov_dpth <- month_ts(mp_mn_av, 11)
 
-nov_dpth <- join_depth_months(carrizo = car_nov, chuska = ch_nov, black_mesa = bm_nov, defiance_plateau = dp_nov, mt_powell = mp_nov, navajo_mt = nm_nov)
+nov_dpth <- join_depth_months(carrizo = car_nov_dpth, chuska = ch_nov_dpth, black_mesa = bm_nov_dpth, defiance_plateau = dp_nov_dpth, mt_powell = mp_nov_dpth, navajo_mt = nm_nov_dpth)
 
 nov_dpth_graph <- month_bplot_dpth(nov_dpth, title = "November")
 
 ```
+
+
+```{r}
+# PCA?
+nov_dpth_swe <- merge(nov_dpth, nov_swe, by = c("waterYear", "region"))
+pcs <- prcomp(nov_dpth_swe[3:4], scale = TRUE)
+summary(pcs)
+
+group <-  nov_dpth_swe$region
+
+ggplot(pcs, aes(x = PC1, y = PC2, color = group)) +
+  geom_point()+
+  theme_classic()
+
+```
+
 
 ```{r, echo = FALSE}
 # December
