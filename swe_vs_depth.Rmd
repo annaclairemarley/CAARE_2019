@@ -21,6 +21,12 @@ source("Functions/util.R")
 source('Functions/graphing.R')
 ```
 
+```{r}
+
+
+
+```
+
 
 
 ### Correlation between SWE and Snow Depth (November - April Water Year)
@@ -82,6 +88,16 @@ car_daily_cor_swe_dpth <- plot_cor(car_swe_dpth, car_swedpth_r2, region = "Carri
 
 ```
 
+Each month has it's own line:
+```{r}
+
+plot_cor_month(car_swe_dpth, car_swedpth_r2, region = "Carrizo")
+
+# equations of the lines:
+
+car_mnth_equ <- cor_equation(car_swe_dpth)
+
+```
 
 ### Chuska 
 
@@ -129,6 +145,18 @@ ch_swe_v_depth_graph <- plot_cor(ch_swe_dpth, ch_swedepth_r2, region = "Chuska")
 ch_swe_v_depth_graph 
 ```
 
+
+Each month has it's own line:
+```{r}
+
+plot_cor_month(ch_swe_dpth, car_swedpth_r2, region = "Chuska")
+
+# equations of the lines:
+
+ch_mnth_equ <- cor_equation(ch_swe_dpth)
+
+```
+
 ### Black Mesa
 
 - Generally, January, February, and March swe and depth values are less correlated than other months
@@ -173,6 +201,17 @@ bm_swe_v_depth_graph <- plot_cor(bm_swe_dpth, bm_swedepth_r2, region = "Black Me
 bm_swe_v_depth_graph
 ```
 
+
+Each month has it's own line:
+```{r}
+
+plot_cor_month(bm_swe_dpth, car_swedpth_r2, region = "Black Mesa")
+
+# equations of the lines:
+
+bm_mnth_equ <- cor_equation(bm_swe_dpth)
+```
+
 ### Navajo Mt
 
 - March, January, and some december most often less correlated
@@ -196,6 +235,16 @@ nm_swedepth_r2 <- summary(nm_swe_v_depth_lm)$adj.r.squared
 # plot it
 nm_swe_v_depth_graph <- plot_cor(nm_swe_dpth, nm_swedepth_r2, region = "Navajo Mt")
 nm_swe_v_depth_graph
+```
+
+
+Each month has it's own line:
+```{r}
+
+plot_cor_month(nm_swe_dpth, car_swedpth_r2, region = "Navajo Mountain")
+# equations of the lines:
+
+nm_mnth_equ <- cor_equation(nm_swe_dpth)
 ```
 
 ### Mt Powell
@@ -225,6 +274,17 @@ mp_swe_v_depth_graph <- plot_cor(mp_swe_dpth, mp_swedepth_r2, region = "Mt Powel
 mp_swe_v_depth_graph
 ```
 
+
+Each month has it's own line:
+```{r}
+
+plot_cor_month(mp_swe_dpth, car_swedpth_r2, region = "Mt Powell")
+
+# equations of the lines:
+
+mp_mnth_equ <- cor_equation(mp_swe_dpth)
+```
+
 ### Defiance Plateau 
 
 - March seems to be least correlated
@@ -250,6 +310,18 @@ dp_swedepth_r2 <- summary(dp_swe_v_depth_lm)$adj.r.squared
 # plot it
 dp_swe_v_depth_graph <- plot_cor(dp_swe_dpth, dp_swedepth_r2, region = "Defiance Plateau")
 dp_swe_v_depth_graph
+```
+
+
+Each month has it's own line:
+```{r}
+
+plot_cor_month(dp_swe_dpth, car_swedpth_r2, region = "Defiance Plateau")
+
+
+# equations of the lines:
+
+dp_mnth_equ <- cor_equation(dp_swe_dpth)
 ```
 
 ### SWE-depth ratio - annual averaged metric 

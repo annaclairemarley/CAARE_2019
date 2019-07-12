@@ -262,8 +262,36 @@ join_depth_months = function(...) {
   
 }
 
+#####################################################################
+#####################################################################
 
 
+cor_equation = function(df) {
+  
+  # Months, Intercept, Slope
+  result_df = NULL
+  
+  for (month_no in unique(df$month)) {
+    
+    df_month = df %>% 
+      filter(month == month_no)
+    
+    lm_df = lm(df_month$swe_mm ~ df_month$depth_mm)
 
-
+    intercept = lm_df$coefficients[1]
+    slope = lm_df$coefficients[2]
+    
+    if (is.null(result_df)) {
+      result_df = data.frame(month=c(month_no),
+                      intercept=c(intercept),
+                      slope=c(slope))
+    } else {
+      result_df = rbind(result_df, c(month_no, intercept, slope))
+    }
+    
+  
+  }
+  
+  return(result_df)
+}
 
