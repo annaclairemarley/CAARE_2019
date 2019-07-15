@@ -1,9 +1,6 @@
 ---
 title: "SWE & Snow Depth"
-output: 
-  html_document:
-    toc_float: TRUE
-
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
