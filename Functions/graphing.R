@@ -247,10 +247,34 @@ month_bplot_dpth = function(df, title = "") {
 }
 
 
+#####################################################################
+#####################################################################
+#' plot_slope_swedpth
+#' 
+#' Plots the slope of the line of the linear relationship between swe and snowdepth over the months
+#'
+#' @param df needs to be the output dataframe of cor_equation()
+#' @param title name of the region
+#'
+#' @return correlation graph
+#' @export
+#'
+#' @examples plot_slope_swedpth(df, title = "Carrizo")
 
+plot_slope_swedpth = function(df, title = "") {
 
+  graph = df %>% 
+    ggplot(aes(x = month_n, y = slope)) +
+    geom_point() +
+    labs(
+      x = "Month",
+      y = "Slope",
+      title = sprintf("%s", title)
+    ) +
+    theme_classic()
 
-
+  return(graph)
+}
 
 
 

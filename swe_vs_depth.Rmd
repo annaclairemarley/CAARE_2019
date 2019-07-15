@@ -1,6 +1,9 @@
 ---
 title: "SWE & Snow Depth"
-output: html_document
+output: 
+  html_document:
+    toc_float: TRUE
+
 ---
 
 ```{r setup, include=FALSE}
@@ -21,13 +24,15 @@ source("Functions/util.R")
 source('Functions/graphing.R')
 ```
 
-```{r}
+# {.tabset}
 
+This rmarkdown shows some of the relationships between SWE and snow depth at each location. Analyses conducted include:
 
+- Correlation between SWE and Snow Depth with the colors grouped by months
+- linear relationship between Swe and snow depth for each month
+- graph of the slopes of the monthly linear relationship
 
-```
-
-
+# {.tabset}
 
 ### Correlation between SWE and Snow Depth (November - April Water Year)
 
@@ -50,7 +55,9 @@ car_dpth_av <- calc_depth_metrics(car_dpth, "month", mean)
 
 ```
 
-### Carrizo
+
+
+### Carrizo 
 
 - Generally, January, February, and March swe and depth values are less correlated than other months
 
@@ -89,15 +96,29 @@ car_daily_cor_swe_dpth <- plot_cor(car_swe_dpth, car_swedpth_r2, region = "Carri
 ```
 
 Each month has it's own line:
-```{r}
+
+```{r,echo= FALSE}
 
 plot_cor_month(car_swe_dpth, car_swedpth_r2, region = "Carrizo")
 
+
+
+```
+
+
+Slope of the line of the linear relationship of each month's swe and snow depth
+- almost linearly increasing slop through the water year until April, where the slope decreases back down to almost the February slope
+
+
+```{r, echo = FALSE}
 # equations of the lines:
 
 car_mnth_equ <- cor_equation(car_swe_dpth)
+plot_slope_swedpth(car_mnth_equ, title = "Carrizo")
 
 ```
+
+# {.tabset}
 
 ### Chuska 
 
@@ -132,8 +153,6 @@ ch_av_snow_ratio <- mean(ch_av_ratio$mean_ratio)
 ```
 
 
-
-
 ```{r, echo = FALSE}
 # linear regression
 ch_swe_v_depth_lm <- lm(ch_swe_dpth$swe_mm ~ ch_swe_dpth$depth_mm)
@@ -146,18 +165,32 @@ ch_swe_v_depth_graph
 ```
 
 
+
 Each month has it's own line:
-```{r}
+
+```{r, echo = FALSE}
 
 plot_cor_month(ch_swe_dpth, car_swedpth_r2, region = "Chuska")
 
-# equations of the lines:
 
-ch_mnth_equ <- cor_equation(ch_swe_dpth)
 
 ```
 
-### Black Mesa
+- almost perfect linear increase in the slope of the relationship between swe and depth through time
+
+```{r, echo = FALSE}
+# equations of the lines:
+
+ch_mnth_equ <- cor_equation(ch_swe_dpth)  
+
+plot_slope_swedpth(ch_mnth_equ, title = "Chuska")
+
+
+```
+
+# {.tabset}
+
+### Black Mesa 
 
 - Generally, January, February, and March swe and depth values are less correlated than other months
 
@@ -203,16 +236,25 @@ bm_swe_v_depth_graph
 
 
 Each month has it's own line:
-```{r}
+
+```{r, echo = FALSE}
 
 plot_cor_month(bm_swe_dpth, car_swedpth_r2, region = "Black Mesa")
 
+```
+
+- almost linearly increasing slop through the water year until April, where the slope decreases back down to almost the November slope
+
+```{r, echo = FALSE}
 # equations of the lines:
 
 bm_mnth_equ <- cor_equation(bm_swe_dpth)
+plot_slope_swedpth(bm_mnth_equ, title = "Black Mesa")
 ```
 
-### Navajo Mt
+# {.tabset}
+
+### Navajo Mt 
 
 - March, January, and some december most often less correlated
 ```{r, include=FALSE}
@@ -239,15 +281,28 @@ nm_swe_v_depth_graph
 
 
 Each month has it's own line:
-```{r}
+
+```{r, echo = FALSE}
 
 plot_cor_month(nm_swe_dpth, car_swedpth_r2, region = "Navajo Mountain")
+
+
+```
+
+- Seems to be the only location where there is not really a clear linear increase in the slope of the relationship between swe and snow depth
+
+```{r, echo = FALSE}
+
 # equations of the lines:
 
 nm_mnth_equ <- cor_equation(nm_swe_dpth)
+plot_slope_swedpth(nm_mnth_equ, title = "Navajo Mt")
+
 ```
 
-### Mt Powell
+# {.tabset}
+
+### Mt Powell 
 
 - Jn, Feb and March seem to be outliers
 
@@ -276,14 +331,27 @@ mp_swe_v_depth_graph
 
 
 Each month has it's own line:
-```{r}
+
+```{r, echo = FALSE}
 
 plot_cor_month(mp_swe_dpth, car_swedpth_r2, region = "Mt Powell")
+
+
+
+```
+
+- almost linearly increasing slop through the water year until April, where the slope decreases back down to almost the November slope
+
+```{r, echo = FALSE}
 
 # equations of the lines:
 
 mp_mnth_equ <- cor_equation(mp_swe_dpth)
+plot_slope_swedpth(mp_mnth_equ, title = "Mt Powell")
+
 ```
+
+# {.tabset}
 
 ### Defiance Plateau 
 
@@ -314,25 +382,40 @@ dp_swe_v_depth_graph
 
 
 Each month has it's own line:
-```{r}
+
+```{r, echo = FALSE}
 
 plot_cor_month(dp_swe_dpth, car_swedpth_r2, region = "Defiance Plateau")
 
 
+
+
+```
+
+- almost linearly increasing slop through the water year until April, where the slope decreases back down to almost the January slope
+
+```{r, echo = FALSE}
+
 # equations of the lines:
 
 dp_mnth_equ <- cor_equation(dp_swe_dpth)
+plot_slope_swedpth(dp_mnth_equ, title = "Defiance Plateau")
+
 ```
 
-### SWE-depth ratio - annual averaged metric 
+# {.tabset}
+
+## SWE-depth ratio 
+
+- annual averaged metric 
 
 - **Carrizo**: `r round(car_av_snow_ratio, 3)`
 
 - **Chuska**: `r round(ch_av_snow_ratio, 3)`
 
 - **Black Mesa**: `r round(bm_av_snow_ratio, 3)`
-
-### SWE-depth ratio monthly average:
+.
+### SWE-depth ratio monthly average: 
 
 - Generally, the ratio increases through the water year (starting at november). This corroborates the trend seen in the correlation graph where depth and swe becomes less correlated as the water year progresses
 
@@ -352,7 +435,7 @@ all_swe_dpth
 
 
 
-### SWE and Snow depth (November - April Water Year)
+### SWE and Snow depth (November - April Water Year) 
 
 - Generally, snow depth is much greater than SWE, but follows the same general patter
 

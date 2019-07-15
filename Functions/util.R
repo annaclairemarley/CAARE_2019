@@ -288,9 +288,14 @@ cor_equation = function(df) {
     } else {
       result_df = rbind(result_df, c(month_no, intercept, slope))
     }
+     
     
-  
   }
+
+  result_df = result_df %>% 
+    mutate(month_n = c("November", "December", "January", "February", "March", "April")) %>% 
+    mutate(month_n = factor(month_n, levels = c("November", "December", "January", "February", "March", "April")))
+    
   
   return(result_df)
 }
