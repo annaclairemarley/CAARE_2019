@@ -21,22 +21,26 @@ source("Functions/util.R")
 source('Functions/graphing.R')
 ```
 
-# {.tabset}
 
-This rmarkdown shows some of the relationships between SWE and snow depth at each location. Analyses conducted include:
+### This rmarkdown shows some of the relationships between SWE and snow depth at each location. Analyses conducted include:
 
 - Correlation between SWE and Snow Depth with the colors grouped by months
 - linear relationship between Swe and snow depth for each month
 - graph of the slopes of the monthly linear relationship
 
-# {.tabset}
 
-### Correlation between SWE and Snow Depth (November - April Water Year)
+## General Patterns
+
+#### Correlation between SWE and Snow Depth (November - April Water Year)
 
 - SWE and snow depth are highly correlated across regions (>0.9)
 - Generally, as snow depth and swe values get larger, they become less closely correlated
 
+#### Monthly linear relationships between SWE and Snow Depth 
 
+- SWE is a function of depth and density, so SWE/depth = bulk density
+- So through the water year, we see generally increasing density at all locations November to March. 
+  - However, in April, there is sometimes a drop in density depending on location - this may simply be because most of the snow has melted
 
 ```{r, include = FALSE}
 # read in the daily data files
@@ -115,9 +119,9 @@ plot_slope_swedpth(car_mnth_equ, title = "Carrizo")
 
 ```
 
-# {.tabset}
+# {.tabset .tabset-fade}
 
-### Chuska 
+## Chuska 
 
 - Generally, January, February, March, amd some April swe and depth values are less correlated than other months
 
@@ -185,9 +189,9 @@ plot_slope_swedpth(ch_mnth_equ, title = "Chuska")
 
 ```
 
-# {.tabset}
+# {.tabset .tabset-fade}
 
-### Black Mesa 
+## Black Mesa 
 
 - Generally, January, February, and March swe and depth values are less correlated than other months
 
@@ -203,7 +207,7 @@ bm_swe_dpth <- merge_snow(bm_swe, bm_dpth)
 
 
 ```{r, include = FALSE}
-# average swe - depth metric (from swe/depth)
+# average density (from swe/depth)
 bm_av_ratio <- bm_swe_dpth %>% 
   filter(snow_ratio != "NaN") %>% 
   filter(snow_ratio != "Inf") %>% 
@@ -249,9 +253,9 @@ bm_mnth_equ <- cor_equation(bm_swe_dpth)
 plot_slope_swedpth(bm_mnth_equ, title = "Black Mesa")
 ```
 
-# {.tabset}
+# {.tabset .tabset-fade}
 
-### Navajo Mt 
+## Navajo Mt 
 
 - March, January, and some december most often less correlated
 ```{r, include=FALSE}
@@ -261,6 +265,24 @@ nm_dpth <- read_csv("winter_wy/nm_dpth_wy_03_19.csv")
 
 # merge them together 
 nm_swe_dpth <- merge_snow(nm_swe, nm_dpth)
+
+```
+
+
+```{r, include = FALSE}
+# average density (from swe/depth)
+nm_av_ratio <- nm_swe_dpth %>% 
+  filter(snow_ratio != "NaN") %>% 
+  filter(snow_ratio != "Inf") %>% 
+  group_by(month) %>% 
+  summarize(
+    mean_ratio = mean(snow_ratio)
+  )
+  
+
+nm_av_snow_ratio <- mean(nm_av_ratio$mean_ratio)
+  
+
 
 ```
 
@@ -297,9 +319,9 @@ plot_slope_swedpth(nm_mnth_equ, title = "Navajo Mt")
 
 ```
 
-# {.tabset}
+# {.tabset .tabset-fade}
 
-### Mt Powell 
+## Mt Powell 
 
 - Jn, Feb and March seem to be outliers
 
@@ -313,6 +335,23 @@ mp_swe_dpth <- merge_snow(mp_swe, mp_dpth)
 
 ```
 
+
+```{r, include = FALSE}
+# average density (from swe/depth)
+mp_av_ratio <- mp_swe_dpth %>% 
+  filter(snow_ratio != "NaN") %>% 
+  filter(snow_ratio != "Inf") %>% 
+  group_by(month) %>% 
+  summarize(
+    mean_ratio = mean(snow_ratio)
+  )
+  
+
+mp_av_snow_ratio <- mean(mp_av_ratio$mean_ratio)
+  
+
+
+```
 
 
 ```{r, echo = FALSE}
@@ -348,9 +387,9 @@ plot_slope_swedpth(mp_mnth_equ, title = "Mt Powell")
 
 ```
 
-# {.tabset}
+# {.tabset .tabset-fade}
 
-### Defiance Plateau 
+## Defiance Plateau 
 
 - March seems to be least correlated
 
@@ -364,6 +403,23 @@ dp_swe_dpth <- merge_snow(dp_swe, dp_dpth)
 
 ```
 
+
+```{r, include = FALSE}
+# average density (from swe/depth)
+dp_av_ratio <- dp_swe_dpth %>% 
+  filter(snow_ratio != "NaN") %>% 
+  filter(snow_ratio != "Inf") %>% 
+  group_by(month) %>% 
+  summarize(
+    mean_ratio = mean(snow_ratio)
+  )
+  
+
+dp_av_snow_ratio <- mean(dp_av_ratio$mean_ratio)
+  
+
+
+```
 
 
 ```{r, echo = FALSE}
@@ -400,7 +456,7 @@ plot_slope_swedpth(dp_mnth_equ, title = "Defiance Plateau")
 
 ```
 
-# {.tabset}
+# {.tabset .tabset-fade}
 
 ## SWE-depth ratio 
 
@@ -412,21 +468,43 @@ plot_slope_swedpth(dp_mnth_equ, title = "Defiance Plateau")
 
 - **Black Mesa**: `r round(bm_av_snow_ratio, 3)`
 .
-### SWE-depth ratio monthly average: 
+### SWE-depth ratio (= density) monthly average: 
 
-- Generally, the ratio increases through the water year (starting at november). This corroborates the trend seen in the correlation graph where depth and swe becomes less correlated as the water year progresses
+- Generally, density increases through the water year (starting at november). This corroborates the trend seen in the correlation graph where depth and swe becomes less correlated as the water year progresses
 
 ```{r, echo = FALSE}
 
-all_swe_dpth <- merge(bm_av_ratio, ch_av_ratio, by = "month") %>% 
+# create a dataframe of the density of each lcoation
+all_density <- merge(bm_av_ratio, ch_av_ratio, by = "month") %>% 
   merge(car_av_ratio, by = "month") %>% 
   rename(black_mesa = mean_ratio.x, chuska = mean_ratio.y, carrizo = mean_ratio) %>% 
   mutate(black_mesa = round(black_mesa, 3))  %>% 
   mutate(carrizo = round(carrizo, 3))  %>% 
-  mutate(chuska = round(chuska, 3)) 
-all_swe_dpth
+  mutate(chuska = round(chuska, 3)) %>% 
+  merge(mp_av_ratio, by = "month") %>% 
+  rename(mt_powell = mean_ratio) %>% 
+  merge(nm_av_ratio, by = "month") %>% 
+  rename(navajo_mt = mean_ratio) %>% 
+  merge(dp_av_ratio, by = "month") %>% 
+  rename(defiance_plateau = mean_ratio)
 
-  
+all_density_tidy <- all_density %>% 
+  mutate(month_n = c("January", "February", "March", "April", "November", "December")) %>% 
+  mutate(month_n = factor(month_n, levels = c("November", "December", "January", "February", "March", "April"))) %>% 
+  mutate(month = factor(month, levels = c(11, 12, 1, 2, 3, 4))) %>% 
+  melt(id.vars= c("month", "month_n")) %>% 
+  rename(region = variable) %>% 
+  rename(density = value)
+
+
+# graph it
+
+all_density_graph <- all_density_tidy %>% 
+  ggplot(aes(x = month, y = density, color = region)) +
+  geom_line() +
+  theme_classic() 
+
+
 
 ```
 
