@@ -22,7 +22,7 @@ graph_with_wateryear = function(df, title = "", type=geom_line, variable = "swe_
   
   swe_daily_graph = df %>% 
     ggplot(aes_string("date", variable)) +
-    type() +
+    type(color = "dark blue") +
     scale_x_date(date_breaks = "3 month", date_labels="%b", name="Month",
                  sec.axis = sec_axis(~. , name="Water Year",  breaks= breakDates, labels=seq(startWaterYear,endWaterYear,by=1))
     ) +
@@ -234,18 +234,28 @@ plot_cor = function(df, adjr2, region = "") {
 
 month_bplot_dpth = function(df, title = "") {
   plot = df %>% 
-    ggplot(aes(x = region, y = depth_mm))+
+    ggplot(aes(x = fct_reorder(region, depth_mm, .desc = TRUE), y = depth_mm))+
     geom_boxplot(aes(fill = region), show.legend = FALSE) +
     labs(
       x = "Region",
       y = "Depth (mm)",
       title = sprintf("%s", title)
-    ) +
+    ) + 
+    scale_y_continuous(limits = c(0, 950)) +
+    scale_fill_manual(values=c("#003f5c", "#444e86", "#955196", "#dd5182", "#ff6e54", "#ffa600" )) +
+   # scale_x_discrete(labels = c("Chuska" = "chuska", "Mt. Powell"= "mt_powell", "Black Mesa" = "black_mesa", "Defiance Plateau" = "defiance_plateau", "Carrizo" = "carrizo", "Navajo Mt" = "navajo_mt")) +
     theme_classic() 
   
   return(plot)
 }
 
+
+#003f5c
+#444e86
+#955196
+#dd5182
+#ff6e54
+#ffa600
 
 #####################################################################
 #####################################################################

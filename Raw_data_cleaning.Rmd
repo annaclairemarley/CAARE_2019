@@ -210,6 +210,8 @@ all_swe_total <- all_swe %>%
   select(date, car_total, ch_total, bm_total, dp_total, nm_total, mp_total) %>% 
   mutate(mt_range_sum_total = rowSums(.[, names(.) != "date"])) # add across rows to get the sum of total swe in mts
  
+# write this as a csv
+  write.csv(all_swe_total, "winter_wy/all_swe_total.csv", row.names = FALSE)
 
 # merge this data with the whole NN nation daily swe data and create a contribution column
 NN_mt_range <- NN_swe %>% 

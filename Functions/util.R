@@ -262,6 +262,31 @@ join_depth_months = function(...) {
   
 }
 
+# same but for swe_km3
+join_months_km = function(...) {
+  kwargs = list(...) # key word arguents 
+  placeNames = names(kwargs) # grabs the name of what you input
+  
+  mergerdDF = NULL
+  for (i in 1:length(placeNames)) { # for each placename
+    df = kwargs[[placeNames[i]]] %>% # gets the df for that placename
+      select(waterYear, swe_total_km3) %>% #select water year and swe_mm
+      rename(!!placeNames[i] := swe_total_km3) #renames swe_mm to the placename for joining
+    if (i == 1){ # if it's the 1st df, don't need to merge
+      mergedDF = df
+    } else{
+      mergedDF = merge(mergedDF, df, by="waterYear") #all the subsequent ones you merge together
+    }
+  }
+  
+  result = mergedDF %>% 
+    melt(id.vars="waterYear") %>% # then you just melt and rename
+    rename(region = variable,
+           swe_total_km3 = value)
+  return(result)
+  
+}
+
 #####################################################################
 #####################################################################
 

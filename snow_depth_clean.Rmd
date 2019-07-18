@@ -21,6 +21,7 @@ library(dataRetrieval)
 library(reshape2)
 library(corrplot)
 library(factoextra)
+library(forcats)
 source("Functions/util.R")
 source('Functions/graphing.R')
 ```
@@ -125,12 +126,21 @@ an_av_depth_graph <- an_av_all %>%
 ## Monthly Mean Snow Depth variability (November - April Water Year)
 
 ```{r, include = FALSE}
+# monthly mean
 car_mn_av <- calc_depth_metrics(car_depth_wy, "month", mean)
 ch_mn_av <- calc_depth_metrics(ch_depth_wy, "month", mean)
 bm_mn_av <- calc_depth_metrics(bm_depth_wy, "month", mean)
 nm_mn_av <- calc_depth_metrics(nm_depth_wy, "month", mean)
 mp_mn_av <- calc_depth_metrics(mp_depth_wy, "month", mean)
 dp_mn_av <- calc_depth_metrics(dp_depth_wy, "month", mean)
+
+#monthly max
+car_mn_max <- calc_depth_metrics(car_depth_wy, "month", max)
+ch_mn_max <- calc_depth_metrics(ch_depth_wy, "month", max)
+bm_mn_max <- calc_depth_metrics(bm_depth_wy, "month", max)
+nm_mn_max <- calc_depth_metrics(nm_depth_wy, "month", max)
+mp_mn_max <- calc_depth_metrics(mp_depth_wy, "month", max)
+dp_mn_max <- calc_depth_metrics(dp_depth_wy, "month", max)
 ```
 
 Carrizo: 
@@ -199,7 +209,7 @@ av_month_depth_all <- car_mn_av %>%
 # correlation matrix
 cor <- cor(av_month_depth_all)
 corrplot(cor, method = "ellipse", type = "upper", 
-         addCoef.col = "black", tl.col = "black")
+         addCoef.col = "black", tl.col = "black",  tl.srt=45)
 
 ```
 
@@ -321,7 +331,7 @@ nov_dpth_graph <- month_bplot_dpth(nov_dpth, title = "November")
 ```
 
 
-```{r}
+```{r, error = TRUE}
 # PCA?
 nov_dpth_swe <- merge(nov_dpth, nov_swe, by = c("waterYear", "region"))
 pcs <- prcomp(nov_dpth_swe[3:4], scale = TRUE)
@@ -422,6 +432,32 @@ grid.arrange(nov_dpth_graph, dec_dpth_graph, jan_dpth_graph, feb_dpth_graph, mar
 
 ```
 
-- peak snow depth is usually December - January
+- peak snow depth is usually January and sometimes February
 - decreases drastically in february and then is mostly gone by april
 - Navajo my usually has the shallowest snow depth
+
+```{r, fig.width=15}
+
+grid.arrange(dec_dpth_graph, jan_dpth_graph, feb_dpth_graph, mar_dpth_graph, ncol = 2)
+
+```
+
+
+
+```{r, echo = FALSE}
+# Since max snow depth usually occurs in January, let's see how max snow depth is changing over time 
+
+max_Depth <- join_depth_months(carrizo = month_ts(car_mn_max, 1), 
+                              chuska = month_ts(ch_mn_max, 1),
+                              black_mesa = month_ts(bm_mn_max, 1), 
+                              defiance_plateau = month_ts(dp_mn_max, 1) , 
+                              mt_powell = month_ts(mp_mn_max, 1), 
+                              navajo_mt = month_ts(nm_mn_max, 1))
+
+all_max_depth_graph <- max_Depth %>% 
+  ggplot(aes(x = waterYear, y = depth_mm, group = region, color = region)) +
+  geom_line() +
+  theme_classic() 
+
+```
+
