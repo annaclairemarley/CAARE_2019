@@ -251,6 +251,31 @@ bm_daily
 carr_weekly <- calc_swe_metrics(car_wint_wy, "1 week", mean)
 ch_weekly <- calc_swe_metrics(ch_wint_wy, "1 week", mean)
 bm_weekly <- calc_swe_metrics(bm_wint_wy, "1 week", mean)
+nm_weekly <- calc_swe_metrics(bm_wint_wy, "1 week", mean)
+
+```
+
+```{r, include = FALSE}
+# weekly mean variance at 5 year increments
+
+# carrizo
+# so the first number means that from 2004-2007, theres that much variance and the second means from 2005-2008 theres that much variance
+  car_variances = c()
+
+  for (startYear in seq(2004, 2019 - 4, by=1)) {
+    endYear = startYear + 3
+    if (endYear > 2019) {
+      endYear = 2019
+    }
+    car_var = carr_weekly %>% 
+      filter(waterYear <= endYear & waterYear >= startYear)
+    print(mean(car_var$swe_mm))
+    car_variances = c(car_variances, mean(car_var$swe_mm))
+    
+  }
+  
+  car_variances
+
 
 ```
 

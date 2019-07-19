@@ -241,7 +241,50 @@ NN_all_swe_month_av <- calc_swe_metrics(NN_swe, "month", mean) %>%
 - divide that number by the total amount of swe for nn 
 
 
+## Palmer Drought Severity Index
 
+
+```{r}
+# Agencies
+alamo_pdsi <- read_csv("data_download/data/ALAMO_pdsi_2003-09-01_2019-07-17.csv") %>% 
+             clean_names() %>% 
+            rename(pdsi = palmer_drounght_severity_index)
+
+chinle_pdsi <- read_csv("data_download/data/CHINLE_pdsi_2003-09-01_2019-07-17.csv") %>% 
+    clean_names() %>% 
+    rename(pdsi = palmer_drounght_severity_index) %>% 
+    add_water_year() 
+
+east_navajo_pdsi <- read_csv("data_download/data/EASTERN NAVAJO_pdsi_2003-09-01_2019-07-17.csv") %>% 
+             clean_names() %>% 
+            rename(pdsi = palmer_drounght_severity_index) %>% 
+             add_water_year() 
+  
+fort_defiance_pdsi <- read_csv("data_download/data/FORT DEFIANCE_pdsi_2003-09-01_2019-07-17.csv") %>% 
+             clean_names() %>% 
+            rename(pdsi = palmer_drounght_severity_index)%>% 
+             add_water_year() 
+
+shiprock_pdsi <- read_csv("data_download/data/SHIPROCK_pdsi_2003-09-01_2019-07-17.csv") %>% 
+             clean_names() %>% 
+            rename(pdsi = palmer_drounght_severity_index)%>% 
+             add_water_year() 
+
+west_navajo_pdsi <- read_csv("data_download/data/WESTERN NAVAJO_pdsi_2003-09-01_2019-07-17.csv") %>% 
+             clean_names() %>% 
+            rename(pdsi = palmer_drounght_severity_index)%>% 
+             add_water_year() 
+
+# write them as CSV as save in agency folder
+
+write.csv(alamo_pdsi, "Agencies/alamo_pdsi.csv", row.names = FALSE)
+write.csv(chinle_pdsi, "Agencies/chinle_pdsi.csv", row.names = FALSE)
+write.csv(east_navajo_pdsi, "Agencies/east_navajo_pdsi.csv", row.names = FALSE)
+write.csv(fort_defiance_pdsi, "Agencies/fort_defiance_pdsi.csv", row.names = FALSE)
+write.csv(shiprock_pdsi, "Agencies/shiprock_pdsi.csv", row.names = FALSE)
+write.csv(west_navajo_pdsi, "Agencies/west_navajo_pdsi.csv", row.names = FALSE)
+
+```
 
 
 

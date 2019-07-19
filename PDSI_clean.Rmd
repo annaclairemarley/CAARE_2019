@@ -1,0 +1,252 @@
+---
+title: "Palmer Drought Severity Index"
+author: "AnnaClaire Marley"
+date: "7/18/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+# load the packages
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(gridExtra)
+library(grid)
+library(dataRetrieval)
+library(reshape2)
+library(corrplot)
+source("Functions/util.R")
+source('Functions/graphing.R')
+```
+
+```{r, include = FALSE}
+
+# read in the agency data & add water year
+chinle_pdsi <- read_csv("Agencies/chinle_pdsi.csv") 
+east_navajo_pdsi <- read_csv("Agencies/east_navajo_pdsi.csv")
+west_navajo_pdsi <- read_csv("Agencies/west_navajo_pdsi.csv")
+shiprock_pdsi <- read_csv("Agencies/shiprock_pdsi.csv")
+fort_defiance_pdsi <- read_csv("Agencies/fort_defiance_pdsi.csv")
+
+# winter months
+chinle_pdsi_wint <- chinle_pdsi %>% 
+  filter(month(date) %in% c(11, 12, 1, 2, 3, 4))
+
+east_navajo_pdsi_wint <- east_navajo_pdsi %>% 
+  filter(month(date) %in% c(11, 12, 1, 2, 3, 4))
+
+west_navajo_pdsi_wint <- west_navajo_pdsi %>% 
+  filter(month(date) %in% c(11, 12, 1, 2, 3, 4))
+
+shiprock_pdsi_wint <- shiprock_pdsi %>% 
+  filter(month(date) %in% c(11, 12, 1, 2, 3, 4))
+
+fort_defiance_pdsi_wint <- fort_defiance_pdsi %>% 
+  filter(month(date) %in% c(11, 12, 1, 2, 3, 4))
+
+```
+
+```{r, include = FALSE}
+# take the average yearly pdsi value 
+chinle_an_av <- calc_pdsi_metrics(chinle_pdsi, "year", mean)
+east_navajo_an_av <- calc_pdsi_metrics(east_navajo_pdsi, "year", mean)
+west_navajo_an_av <- calc_pdsi_metrics(west_navajo_pdsi, "year", mean)
+shiprock_an_av <- calc_pdsi_metrics(shiprock_pdsi, "year", mean)
+fort_defiance_an_av <- calc_pdsi_metrics(fort_defiance_pdsi, "year", mean)
+
+# take the monthly mean of the yearly data
+
+chinle_mnth_av <- calc_pdsi_metrics(chinle_pdsi, "month", mean)
+east_navajo_mnth_av <- calc_pdsi_metrics(east_navajo_pdsi, "month", mean)
+west_navajo_mnth_av <- calc_pdsi_metrics(west_navajo_pdsi, "month", mean)
+shiprock_mnth_av <- calc_pdsi_metrics(shiprock_pdsi, "month", mean)
+fort_defiance_mnth_av <- calc_pdsi_metrics(fort_defiance_pdsi, "month", mean)
+
+# take the monthly mean of the winter data
+chinle_mnth_av_wint <- calc_pdsi_metrics(chinle_pdsi_wint, "month", mean)
+east_navajo_mnth_av_wint <- calc_pdsi_metrics(east_navajo_pdsi_wint, "month", mean)
+west_navajo_mnth_av_wint <- calc_pdsi_metrics(west_navajo_pdsi_wint, "month", mean)
+shiprock_mnth_av_wint <- calc_pdsi_metrics(shiprock_pdsi_wint, "month", mean)
+fort_defiance_mnth_av_wint <- calc_pdsi_metrics(fort_defiance_pdsi_wint, "month", mean)
+
+# visualize example 
+ggplot(chinle_mnth_av_wint, aes(x = date, y = pdsi)) +
+  geom_col() +
+  theme_classic()
+
+```
+
+
+#### Correlation of PDSI monthly averages for the Agencies
+```{r, echo = FALSE}
+## look to see how correlated the PDSI is between regions
+
+pdsi_agencies <- chinle_mnth_av %>% 
+  rename(chinle = pdsi) %>% 
+  left_join(east_navajo_mnth_av, by = "date") %>% 
+  rename(east_navajo = pdsi) %>% 
+  left_join(west_navajo_mnth_av, by = "date") %>% 
+  rename(west_navajo = pdsi) %>% 
+  left_join(shiprock_mnth_av, by = "date") %>% 
+  rename(shiprock = pdsi) %>% 
+  left_join(fort_defiance_mnth_av, by = "date") %>% 
+  rename(fort_defiance = pdsi) %>% 
+  select(date, chinle, east_navajo, west_navajo, shiprock, fort_defiance) 
+  
+pdsi_cor_df<- pdsi_agencies %>% 
+  remove_rownames() %>% 
+  column_to_rownames(var = "date")
+
+# correlation matrix
+cor_pdsi <- cor(pdsi_cor_df)
+corrplot(cor_pdsi, method = "ellipse", type = "upper", 
+         addCoef.col = "black", tl.col = "black",  tl.srt=45)
+
+```
+
+
+
+```{r, echo=FALSE}
+#### Now look to see if there are correlations in PDSI and swe levels ####
+
+# first read in Chuska swe data and calculate metrics
+
+chuska_swe <- read_csv("winter_wy/ch_swe_wy_03_19.csv")
+chuska_swe_mnth_av <- calc_swe_metrics(chuska_swe, "month", mean)
+chuska_swe_an_av <- calc_swe_metrics(chuska_swe, "year", mean)
+chuska_mnth_anom <- calc_month_anom(chuska_swe_mnth_av) %>% 
+  arrange(date)
+
+# plot swe vs pdsi
+
+plot(shiprock_mnth_av_wint$pdsi, chuska_mnth_anom$anomaly)
+cor.test(shiprock_an_av$pdsi, chuska_swe_an_av$swe_mm)
+```
+
+```{r}
+## see how chuska correlates with the pdsi of the agencies
+
+agencies_v_chuska <- pdsi_agencies %>% 
+  left_join(chuska_swe_mnth_av, by = "date") %>% 
+  select(-waterYear) %>% 
+  filter(swe_mm != "NA") %>% 
+  remove_rownames() %>% 
+  column_to_rownames(var = "date")
+
+cor_pdsi_chuska <- cor(agencies_v_chuska)
+corrplot(cor_pdsi_chuska, method = "ellipse", type = "upper", 
+         addCoef.col = "black", tl.col = "black",  tl.srt=45)
+```
+
+
+```{r}
+
+
+
+## make dataframes with swe and pdsi for shiprock
+
+chuska_ship <- shiprock_mnth_av %>% 
+  left_join(chuska_mnth_anom, by = "date") %>% 
+  select(date, pdsi, anomaly, sign, waterYear.x) 
+
+## make graph of the two
+chuska_ship_graph <- chuska_ship %>% 
+  ggplot(aes(x = date)) +
+  geom_col(aes(y = anomaly / 10, fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  labs(
+    y = "SWE Anomaly (scaled down by 10)"
+  ) +
+  geom_col(aes(y = pdsi), color = "#1219cc", alpha = 0.5) +
+  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "PDSI"), expand = c(0,0)) +
+  theme_classic()
+
+chuska_ship_graph
+
+
+
+```
+
+```{r}
+# chuska vs chinle
+
+chuska_chin <- chinle_mnth_av %>% 
+  left_join(chuska_mnth_anom, by = "date") %>% 
+  select(date, pdsi, anomaly, sign, waterYear.x) 
+
+## make graph of the two
+chuska_chin_graph <- chuska_chin %>% 
+  ggplot(aes(x = date)) +
+  geom_col(aes(y = anomaly / 10, fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  labs(
+    y = "SWE Anomaly (scaled down by 10)"
+  ) +
+  geom_col(aes(y = pdsi), color = "#1219cc", alpha = 0.5) +
+  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "PDSI"), expand = c(0,0)) +
+  theme_classic()
+
+chuska_chin_graph
+
+```
+
+```{r}
+#fortdefiance anomaly
+
+fort_def_mnth_intra_av <- fort_defiance_mnth_av %>% 
+    mutate(month = month(date)) %>% 
+    group_by(month) %>% 
+    summarize(mean_pdsi = mean(pdsi))
+    
+fort_def_anom  <- fort_defiance_mnth_av %>% 
+    mutate(month = month(date)) %>% 
+    merge(fort_def_mnth_intra_av, by = "month")%>%
+    mutate(anomaly_pdsi = pdsi - mean_pdsi)
+
+# chuska vs fort defiance
+chuska_fd <- fort_def_anom %>% 
+  left_join(chuska_mnth_anom, by = "date") %>% 
+  select(date, pdsi, anomaly, sign, waterYear.x, anomaly_pdsi) 
+
+## make graph of the two
+chuska_fd_graph <- chuska_fd %>% 
+  ggplot(aes(x = date)) +
+  geom_col(aes(y = anomaly / 10, fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  labs(
+    y = "SWE Anomaly (scaled down by 10)"
+  ) +
+  geom_col(aes(y = anomaly_pdsi), color = "#1219cc", alpha = 0.5) +
+  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "PDSI"), expand = c(0,0)) +
+  theme_classic()
+
+chuska_fd_graph
+
+```
+
+
+```{r}
+## quick make chuska anomaly graph for poster
+
+ # first make variables for ease of graphing  
+      startWaterYear = min(chuska_mnth_anom$waterYear)
+      endWaterYear = max(chuska_mnth_anom$waterYear)
+      # Create sequence of real dates, on which to place the water year lables
+      breakDates = seq.Date(from = ymd(paste(startWaterYear,1,1, sep='-')), length.out = endWaterYear - startWaterYear + 1, by = "1 year")
+
+ch_poster <- ggplot(chuska_mnth_anom, aes(x = date, y = anomaly)) +
+  geom_col(aes(y = anomaly / 10, fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_date(breaks= breakDates, labels=seq(startWaterYear,endWaterYear,by=1)) +
+  labs(
+    y = "SWE Anomaly (mm)",
+    x = "Water Year"
+  ) +
+  theme_classic()
+
+```
+

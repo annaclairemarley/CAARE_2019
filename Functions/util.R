@@ -131,6 +131,18 @@ calc_depth_metrics = function(region, period, statistic){
   
 }
 
+# same thing but for pdsi
+calc_pdsi_metrics = function(region, period, statistic){
+  
+  # dataframe of SWE metric desired
+  av = region %>% 
+    group_by(date = floor_date(date, period))  %>% 
+    summarize(pdsi = statistic(pdsi), waterYear=min(waterYear)) 
+  
+  return(av)
+  
+}
+
 #####################################################################
 #####################################################################
 
