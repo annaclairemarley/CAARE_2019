@@ -151,12 +151,12 @@ corrplot(cor_pdsi_chuska, method = "ellipse", type = "upper",
 
 chuska_ship <- shiprock_mnth_av %>% 
   left_join(chuska_mnth_anom, by = "date") %>% 
-  select(date, pdsi, anomaly, sign, waterYear.x) 
+  select(date, pdsi, anomaly, sign, waterYear.x, anomaly_perc) 
 
 ## make graph of the two
 chuska_ship_graph <- chuska_ship %>% 
   ggplot(aes(x = date)) +
-  geom_col(aes(y = anomaly / 10, fill = sign), show.legend = FALSE) +
+  geom_col(aes(y = anomaly_perc, fill = sign), show.legend = FALSE) +
   scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
   labs(
     y = "SWE Anomaly (scaled down by 10)"
@@ -205,27 +205,55 @@ fort_def_mnth_intra_av <- fort_defiance_mnth_av %>%
 fort_def_anom  <- fort_defiance_mnth_av %>% 
     mutate(month = month(date)) %>% 
     merge(fort_def_mnth_intra_av, by = "month")%>%
-    mutate(anomaly_pdsi = pdsi - mean_pdsi)
+    mutate(anomaly_pdsi = pdsi - mean_pdsi) %>% 
+    mutate(pdsi_anom_perc = (anomaly_pdsi/mean_pdsi)*100)
 
 # chuska vs fort defiance
 chuska_fd <- fort_def_anom %>% 
   left_join(chuska_mnth_anom, by = "date") %>% 
-  select(date, pdsi, anomaly, sign, waterYear.x, anomaly_pdsi) 
+  select(date, pdsi, anomaly, sign, waterYear.x, anomaly_pdsi, pdsi_anom_perc, anomaly_perc) 
 
 ## make graph of the two
 chuska_fd_graph <- chuska_fd %>% 
   ggplot(aes(x = date)) +
-  geom_col(aes(y = anomaly / 10, fill = sign), show.legend = FALSE) +
+  geom_col(aes(y = anomaly_perc, fill = sign), show.legend = FALSE) +
   scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
   labs(
-    y = "SWE Anomaly (scaled down by 10)"
+    y = "SWE % Difference from Average"
   ) +
-  geom_col(aes(y = anomaly_pdsi), color = "#1219cc", alpha = 0.5) +
-  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "PDSI"), expand = c(0,0)) +
+  geom_line(aes(y = anomaly_pdsi*100), color = "#1219cc", alpha = 0.5) +
+  scale_y_continuous(sec.axis = sec_axis(~., name = "PDSI % Difference from Average"), expand = c(0,0)) +
   theme_classic()
 
 chuska_fd_graph
 
+chuska_fd_graph2 <- chuska_fd %>% 
+  ggplot(aes(x = date)) +
+  geom_col(aes(y = anomaly_perc, fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  labs(
+    y = "SWE % Difference from Average",
+    x = "Water Year"
+  ) +
+  geom_line(aes(y = anomaly_pdsi*100), color = "#1219cc", alpha = 0.5) +
+  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "PDSI Anomaly (scaled x 100)"), expand = c(0,0)) +
+  scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
+  theme_classic() +
+  theme(axis.line.y.right = element_line(color = "#1219cc"),
+        axis.text.y.right = element_text(color = "#1219cc"),
+        axis.title.y.right = element_text(color = "#1219cc"))
+
+chuska_fd_graph2
+
+
+```
+
+```{r, echo = FALSE}
+# Chuska and fort defiance agency % difference from average correlations
+
+plot(chuska_fd$anomaly_perc, chuska_fd$anomaly_pdsi)
+
+cor.test(chuska_fd$anomaly_perc, chuska_fd$anomaly_pdsi)
 ```
 
 

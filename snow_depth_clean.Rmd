@@ -358,7 +358,8 @@ mp_dec_dpth <- month_ts(mp_mn_av, 12)
 
 dec_dpth <- join_depth_months(carrizo = car_dec_dpth, chuska = ch_dec_dpth, black_mesa = bm_dec_dpth, defiance_plateau = dp_dec_dpth, mt_powell = mp_dec_dpth, navajo_mt = nm_dec_dpth)
 
-dec_dpth_graph <- month_bplot_dpth(dec_dpth, title = "December")
+dec_dpth_graph <- month_bplot_dpth(dec_dpth, title = "December") +
+  scale_x_discrete(labels = c("Chuska", "Defiance Plateau", "Black Mesa", "Mt. Powell", "Carrizo", "Navajo Mt."))
 
 ```
 
@@ -374,7 +375,8 @@ jan_dpth <- join_depth_months(carrizo = month_ts(car_mn_av, 1),
                               mt_powell = month_ts(mp_mn_av, 1), 
                               navajo_mt = month_ts(nm_mn_av, 1))
 
-jan_dpth_graph <- month_bplot_dpth(jan_dpth, title = "January")
+jan_dpth_graph <- month_bplot_dpth(jan_dpth, title = "January") +
+  scale_x_discrete(labels = c("Chuska", "Defiance Plateau",  "Mt. Powell", "Black Mesa","Carrizo", "Navajo Mt."))
 
 ```
 
@@ -390,7 +392,8 @@ feb_dpth <- join_depth_months(carrizo = month_ts(car_mn_av, 2),
                               mt_powell = month_ts(mp_mn_av, 2), 
                               navajo_mt = month_ts(nm_mn_av, 2))
 
-feb_dpth_graph <- month_bplot_dpth(feb_dpth, title = "February")
+feb_dpth_graph <- month_bplot_dpth(feb_dpth, title = "February") +
+  scale_x_discrete(labels = c("Chuska", "Defiance Plateau",  "Mt. Powell", "Carrizo", "Black Mesa", "Navajo Mt."))
 
 ```
 
@@ -405,7 +408,8 @@ mar_dpth <- join_depth_months(carrizo = month_ts(car_mn_av, 3),
                               mt_powell = month_ts(mp_mn_av, 3), 
                               navajo_mt = month_ts(nm_mn_av, 3))
 
-mar_dpth_graph <- month_bplot_dpth(mar_dpth, title = "March")
+mar_dpth_graph <- month_bplot_dpth(mar_dpth, title = "March") +
+  scale_x_discrete(labels = c("Chuska", "Defiance Plateau",  "Black Mesa", "Mt. Powell", "Carrizo",  "Navajo Mt."))
 
 ```
 
@@ -420,7 +424,8 @@ apr_dpth <- join_depth_months(carrizo = month_ts(car_mn_av, 4),
                               mt_powell = month_ts(mp_mn_av, 4), 
                               navajo_mt = month_ts(nm_mn_av, 4))
 
-apr_dpth_graph <- month_bplot_dpth(apr_dpth, title = "April")
+apr_dpth_graph <- month_bplot_dpth(apr_dpth, title = "April") +
+  scale_x_discrete(labels = c("Chuska", "Defiance Plateau",  "Black Mesa", "Navajo Mt.", "Carrizo", "Mt. Powell"))
 
 ```
 

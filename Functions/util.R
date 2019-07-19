@@ -166,6 +166,7 @@ calc_month_anom = function(df){
   
   intra_month_anomaly = merge(df_month, intra_month, by = "month")%>%
     mutate(anomaly = swe_mm - mean_swe) %>% 
+    mutate(anomaly_perc = (anomaly/mean_swe)*100) %>% 
     mutate(sign = ifelse(anomaly < 0, "negative", "positive") )
   
   return(intra_month_anomaly = intra_month_anomaly)
@@ -183,6 +184,7 @@ calc_mnth_depth_anom = function(df){
   
   intra_month_anomaly = merge(df_month, intra_month, by = "month")%>%
     mutate(anomaly = depth_mm - mean_depth) %>% 
+    mutate(anomaly_perc = (anomaly/mean_depth)*100) %>%
     mutate(sign = ifelse(anomaly < 0, "negative", "positive") )
   
   return(intra_month_anomaly = intra_month_anomaly)
@@ -275,15 +277,15 @@ join_depth_months = function(...) {
 }
 
 # same but for swe_km3
-join_months_km = function(...) {
+join_months_m = function(...) {
   kwargs = list(...) # key word arguents 
   placeNames = names(kwargs) # grabs the name of what you input
   
   mergerdDF = NULL
   for (i in 1:length(placeNames)) { # for each placename
     df = kwargs[[placeNames[i]]] %>% # gets the df for that placename
-      select(waterYear, swe_total_km3) %>% #select water year and swe_mm
-      rename(!!placeNames[i] := swe_total_km3) #renames swe_mm to the placename for joining
+      select(waterYear, swe_total_m3) %>% #select water year and swe_mm
+      rename(!!placeNames[i] := swe_total_m3) #renames swe_mm to the placename for joining
     if (i == 1){ # if it's the 1st df, don't need to merge
       mergedDF = df
     } else{
@@ -294,7 +296,7 @@ join_months_km = function(...) {
   result = mergedDF %>% 
     melt(id.vars="waterYear") %>% # then you just melt and rename
     rename(region = variable,
-           swe_total_km3 = value)
+           swe_total_m3 = value)
   return(result)
   
 }
@@ -317,13 +319,15 @@ cor_equation = function(df) {
 
     intercept = lm_df$coefficients[1]
     slope = lm_df$coefficients[2]
+    r.squared = summary(lm_df)$adj.r.squared
     
     if (is.null(result_df)) {
       result_df = data.frame(month=c(month_no),
                       intercept=c(intercept),
-                      slope=c(slope))
+                      slope=c(slope),
+                      r.squared = c(r.squared))
     } else {
-      result_df = rbind(result_df, c(month_no, intercept, slope))
+      result_df = rbind(result_df, c(month_no, intercept, slope, r.squared))
     }
      
     

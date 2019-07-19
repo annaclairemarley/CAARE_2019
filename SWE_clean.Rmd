@@ -20,6 +20,7 @@ library(dataRetrieval)
 library(reshape2)
 library(corrplot)
 library(forcats)
+library(RColorBrewer)
 source("Functions/util.R")
 source('Functions/graphing.R')
 ```
@@ -54,13 +55,13 @@ nm_area_km = 96 #km2
 nn_area_km = 67636 #km2
 
 # mm areas of each mountain range:
-carrizo_area_mm = 339
-chuska_area_mm = 4581
-bm_area_mm = 1413 
-defiance_area_mm = 1106
-mt_powell_area_mm = 77
-nm_area_mm = 96
-nn_area_mm = 67636
+carrizo_area_m = 339000
+chuska_area_m = 4581000
+bm_area_m = 1413000 
+defiance_area_m = 1106000
+mt_powell_area_m = 77000
+nm_area_m = 96000
+nn_area_m = 67636000
 ```
 
 
@@ -134,58 +135,82 @@ an_av_swe_graph
 
 
 ```{r, echo = FALSE}
-# total average swe
+# Total amount of average winter swe
 
-# first need to change mm to km, then multiply by their area in km2
+# first need to change mm to m, then multiply by their area in m2
 car_an_total_swe <- car_an_swe %>% 
-  mutate(swe_km = swe_mm/1000000) %>% 
-  mutate(swe_total_km3 = swe_km*carrizo_area_km)
+  mutate(swe_m = swe_mm/1000) %>% 
+  mutate(swe_total_m3 = swe_m*carrizo_area_m)
 
 ch_an_total_swe <-ch_an_swe %>% 
-  mutate(swe_km = swe_mm/1000000) %>% 
-  mutate(swe_total_km3 = swe_km*chuska_area_km)
+  mutate(swe_m = swe_mm/1000) %>% 
+  mutate(swe_total_m3 = swe_m*chuska_area_m)
 
 bm_an_total_swe <-bm_an_swe %>% 
-  mutate(swe_km = swe_mm/1000000) %>% 
-  mutate(swe_total_km3 = swe_km*bm_area_km)
+  mutate(swe_m = swe_mm/1000) %>% 
+  mutate(swe_total_m3 = swe_m*bm_area_m)
 
 mp_an_total_swe <-mp_an_swe %>% 
-  mutate(swe_km = swe_mm/1000000) %>% 
-  mutate(swe_total_km3 = swe_km*mt_powell_area_km)
+  mutate(swe_m = swe_mm/1000) %>% 
+  mutate(swe_total_m3 = swe_m*mt_powell_area_m)
 
 dp_an_total_swe <-dp_an_swe %>% 
-  mutate(swe_km = swe_mm/1000000) %>% 
-  mutate(swe_total_km3 = swe_km*defiance_area_km)
+  mutate(swe_m = swe_mm/1000) %>% 
+  mutate(swe_total_m3 = swe_m*defiance_area_m)
 
 nm_an_total_swe <-nm_an_swe %>% 
-  mutate(swe_km = swe_mm/1000000) %>% 
-  mutate(swe_total_km3 = swe_km*nm_area_km)
+  mutate(swe_m = swe_mm/1000) %>% 
+  mutate(swe_total_m3 = swe_m*nm_area_m)
 
 # then join the dataframes together
 # graph annual average stacked on top of each other
 # join together
-an_av_total <- join_months_km(carrizo = car_an_total_swe, chuska = ch_an_total_swe, 
+an_av_total <- join_months_m(carrizo = car_an_total_swe, chuska = ch_an_total_swe, 
                            black_mesa = bm_an_total_swe, mt_powell = mp_an_total_swe, 
                            defiance_plateau = dp_an_total_swe, navajo_mt = nm_an_total_swe)
 
-# graph it
 
+# make a loop to set the order
+an_av_total$region_order = 0
+for (i in length(an_av_total$region)) {
+  an_av_total$region_order = ifelse(an_av_total$region == "chuska", 6, an_av_total$region_order)
+  an_av_total$region_order = ifelse(an_av_total$region == "defiance_plateau", 5, an_av_total$region_order)
+   an_av_total$region_order = ifelse(an_av_total$region == "black_mesa", 4, an_av_total$region_order)
+   an_av_total$region_order = ifelse(an_av_total$region == "carrizo", 3, an_av_total$region_order)
+  an_av_total$region_order = ifelse(an_av_total$region == "mt_powell", 2, an_av_total$region_order)
+   an_av_total$region_order = ifelse(an_av_total$region == "navajo_mt", 1, an_av_total$region_order)
+   
+}
+
+
+```
+
+
+```{r, echo = FALSE}
+
+####graph it#####
 an_av_total_swe_graph <- an_av_total %>% 
-  ggplot(aes(x = waterYear, y = swe_total_km3)) +
-  geom_col(aes(fill = region)) +
+  ggplot(aes(x = waterYear, y = swe_total_m3)) +
+  geom_col(aes(fill = reorder(region, region_order))) +
   scale_y_continuous(expand = c(0,0)) +
   scale_x_continuous(breaks = seq(2004, 2019, by = 2)) +
-  scale_fill_discrete(name = "Region", labels = c("Carrizo", "Chuska", "Black Mesa", "Mt. Powell", "Defiance Plateau", "Navajo Mt.")) +
+  scale_fill_brewer(palette = "Spectral", name = "Region", 
+                    labels = c("Navajo Mt.", "Mt. Powell", "Carrizo", "Black Mesa",  "Defiance Plateau", "Chuska")) +
   labs(
-    x = "Water Year",
-    y = "SWE (km^3)",
-    title = "Total SWE in each Region"
-  ) +
-  coord_flip()+
+    y = expression(paste("SWE ", (m^3))),
+    x = "Water Year"
+    ) +
   theme_classic()
 
 an_av_total_swe_graph
 
+
+
+```
+
+
+
+```{r, include = FALSE}
 # contribution of each region to the total
 
 contributions <- data.frame(car_an_total_swe$waterYear, 
@@ -218,6 +243,8 @@ nm_cont_swe <- mean(contributions$nm_cont)
 mp_cont_swe <- mean(contributions$mp_cont)
 dp_cont_swe <- mean(contributions$dp_cont)
 ```
+
+
 
 The annual average % contribution to the total annual average swe of all 6 mountain ranges:
 
@@ -381,12 +408,20 @@ av_mnth_all_graph
 ```{r, echo = FALSE}
 # correlation matrix
 av_month_swe_all_corr <- av_month_swe_all %>% 
-  column_to_rownames(var = "date")
+  column_to_rownames(var = "date") %>% 
+  rename("Carrizo" = "carrizo") %>% 
+  rename("Black Mesa" = "black_mesa") %>% 
+  rename("Mt. Powell" = "mt_powell") %>% 
+  rename("Defiance Plateau" = "defiance_plateau") %>% 
+  rename("Navajo Mt." = "navajo_mt") %>% 
+  rename("Chuska" = "chuska")
 
 
 cor <- cor(av_month_swe_all_corr)
+corrplot(cor, method = "square", type = "upper", 
+         addCoef.col = "white", tl.col = "black", tl.srt=45)
 corrplot(cor, method = "ellipse", type = "upper", 
-         addCoef.col = "black", tl.col = "black")
+         addCoef.col = "black", tl.col = "black", tl.srt=45)
 
 ```
 - Black Mesa to Mt. Powell, Black Mesa to Defiance Plateau and Defiance Plateau and Mt Powell all have the highest correlations between each other 

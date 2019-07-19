@@ -174,7 +174,7 @@ Each month has it's own line:
 
 ```{r, echo = FALSE}
 
-plot_cor_month(ch_swe_dpth, car_swedpth_r2, region = "Chuska") + 
+plot_cor_month(ch_swe_dpth, car_swedpth_r2, region = "") + 
   geom_point(alpha = 0.2) + 
   scale_color_discrete(labels= c("Jan", "Feb", "Mar", "Apr", "Nov", "Dec")) 
 
@@ -182,7 +182,7 @@ plot_cor_month(ch_swe_dpth, car_swedpth_r2, region = "Chuska") +
 ```
 
 - almost perfect linear increase in the slope of the relationship between swe and depth through time
-
+- adjusted r squared values for all lines > 0.9
 ```{r, echo = FALSE}
 # equations of the lines:
 
@@ -582,17 +582,25 @@ graph_with_wateryear(bm_swe_dpth, title = "Black Mesa") +
 # create chuska swe anomaly 
 
 ch_swe_anom <- calc_month_anom(calc_swe_metrics(ch_swe, "month", mean)) %>% 
-  rename(swe_anomaly = anomaly)
+  rename(swe_anomaly = anomaly) %>% 
+  rename(swe_anom_perc = anomaly_perc)
 
 # chuska depth anomaly
 
-ch_depth_anom <- calc_mnth_depth_anom(calc_depth_metrics(ch_dpth, "month", mean)) 
+ch_depth_anom <- calc_mnth_depth_anom(calc_depth_metrics(ch_dpth, "month", mean)) %>% 
+  rename(depth_anom_perc = anomaly_perc)
 
 # merge together 
 
 ch_swe_dpth_anom <- merge(ch_depth_anom, ch_swe_anom, by = "date") %>% 
-  select(date, waterYear.x, anomaly, sign.x, swe_anomaly) %>% 
+  select(date, waterYear.x, anomaly, swe_anom_perc, depth_anom_perc, sign.x, swe_anomaly) %>% 
   rename(waterYear = waterYear.x)
+
+
+
+```
+
+```{r, echo = FALSE}
 
 # create graph 
       # first make variables for ease of graphing  
@@ -617,6 +625,138 @@ ch_swe_dpth_anom <- merge(ch_depth_anom, ch_swe_anom, by = "date") %>%
         axis.title.y.right = element_text(color = "#1219cc")) 
 
 ```
+
+```{r, echo = FALSE}
+### Percent difference from average###
+# create graph 
+      # first make variables for ease of graphing  
+      startWaterYear = min(ch_swe_dpth_anom$waterYear)
+      endWaterYear = max(ch_swe_dpth_anom$waterYear)
+      # Create sequence of real dates, on which to place the water year lables
+      breakDates = seq.Date(from = ymd(paste(startWaterYear,1,1, sep='-')), length.out = endWaterYear - startWaterYear + 1, by = "1 year")
+      
+  ggplot(ch_swe_dpth_anom, aes(x = date)) +
+  geom_col(aes(y = depth_anom_perc, fill = sign.x), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_date(breaks= breakDates, labels=seq(startWaterYear,endWaterYear,by=1)) +
+  labs(
+    x = "Water Year",
+    y = "Snow Depth % Difference from Average"
+  ) +
+  theme_classic() +
+  geom_line(aes(y = swe_anom_perc), color = "#1219cc") +
+  scale_y_continuous(sec.axis = sec_axis(~., name = "SWE % Difference from Average"), 
+                     expand = c(0,0)) +
+  theme(axis.line.y.right = element_line(color = "#1219cc"),
+        axis.text.y.right = element_text(color = "#1219cc"),
+        axis.title.y.right = element_text(color = "#1219cc")) 
+
+```
+
+```{r, echo = FALSE}
+
+ch_nov_anom <- ch_swe_anom %>% 
+  filter(month == "11") %>% 
+  ggplot(aes(x = waterYear, y = swe_anom_perc)) +
+  geom_col(aes(fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_continuous(breaks = seq(2004,2019, by = 3)) +
+  labs(
+    x = "Water Year",
+    y = "SWE % Difference from Average",
+    title = "November"
+  ) +
+  theme_classic()
+
+
+
+ch_dec_anom <- ch_swe_anom %>% 
+  filter(month == "12") %>% 
+  ggplot(aes(x = waterYear, y = swe_anom_perc)) +
+  geom_col(aes(fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_continuous(breaks = seq(2004,2019, by = 3)) +
+  labs(
+    x = "Water Year",
+    y = "SWE % Difference from Average",
+    title = "December"
+  ) +
+  theme_classic()
+
+
+
+# just january anomalies
+
+ch_jan_anom <- ch_swe_anom %>% 
+  filter(month == "1") %>% 
+  ggplot(aes(x = waterYear, y = swe_anom_perc)) +
+  geom_col(aes(fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_continuous(breaks = seq(2004,2019, by = 3)) +
+  labs(
+    x = "Water Year",
+    y = "SWE % Difference from Average",
+    title = "January"
+  ) +
+  theme_classic()
+
+
+
+# just feb anomalies
+ch_feb_anom <- ch_swe_anom %>% 
+  filter(month == "2") %>% 
+  ggplot(aes(x = waterYear, y = swe_anom_perc)) +
+  geom_col(aes(fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_continuous(breaks = seq(2004,2019, by = 3)) +
+  labs(
+    x = "Water Year",
+    y = "SWE % Difference from Average",
+    title = "February"
+  ) +
+  theme_classic()
+
+
+# just march anomalies
+ch_mar_anom <- ch_swe_anom %>% 
+  filter(month == "3") %>% 
+  ggplot(aes(x = waterYear, y = swe_anom_perc)) +
+  geom_col(aes(fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_continuous(breaks = seq(2004,2019, by = 3)) +
+  labs(
+    x = "Water Year",
+    y = "SWE % Difference from Average",
+    title = "March"
+  ) +
+  theme_classic()
+
+
+
+# just march anomalies
+ch_apr_anom <- ch_swe_anom %>% 
+  filter(month == "4") %>% 
+  ggplot(aes(x = waterYear, y = swe_anom_perc)) +
+  geom_col(aes(fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_continuous(breaks = seq(2004,2019, by = 3)) +
+  scale_y_continuous(breaks = seq(-100,800, by = 100)) +
+  labs(
+    x = "Water Year",
+    y = "SWE % Difference from Average",
+    title = "April"
+  ) +
+  theme_classic()
+
+
+```
+
+```{r, fig.width= 10}
+
+grid.arrange(ch_nov_anom, ch_dec_anom, ch_jan_anom, ch_feb_anom, ch_mar_anom, ch_apr_anom, ncol = 3)
+
+```
+
 
 ### Depth scaled (depth*0.2) by swe/depth metric
 

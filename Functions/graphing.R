@@ -232,30 +232,40 @@ plot_cor = function(df, adjr2, region = "") {
 
 # to make the averaged month over region boxplots
 
+
+
 month_bplot_dpth = function(df, title = "") {
+
+  # make a loop to set the order
+  df$region_order = 0
+  for (i in length(df$region)) {
+    df$region_order = ifelse(df$region == "chuska", "F", df$region_order)
+    df$region_order = ifelse(df$region == "defiance_plateau", "E", df$region_order)
+    df$region_order = ifelse(df$region == "black_mesa", "D", df$region_order)
+    df$region_order = ifelse(df$region == "carrizo", "C", df$region_order)
+    df$region_order = ifelse(df$region == "mt_powell", "B", df$region_order)
+    df$region_order = ifelse(df$region == "navajo_mt", "A", df$region_order)
+  }
+  
   plot = df %>% 
     ggplot(aes(x = fct_reorder(region, depth_mm, .desc = TRUE), y = depth_mm))+
-    geom_boxplot(aes(fill = region), show.legend = FALSE) +
+    geom_boxplot(aes(fill = region_order), show.legend = FALSE) +
     labs(
       x = "Region",
       y = "Depth (mm)",
       title = sprintf("%s", title)
     ) + 
-    scale_y_continuous(limits = c(0, 950)) +
-    scale_fill_manual(values=c("#003f5c", "#444e86", "#955196", "#dd5182", "#ff6e54", "#ffa600" )) +
-   # scale_x_discrete(labels = c("Chuska" = "chuska", "Mt. Powell"= "mt_powell", "Black Mesa" = "black_mesa", "Defiance Plateau" = "defiance_plateau", "Carrizo" = "carrizo", "Navajo Mt" = "navajo_mt")) +
-    theme_classic() 
+    #scale_y_continuous(limits = c(0, 950)) +
+    #scale_fill_brewer(palette = "Spectral", direction = -1)+
+    scale_fill_manual(values=c("#D53E4F", "#FC8D59", "#FEE08B", "#E6F598", "#99D594", "#3288BD")) +
+   #scale_x_discrete(labels = c("Chuska" = "chuska", "Mt. Powell"= "mt_powell", "Black Mesa" = "black_mesa", "Defiance Plateau" = "defiance_plateau", "Carrizo" = "carrizo", "Navajo Mt" = "navajo_mt")) +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
   
   return(plot)
 }
 
 
-#003f5c
-#444e86
-#955196
-#dd5182
-#ff6e54
-#ffa600
 
 #####################################################################
 #####################################################################
