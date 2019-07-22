@@ -190,14 +190,15 @@ for (i in length(an_av_total$region)) {
 
 ####graph it#####
 an_av_total_swe_graph <- an_av_total %>% 
-  ggplot(aes(x = waterYear, y = swe_total_m3)) +
+  mutate(swe_total_thousand_m3 = swe_total_m3/1000) %>% 
+  ggplot(aes(x = waterYear, y = swe_total_thousand_m3)) +
   geom_col(aes(fill = reorder(region, region_order))) +
   scale_y_continuous(expand = c(0,0)) +
   scale_x_continuous(breaks = seq(2004, 2019, by = 2)) +
   scale_fill_brewer(palette = "Spectral", name = "Region", 
                     labels = c("Navajo Mt.", "Mt. Powell", "Carrizo", "Black Mesa",  "Defiance Plateau", "Chuska")) +
   labs(
-    y = expression(paste("SWE ", (m^3))),
+    y = expression(paste("SWE ", (thousand-m^3))),
     x = "Water Year"
     ) +
   theme_classic()
@@ -214,26 +215,26 @@ an_av_total_swe_graph
 # contribution of each region to the total
 
 contributions <- data.frame(car_an_total_swe$waterYear, 
-                       car_an_total_swe$swe_total_km3, 
-                       ch_an_total_swe$swe_total_km3,
-                       bm_an_total_swe$swe_total_km3,
-                       dp_an_total_swe$swe_total_km3,
-                       nm_an_total_swe$swe_total_km3,
-                       mp_an_total_swe$swe_total_km3) %>% 
+                       car_an_total_swe$swe_total_m3, 
+                       ch_an_total_swe$swe_total_m3,
+                       bm_an_total_swe$swe_total_m3,
+                       dp_an_total_swe$swe_total_m3,
+                       nm_an_total_swe$swe_total_m3,
+                       mp_an_total_swe$swe_total_m3) %>% 
                 rename(waterYear = car_an_total_swe.waterYear,
-                       car_swe_km3 = car_an_total_swe.swe_total_km3,
-                       ch_swe_km3 = ch_an_total_swe.swe_total_km3,
-                       bm_swe_km3 = bm_an_total_swe.swe_total_km3,
-                       nm_swe_km3 = nm_an_total_swe.swe_total_km3,
-                       mp_swe_km3 = mp_an_total_swe.swe_total_km3,
-                       dp_swe_km3 = dp_an_total_swe.swe_total_km3) %>% 
+                       car_swe_m3 = car_an_total_swe.swe_total_m3,
+                       ch_swe_m3 = ch_an_total_swe.swe_total_m3,
+                       bm_swe_m3 = bm_an_total_swe.swe_total_m3,
+                       nm_swe_m3 = nm_an_total_swe.swe_total_m3,
+                       mp_swe_m3 = mp_an_total_swe.swe_total_m3,
+                       dp_swe_m3 = dp_an_total_swe.swe_total_m3) %>% 
               mutate(mt_range_sum_total = rowSums(.[, names(.) != "waterYear"])) %>% 
-              mutate(car_cont = car_swe_km3/mt_range_sum_total,
-                     ch_cont = ch_swe_km3/mt_range_sum_total,
-                     bm_cont = bm_swe_km3/mt_range_sum_total,
-                     mp_cont = mp_swe_km3/mt_range_sum_total,
-                     nm_cont = nm_swe_km3/mt_range_sum_total,
-                     dp_cont = dp_swe_km3/mt_range_sum_total)
+              mutate(car_cont = car_swe_m3/mt_range_sum_total,
+                     ch_cont = ch_swe_m3/mt_range_sum_total,
+                     bm_cont = bm_swe_m3/mt_range_sum_total,
+                     mp_cont = mp_swe_m3/mt_range_sum_total,
+                     nm_cont = nm_swe_m3/mt_range_sum_total,
+                     dp_cont = dp_swe_m3/mt_range_sum_total)
 
 # Average annual percent contribution to the total annual average swe in all 6 mountain ranges
 chusk_cont_swe <- mean(contributions$ch_cont)
