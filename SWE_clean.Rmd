@@ -857,6 +857,78 @@ all_swe_total <- read_csv("winter_wy/all_swe_total.csv")
 
 ```
 
+### peak snowmelt chuska
+
+```{r, echo = FALSE}
+
+max_ch_weekly <- ch_weekly %>% 
+  group_by(waterYear)  %>% 
+  summarize(swe_mm = max(swe_mm)) 
+
+```
+
+### Chuska annual weekly average max SWE
+```{r, echo = FALSe}
+# read in data
+ch_max_weekly_yr <- read_csv("Chuska/ch_swe_max_week_yr.csv")
+
+
+
+```
+
+```{r, echo = FALSE}
+# make graph
+ch_wk_max_graph <- ch_max_weekly_yr %>% 
+  ggplot(aes(x = wateryear, y = wk_of_wy)) + 
+  geom_line() +
+  labs(
+    x = "Water Year",
+    y = "Week of Water Year",
+    title = "Timing of Chuska Max Weekly Average SWE Value",
+    subtitle = "Trendline: y = -0.2250x + 473.0250 | p-value = 0.436"
+  ) +
+  scale_x_continuous(expand = c(0,0), breaks = seq(2004,2019, by = 2)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_classic()
+
+ch_wk_max_graph
+
+```
+
+```{r, include=FALSE}
+# check equation for trendline
+ch_wk_max_lm <- lm(ch_max_weekly_yr$wk_of_wy ~ ch_max_weekly_yr$wateryear)
+summary(ch_wk_max_lm)
+
+# y = -0.2250x +  473.0250
+
+```
+
+```{r, echo = FALSE}
+# now graph it with the swe value
+ch_wk_max_graph2 <- ch_max_weekly_yr %>% 
+  ggplot(aes(x = wateryear)) + 
+  geom_col(aes(y = max_swe/10)) +
+  labs(
+    x = "Water Year",
+    y = "Max SWE (mm) [scaled down by a factor of 10]",
+    title = "Timing of Chuska Max Weekly Average SWE Value"
+  ) +
+  geom_line(aes(y = wk_of_wy), color = "blue") +
+  scale_x_continuous(expand = c(0,0), breaks = seq(2004,2019, by = 2)) +
+  scale_y_continuous(expand = c(0,0),
+                     sec.axis = sec_axis(~., name = "Week of Water Year")) +
+  theme_classic()+
+  theme(axis.line.y.right = element_line(color = "blue"),
+        axis.text.y.right = element_text(color = "blue"),
+        axis.title.y.right = element_text(color = "blue")) 
+  
+
+
+ch_wk_max_graph2
+
+```
+
 
 
 ### SWE compared to Suzanne's SCA
