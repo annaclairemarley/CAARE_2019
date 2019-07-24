@@ -245,13 +245,14 @@ puppeteer.launch({headless: false}).then(browser => {
 
     /**
      * Gets data for chapters or agencies in the navajo nation and saves it in the data folder.
-     * @param {bool} useChapters    If to use chapters (true) or agencies (false)
-     * @param {string} startDate    The start date for data in format yyyy-mm-dd
-     * @param {string} endDate      The end date for the data in format yyy-mm-dd (Inclusive)
-     * @param {string} variable     The variable to get. Can be one of: swe, snow_depth or pdsi
-     * @param {string} customHeader [Optional] String to use as custom header for csv file. 
+     * @param {array[string]} regionNames Array of region names to download data for. Names must be as they appear in the regions array
+     * @param {bool} areChapters          If the values in the array of region names are chapters (true) or agencies (false)
+     * @param {string} startDate          The start date for data in format yyyy-mm-dd
+     * @param {string} endDate            The end date for the data in format yyy-mm-dd (Inclusive)
+     * @param {string} variable           The variable to get. Can be one of: swe, snow_depth or pdsi
+     * @param {string} customHeader       [Optional] String to use as custom header for csv file. 
      */
-    async function getData(useChapters, startDate, endDate, variable, customHeader) {
+    async function getData(regionNames, areChapters, startDate, endDate, variable, customHeader) {
         customHeader = customHeader || null;
         //Splt date into 6 month intervals
         timeSegments = []
@@ -273,16 +274,13 @@ puppeteer.launch({headless: false}).then(browser => {
             }
         }
         //Select regions
-        regionsToUse = regions.agencies;
-        if (useChapters) {
-            regionsToUse = regions.chapters;
-        }
+        regionsToUse = regionNames;
         
         for (regionIndex in regionsToUse) {
             data = []
             header = ""
             for (timeframeIndex in timeSegments) {
-                let csv = await getDataHelper(timeSegments[timeframeIndex][0], timeSegments[timeframeIndex][1], variable, regionsToUse[regionIndex], useChapters);
+                let csv = await getDataHelper(timeSegments[timeframeIndex][0], timeSegments[timeframeIndex][1], variable, regionsToUse[regionIndex], areChapters);
                 header = csv.shift(); //Remove header
                 data.push(...csv);
             }
@@ -304,14 +302,17 @@ puppeteer.launch({headless: false}).then(browser => {
         
     }
 
-    getData(true, "2003-09-01", "2019-07-17", "pdsi", "Date,Palmer Drounght Severity Index").then(() => {
+    getData(regions.agencies, false, "2003-09-01", "2019-07-17", "pdsi", "Date,Palmer Drounght Severity Index").then(() => {
         browser.close();
     }).catch(e => console.log(e));
-    // getDataHelper("2018-03-15", "2018-04-15", "swe", regions.agencies[2], false).then(csv => {
-    //     console.log(csv);
-    // })
-    // getDataHelper("2018-01-15", "2018-02-15", "swe", regions.agencies[2], false).then(csv => {
-    //     console.log(csv);
-    // })
+    // Alternate usage:
+    /*
+    getData(regions.chapters, true, "2003-09-01", "2019-07-17", "pdsi", "Date,Palmer Drounght Severity Index").then(() => {
+        browser.close();
+    }).catch(e => console.log(e));
+    getData(["CHINLE"], false, "2003-09-01", "2019-07-17", "pdsi", "Date,Palmer Drounght Severity Index").then(() => {
+        browser.close();
+    }).catch(e => console.log(e));
+    */
     
 });
