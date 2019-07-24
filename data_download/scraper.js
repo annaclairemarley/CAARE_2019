@@ -162,6 +162,21 @@ puppeteer.launch({headless: false}).then(browser => {
         }
         
         const page = await browser.newPage();
+        console.log('https://app.climateengine.org/?toolAction=getTimeSeriesOverDateRange&timeSeriesCalc=days&variable2display=none&productTypeTS=MET' + 
+        '&productTS=' + productTS + 
+        '&variableTS=' + variableTS + 
+        '&statisticTS=' + statisticTS + 
+        '&scaleTS=' + scaleTS + 
+        '&unitsTS=metric' +
+        '&dateStartTS=' + startDate + 
+        '&dateEndTS=' + endDate + 
+        '&mapCenterLongLat=-109.7906%2C36.2531&mapzoom=8&chartType=line&runningMeanDays=9' +
+        '&geom_geoms=' + geom_geoms + 
+        '&geom_types=navajo_nation&geom_meta_types=feature_collection&geom_displays=block&geom_checks=checked' + 
+        '&geom_altnames=' + regionName +
+        '&geom_columnnames=Name' + 
+        '&geom_regions=' + geom_regions +
+        '&geom_subchoices=' + regionName)
         await page.goto('https://app.climateengine.org/?toolAction=getTimeSeriesOverDateRange&timeSeriesCalc=days&variable2display=none&productTypeTS=MET' + 
                         '&productTS=' + productTS + 
                         '&variableTS=' + variableTS + 
@@ -170,8 +185,8 @@ puppeteer.launch({headless: false}).then(browser => {
                         '&unitsTS=metric' +
                         '&dateStartTS=' + startDate + 
                         '&dateEndTS=' + endDate + 
-                        '&mapCenterLongLat=-109.7906%2C36.2531&mapzoom=8&chartType=line&runningMeanDays=9&' +
-                        'geom_geoms=' + geom_geoms + 
+                        '&mapCenterLongLat=-109.7906%2C36.2531&mapzoom=8&chartType=line&runningMeanDays=9' +
+                        '&geom_geoms=' + geom_geoms + 
                         '&geom_types=navajo_nation&geom_meta_types=feature_collection&geom_displays=block&geom_checks=checked' + 
                         '&geom_altnames=' + regionName +
                         '&geom_columnnames=Name' + 

@@ -341,3 +341,52 @@ cor_equation = function(df) {
   return(result_df)
 }
 
+#####################################################################
+#####################################################################
+
+#' get_year_max
+#'
+#' create a dataframe with maximum swe_mm weekly average per year
+#'
+#' @param df dataframe of average weekly values
+#'
+#' @return dataframe with maximum swe_mm weekly average per year
+#' @export
+#'
+#' @examples get_year_max(ch_weekly)
+
+
+get_year_max  = function(df) {
+  max_results = data.frame(date=as.Date(character()), 
+                           swe_mm=integer(),
+                           waterYear=integer()) 
+  for (year in unique(df$waterYear)) {
+    yearRecords = filter(df, waterYear == year)
+    max_record = yearRecords[which.max(yearRecords$swe_mm),]
+    max_results = rbind(max_results, max_record)
+  }
+  return(max_results)
+}
+
+#####################################################################
+#####################################################################
+
+#' to_water_week
+#'
+#' Gets the water week number for a given date (week starts on Sunday)
+#'
+#' @param date the date to get the water week number for. N.B. this has to be a Date object, not a string
+#'
+#' @return water week number for a given date (1-52)
+#' @export
+#'
+#' @examples to_water_week(date)
+#' @examples mutate(week_water_year = to_water_week(date))
+
+
+to_water_week = function(date) {
+  octStartWeek = epiweek(ymd(paste(year(date), "-10-01")))
+  diff = 52 - octStartWeek
+  return((epiweek(date) + diff) %% 52 + 1)
+  
+}

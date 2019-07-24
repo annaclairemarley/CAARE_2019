@@ -344,6 +344,14 @@ bm_mn_graph <- graph_with_wateryear(bm_monthly, "Black Mesa")
 bm_mn_graph
 ```
 
+```{r,fig.width=20,fig.height=5,}
+
+ch_wk_graph <- graph_with_wateryear(ch_weekly, "Chuska", type = geom_col)
+ch_wk_graph
+
+```
+
+
 ## All monthly mean
 
 ```{r, echo = FALSE}
@@ -868,24 +876,26 @@ max_ch_weekly <- ch_weekly %>%
 ```
 
 ### Chuska annual weekly average max SWE
+
+
+
 ```{r, echo = FALSe}
-# read in data
-ch_max_weekly_yr <- read_csv("Chuska/ch_swe_max_week_yr.csv")
-
-
+ch_max_weekly_yr <- ch_weekly %>% 
+  get_year_max() %>% 
+  mutate(wk_of_wy = to_water_week(date))
 
 ```
 
 ```{r, echo = FALSE}
 # make graph
 ch_wk_max_graph <- ch_max_weekly_yr %>% 
-  ggplot(aes(x = wateryear, y = wk_of_wy)) + 
+  ggplot(aes(x = waterYear, y = wk_of_wy)) + 
   geom_line() +
   labs(
     x = "Water Year",
     y = "Week of Water Year",
     title = "Timing of Chuska Max Weekly Average SWE Value",
-    subtitle = "Trendline: y = -0.2250x + 473.0250 | p-value = 0.436"
+    subtitle = "Trendline: y = -0.1941x +  409.7176 | p-value: 0.5023"
   ) +
   scale_x_continuous(expand = c(0,0), breaks = seq(2004,2019, by = 2)) +
   geom_smooth(method = "lm", se = FALSE) +
@@ -897,18 +907,18 @@ ch_wk_max_graph
 
 ```{r, include=FALSE}
 # check equation for trendline
-ch_wk_max_lm <- lm(ch_max_weekly_yr$wk_of_wy ~ ch_max_weekly_yr$wateryear)
+ch_wk_max_lm <- lm(ch_max_weekly_yr$wk_of_wy ~ ch_max_weekly_yr$waterYear)
 summary(ch_wk_max_lm)
 
-# y = -0.2250x +  473.0250
+# y = -0.1941x +  409.7176
 
 ```
 
 ```{r, echo = FALSE}
 # now graph it with the swe value
 ch_wk_max_graph2 <- ch_max_weekly_yr %>% 
-  ggplot(aes(x = wateryear)) + 
-  geom_col(aes(y = max_swe/10)) +
+  ggplot(aes(x = waterYear)) + 
+  geom_col(aes(y = swe_mm/10)) +
   labs(
     x = "Water Year",
     y = "Max SWE (mm) [scaled down by a factor of 10]",
