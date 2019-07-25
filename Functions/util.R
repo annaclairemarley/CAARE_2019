@@ -418,6 +418,37 @@ to_water_week = function(date) {
 #####################################################################
 #####################################################################
 
+#' combine_swe_pdsi
+#'
+#' combines pdsi and swe data so that columns area date, pdsi, pdsi_sign, swe anomaly %, swe_sign
+#'
+#' @param df_pdsi the pdsi dataframe
+#' @param df_swe the swe dataframe, need the swe anomaly
+#'
+#' @return 
+#' @export
+#'
+#' @examples combine_swe_pdsi(chinle_pdsi, chuska_anom)
+
+combine_swe_pdsi = function(df_pdsi, df_swe){
+
+  pdsi_2004 <- df_pdsi %>% 
+    calc_pdsi_metrics("month", mean) %>% # change to monthly mean data
+    filter(waterYear >= 2004) # water years = or greater than 2004
+  
+  swe_pdsi <- left_join(pdsi_2004, df_swe, by = "date") %>% 
+    select(date, pdsi, sign.x, anomaly_perc, sign.y) %>% 
+    rename(pdsi_sign = sign.x,
+           swe_sign = sign.y) %>% 
+    add_water_year()
+  
+  return(swe_pdsi)
+
+}
+
+#####################################################################
+#####################################################################
+
 #' compare_swe_pdsi
 #'
 #' Gets the months for swe and pdsi that you want to compare, averages them together and then sticks them together into the same dataframe

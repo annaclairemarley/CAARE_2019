@@ -434,13 +434,111 @@ plot_cor_swe_pdsi(swe_pdsi_sp_lsu, title = "Spring SWE and late Summer PDSI")
 ### Compare SWE of Chuska to PDSI watersheds
 
 ```{r, echo = FALSE}
+# read in chuska and extract anomalies
+
+chuska_swe <- read_csv("Chuska/ch_swe_wint_wy_03_19.csv")
+
+ch_swe_anom <- chuska_swe %>% 
+  calc_swe_metrics("month", mean) %>% 
+  calc_month_anom() %>% 
+  select(date, waterYear, anomaly_perc, sign) %>% 
+  arrange(date)
+
+```
+
+```{r, echo = FALSE}
+### read in all the watershed data###
+
 # Chaco
+
+chaco_pdsi <- read_csv("watersheds/chaco_pdsi.csv", col_names=c("date", "pdsi"), skip =1) %>% 
+  add_water_year()
 
 # Chinle
 
+chinle_pdsi <- read_csv("watersheds/chinle_pdsi.csv", col_names=c("date", "pdsi"), skip =1) %>% 
+  add_water_year()
+
 # Upper Puerco
+up_puerco_pdsi <- read_csv("watersheds/upper_puerco_pdsi.csv", col_names=c("date", "pdsi"), skip =1) %>% 
+  add_water_year()
 
 # middle san juan
+mid_sj_pdsi <- read_csv("watersheds/middle_san_juan_pdsi.csv", col_names=c("date", "pdsi"), skip =1) %>% 
+  add_water_year()
+
+
+```
+
+
+#### Watershed PDSI timeseries (1981-present)
+```{r, echo = FALSE}
+# visualize PDSI time series
+
+chaco_pdsi_mnth <- calc_pdsi_metrics(chaco_pdsi, "month", mean) 
+  plot_pdsi(chaco_pdsi_mnth, title = "Chaco")
+
+chinle_pdsi_mnth <- calc_pdsi_metrics(chinle_pdsi, "month", mean) 
+  plot_pdsi(chinle_pdsi_mnth, title = "Chinle")
+
+up_puerco_pdsi_mnth <- calc_pdsi_metrics(up_puerco_pdsi, "month", mean) 
+  plot_pdsi(up_puerco_pdsi_mnth, title = "Upper Puerco")
+
+mid_sj_pdsi_mnth <- calc_pdsi_metrics(mid_sj_pdsi, "month", mean)
+  plot_pdsi(mid_sj_pdsi_mnth, title = "Middle San Juan")
+
+```
+
+```{r, echo = FALSE}
+
+# combine watersheds PDSI and Chuska swe into one dataframe
+# shows monthly mean pdsi and monthly mean swe anomaly
+
+ch_chaco <- combine_swe_pdsi(chaco_pdsi, ch_swe_anom)
+
+ch_chinle <- combine_swe_pdsi(chinle_pdsi, ch_swe_anom)
+
+ch_up_puerco <- combine_swe_pdsi(up_puerco_pdsi, ch_swe_anom)
+
+ch_mid_sj <- combine_swe_pdsi(mid_sj_pdsi, ch_swe_anom)
+
+```
+
+
+#### Chuska SWE Anomalies vs watershed PDSI
+```{r, echo = FALSE}
+# Visually compare to Chuska SWE
+
+plot_pdsi_swe(ch_chaco, title = "Chaco")
+
+plot_pdsi_swe(ch_chinle, title = "Chinle")
+
+plot_pdsi_swe(ch_up_puerco, title = "Upper Puerco")
+
+plot_pdsi_swe(ch_mid_sj, title = "Middle San Juan")
+
+
+```
+
+#### Compare Chuska SWE different months of SWE to different months of PDSI
+
+```{r, echo = FALSE}
+
+## first pick out months of interest
+ch_chaco_sp_esu <- compare_swe_pdsi(ch_swe_anom, swe_mnths = c(3,4), chaco_pdsi_mnth, pdsi_mnths = c(5,6))
+ch_chinle_sp_esu <- compare_swe_pdsi(ch_swe_anom, swe_mnths = c(3,4), chinle_pdsi_mnth, pdsi_mnths = c(5,6))
+ch_up_puerco_sp_esu <- compare_swe_pdsi(ch_swe_anom, swe_mnths = c(3,4), up_puerco_pdsi_mnth, pdsi_mnths = c(5,6))
+ch_mid_sj_sp_esu <- compare_swe_pdsi(ch_swe_anom, swe_mnths = c(3,4), mid_sj_pdsi_mnth, pdsi_mnths = c(5,6))
+
+```
+
+```{r, echo = FALSE}
+# now graph the relationships
+plot_cor_swe_pdsi(ch_chaco_sp_esu, title = "Spring SWE and Chaco early Summer PDSI")
+plot_cor_swe_pdsi(ch_chinle_sp_esu, title = "Spring SWE and Chinle early Summer PDSI")
+plot_cor_swe_pdsi(ch_up_puerco_sp_esu, title = "Spring SWE and Upper Puerco early Summer PDSI")
+plot_cor_swe_pdsi(ch_mid_sj_sp_esu, title = "Spring SWE and Mid San Juan early Summer PDSI")
+
 
 ```
 
@@ -452,11 +550,34 @@ plot_cor_swe_pdsi(swe_pdsi_sp_lsu, title = "Spring SWE and late Summer PDSI")
 
 tsaile_pdsi <- read_csv("Chapters/tsaile_pdsi.csv") %>% 
   rename(date = DateTime,
-         pdsi = `Palmer Drought Severity Index (PDSI) (gridMET) at TSAILE/WHEATFIELDS, 2003-10-01 to 2019-05-01`) %>% 
+         pdsi = `Palmer Drought Severity Index (PDSI) (gridMET) at TSAILE/WHEATFIELDS, 1979-01-01 to 2019-07-11`) %>% 
   add_water_year()
 
-tsaile_pdsi_mnth <- calc_pdsi_metrics(tsaile_pdsi, "month", mean) %>% 
-  plot_pdsi(title = "Tsaile")
+tsaile_pdsi_mnth <- calc_pdsi_metrics(tsaile_pdsi, "month", mean)  
+  plot_pdsi(tsaile_pdsi_mnth, title = "Tsaile")
 
 ```
+
+
+#### Chuska SWE Anomalies vs Tsaile chapter PDSI
+```{r, echo=FALSE}
+# graph chuska swe anomalies and tsaile pdsi:
+ch_tsaile <- combine_swe_pdsi(tsaile_pdsi, ch_swe_anom)
+plot_pdsi_swe(ch_tsaile, title = "Tsaile")
+
+```
+
+```{r, echo = FALSE}
+# look at correlations
+ch_tsaile_sp_esu <- compare_swe_pdsi(ch_swe_anom, swe_mnths = c(3,4), tsaile_pdsi_mnth, pdsi_mnths = c(5,6))
+plot_cor_swe_pdsi(ch_tsaile_sp_esu, title = "Spring SWE and Tsaile early Summer PDSI")
+
+```
+
+#### Chuska Average SWE cold season vs PDSI of AMJ of Tsaile 
+```{r}
+
+
+```
+
 

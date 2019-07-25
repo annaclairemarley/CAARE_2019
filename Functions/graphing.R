@@ -398,3 +398,37 @@ plot_pdsi = function(df, title = ""){
   
     return(plot)
 }
+
+#####################################################################
+#####################################################################
+#' plot_pdsi_swe
+#' 
+#' plots swe anomaly and pdsi, use the output dataframe of combine_swe_pdsi()
+#'
+#' @param df dataframe of pdsi and swe
+#' @param title the name of what the pdsi is for
+#'
+#' @return 
+
+plot_pdsi_swe = function(df, title = ""){
+  
+  plot = df %>% 
+    ggplot(aes(x = date)) + 
+    geom_col(aes(y = anomaly_perc/100), fill = "#9dc6e0", show.legend = FALSE) +
+    labs(
+      x = "Year",
+      y = "SWE Percent different from average (scaled down by 100)",
+      title = sprintf("Chuska SWE and %s PDSI", title)
+    ) +
+    scale_x_date(expand = c(0,0)) +
+    geom_line(aes(y = pdsi)) +
+    scale_y_continuous(sec.axis = sec_axis(~., name = "PDSI"), expand = c(0,0)) +
+    #scale_color_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+    scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
+    theme_classic() +
+    theme(axis.line.y.right = element_line(color = "#1219cc"),
+          axis.text.y.right = element_text(color = "#1219cc"),
+          axis.title.y.right = element_text(color = "#1219cc")) 
+
+  return(plot)
+}
