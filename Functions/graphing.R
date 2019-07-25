@@ -337,3 +337,64 @@ plot_wk_max_time = function(df, title = "") {
 
   return(graph)
 }
+
+#####################################################################
+#####################################################################
+#' plot_cor_swe_pdsi
+#' 
+#' plots the correlation between swe and pdsi
+#'
+#' @param df df created with compare_swe_pdsi()
+#' @param title whatever you want the title to be
+#'
+#' @return correlation between swe and pdsi, trendline and r value
+
+
+plot_cor_swe_pdsi = function(df, title = ""){
+  
+  coef = cor.test(df$mean_swe, df$mean_pdsi)$estimate
+  
+  # plot the correlation
+  cor_plot_test <- df %>%
+    ggplot(aes(x = mean_swe, y = mean_pdsi)) +
+    geom_point() +
+    geom_smooth(method = "lm", se = FALSE)+
+    labs(
+      x = "SWE Anomaly",
+      y = "PDSI",
+      title = sprintf("%s", title),
+      subtitle = sprintf("r = %s", round(coef, 3))
+    ) +
+  theme_classic()
+
+  return(cor_plot_test)
+}
+
+#####################################################################
+#####################################################################
+#' plot_pdsi
+#' 
+#' plots basic pdsi trend
+#'
+#' @param df dataframe of pdsi
+#' @param title the name of what the pdsi is for
+#'
+#' @return 
+
+plot_pdsi = function(df, title = ""){
+  
+    plot = df %>% 
+      ggplot(aes(x = date, y = pdsi)) + 
+      geom_col(aes(fill = sign), show.legend = FALSE) +
+      labs(
+        x = "Year",
+        y = "PDSI",
+        title = sprintf("%s Palmer Drought Severity Index (PDSI)", title)
+      ) +
+      scale_x_date(expand = c(0,0)) +
+      scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+      geom_smooth(method = "lm") +
+      theme_classic()
+  
+    return(plot)
+}

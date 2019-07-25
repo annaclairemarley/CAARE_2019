@@ -155,7 +155,7 @@ corrplot(cor_pdsi_chuska, method = "ellipse", type = "upper",
 ```
 
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, error=TRUE}
 
 
 
@@ -183,7 +183,7 @@ chuska_ship_graph
 
 ```
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, error = TRUE}
 # chuska vs chinle
 
 chuska_chin <- chinle_mnth_av %>% 
@@ -206,7 +206,7 @@ chuska_chin_graph
 
 ```
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, error = TRUE}
 #fortdefiance anomaly
 
 fort_def_mnth_intra_av <- fort_defiance_mnth_av %>% 
@@ -260,7 +260,7 @@ chuska_fd_graph2
 
 ```
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, error = TRUE}
 # Chuska and fort defiance agency % difference from average correlations
 
 plot(chuska_fd$anomaly_perc, chuska_fd$anomaly_pdsi)
@@ -308,23 +308,10 @@ nn_wk_pdsi_graph <- nn_wk_pdsi %>%
 ```{r, echo = FALSE}
 nn_mnth_pdsi <- calc_pdsi_metrics(nn_pdsi, "month", mean)
 
-nn_mnth_pdsi_graph <- nn_mnth_pdsi %>% 
-  ggplot(aes(x = date, y = pdsi)) + 
-  geom_col(aes(fill = sign), show.legend = FALSE) +
-  labs(
-    x = "Year",
-    y = "PDSI",
-    title = "Navajo Nation Palmer Drought Severity Index (PDSI) "
-  ) +
-  scale_x_date(expand = c(0,0)) +
-  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
-  geom_smooth(method = "lm") +
-  theme_classic()
-
-nn_mnth_pdsi_graph
+plot_pdsi(nn_mnth_pdsi, title = "Navajo Nation")
 ```
 
-#### Compare to total swe for all high elevation regions
+#### Compare PDSI whole NN to total swe for all high elevation regions
 
 ```{r, echo = FALSE}
 # read in the total weekly swe for the mountain ranges 
@@ -373,4 +360,103 @@ nn_pdsi_swe
 
 ```
 
+
+```{r, echo = FALSE}
+
+nn_pdsi_swe2 <- mtns_swe_nn_pdsi %>% 
+  ggplot(aes(x = date)) + 
+  geom_col(aes(y = anomaly_perc/100), fill = "#9dc6e0", show.legend = FALSE) +
+  labs(
+    x = "Year",
+    y = "SWE Percent different from average (scaled down by 100)",
+    title = "Navajo Nation Palmer Drought Severity Index (PDSI) "
+  ) +
+  scale_x_date(expand = c(0,0)) +
+  geom_line(aes(y = pdsi)) +
+  scale_y_continuous(sec.axis = sec_axis(~., name = "PDSI"), expand = c(0,0)) +
+  #scale_color_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
+  theme_classic() +
+  theme(axis.line.y.right = element_line(color = "#1219cc"),
+        axis.text.y.right = element_text(color = "#1219cc"),
+        axis.title.y.right = element_text(color = "#1219cc")) 
+  
+
+nn_pdsi_swe2
+
+```
+
+### Now let's looks at correlations between different months
+
+#### Notation:
+- Winter SWE: November - February (w)
+- Spring SWE: March - April (sp)
+- Early summer PDSI: May - June (esu)
+- Mid summer PDSI: June - July (msu)
+- Late summer PDSI: July - August (lsu)
+
+
+```{r, echo = FALSE}
+
+# first clean up the monthly anomaly of the mts a bit the mountains
+mtns_swe_anom_clean <- mtns_swe_anom %>% 
+  select(date, anomaly_perc, waterYear)
+
+# get the monthly mean of pdsi & filter to 2004
+nn_pdsi_mnth <- calc_pdsi_metrics(nn_pdsi, "month", mean) %>% 
+  filter(waterYear >= 2004)
+
+```
+
+```{r, echo = FALSE}
+#### dataframes of combined ### 
+
+# spring swe, early summer pdsi:
+swe_pdsi_sp_esu <- compare_swe_pdsi(mtns_swe_anom_clean, swe_mnths = c(3,4), nn_pdsi_mnth, pdsi_mnths = c(5,6))
+
+# spring swe, mid summer pdsi:
+swe_pdsi_sp_msu <- compare_swe_pdsi(mtns_swe_anom_clean, swe_mnths = c(3,4), nn_pdsi_mnth, pdsi_mnths = c(6,7))
+
+# spring swe, late summer pdsi:
+swe_pdsi_sp_lsu <- compare_swe_pdsi(mtns_swe_anom_clean, swe_mnths = c(3,4), nn_pdsi_mnth, pdsi_mnths = c(7,8))
+```
+
+
+```{r, echo = FALSE}
+# correlations
+plot_cor_swe_pdsi(swe_pdsi_sp_esu, title = "Spring SWE and early Summer PDSI")
+plot_cor_swe_pdsi(swe_pdsi_sp_msu, title = "Spring SWE and mid Summer PDSI")
+plot_cor_swe_pdsi(swe_pdsi_sp_lsu, title = "Spring SWE and late Summer PDSI")
+
+
+```
+
+### Compare SWE of Chuska to PDSI watersheds
+
+```{r, echo = FALSE}
+# Chaco
+
+# Chinle
+
+# Upper Puerco
+
+# middle san juan
+
+```
+
+
+### Compare SWE of Chuska to PDSI chapters of interest
+
+```{r, echo = FALSE}
+# read in Tsaile chapter PDSI
+
+tsaile_pdsi <- read_csv("Chapters/tsaile_pdsi.csv") %>% 
+  rename(date = DateTime,
+         pdsi = `Palmer Drought Severity Index (PDSI) (gridMET) at TSAILE/WHEATFIELDS, 2003-10-01 to 2019-05-01`) %>% 
+  add_water_year()
+
+tsaile_pdsi_mnth <- calc_pdsi_metrics(tsaile_pdsi, "month", mean) %>% 
+  plot_pdsi(title = "Tsaile")
+
+```
 

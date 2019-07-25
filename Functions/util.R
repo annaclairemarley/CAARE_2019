@@ -414,3 +414,44 @@ to_water_week = function(date) {
   return((epiweek(date) + diff) %% 52 + 1)
   
 }
+
+#####################################################################
+#####################################################################
+
+#' compare_swe_pdsi
+#'
+#' Gets the months for swe and pdsi that you want to compare, averages them together and then sticks them together into the same dataframe
+#'
+#' @param swe_df swe monthly anomaly
+#' @param swe_mnths put in the list of months you want to look at
+#' @param pdsi_df average monthly pdsi
+#' @param pdsi_mnths put in the list of months you want to look at
+#' 
+#' @return dataframe with swe and pdsi filtered to the months you want to look at
+#' @export
+#'
+#' @examples compare_swe_pdsi(mtns_swe_anom_clean, swe_mnths = c(3,4), nn_pdsi_mnth, pdsi_mnths = c(5,6))
+
+
+compare_swe_pdsi = function(swe_df, swe_mnths = c(), pdsi_df, pdsi_mnths = c()) {
+  
+  swe_filtered = swe_df %>% 
+    filter(month(date) %in% swe_mnths) %>% 
+    arrange(date) %>% # make sure the dates are in order
+    rename(date_swe = date) %>% 
+    group_by(waterYear) %>% 
+    summarize(mean_swe = mean(anomaly_perc)) %>% 
+    mutate(id_no =  1:length(mean_swe)) # make a new sequential id column to join with the pdsi dataframe
+  
+  pdsi_filtered = pdsi_df %>% 
+    filter(month(date) %in% pdsi_mnths) %>% 
+    arrange(date) %>%
+    rename(date_pdsi = date) %>% 
+    group_by(waterYear) %>% 
+    summarize(mean_pdsi = mean(pdsi)) %>% 
+    mutate(id_no =  1:length(mean_pdsi))
+  
+  swe_pdsi_merge = merge(swe_filtered, pdsi_filtered, by = "id_no")
+  
+  return(swe_pdsi_merge)
+}
