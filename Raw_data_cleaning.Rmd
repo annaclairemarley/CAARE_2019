@@ -289,5 +289,3 @@ write.csv(west_navajo_pdsi, "Agencies/west_navajo_pdsi.csv", row.names = FALSE)
 
 
 
-
-

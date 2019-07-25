@@ -24,6 +24,18 @@ source('Functions/graphing.R')
 ```
 
 ```{r, include = FALSE}
+# read in NN whole PDSI
+
+nn_pdsi <- read_csv("NN_whole/nn_pdsi_79-19.csv") %>% 
+  rename(date = DateTime,
+         pdsi = `Palmer Drought Severity Index (PDSI) (gridMET) at 4005, 1979-01-01 to 2019-06-09`) %>% 
+  add_water_year()
+
+
+```
+
+
+```{r, include = FALSE}
 
 # read in the agency data & add water year
 chinle_pdsi <- read_csv("Agencies/chinle_pdsi.csv") 
@@ -143,7 +155,7 @@ corrplot(cor_pdsi_chuska, method = "ellipse", type = "upper",
 ```
 
 
-```{r}
+```{r, echo = FALSE}
 
 
 
@@ -171,7 +183,7 @@ chuska_ship_graph
 
 ```
 
-```{r}
+```{r, echo = FALSE}
 # chuska vs chinle
 
 chuska_chin <- chinle_mnth_av %>% 
@@ -194,7 +206,7 @@ chuska_chin_graph
 
 ```
 
-```{r}
+```{r, echo = FALSE}
 #fortdefiance anomaly
 
 fort_def_mnth_intra_av <- fort_defiance_mnth_av %>% 
@@ -257,7 +269,7 @@ cor.test(chuska_fd$anomaly_perc, chuska_fd$anomaly_pdsi)
 ```
 
 
-```{r}
+```{r, echo = FALSE}
 ## quick make chuska anomaly graph for poster
 
  # first make variables for ease of graphing  
@@ -277,4 +289,88 @@ ch_poster <- ggplot(chuska_mnth_anom, aes(x = date, y = anomaly)) +
   theme_classic()
 
 ```
+
+
+### PDSI Whole Navajo Nation
+```{r, echo = FALSE}
+# do some analysis of the whole NN
+
+nn_wk_pdsi <- calc_pdsi_metrics(nn_pdsi, "1 week", mean)
+
+nn_wk_pdsi_graph <- nn_wk_pdsi %>% 
+  ggplot(aes(x = date, y = pdsi)) + 
+  geom_line() +
+  theme_classic()
+
+
+```
+
+```{r, echo = FALSE}
+nn_mnth_pdsi <- calc_pdsi_metrics(nn_pdsi, "month", mean)
+
+nn_mnth_pdsi_graph <- nn_mnth_pdsi %>% 
+  ggplot(aes(x = date, y = pdsi)) + 
+  geom_col(aes(fill = sign), show.legend = FALSE) +
+  labs(
+    x = "Year",
+    y = "PDSI",
+    title = "Navajo Nation Palmer Drought Severity Index (PDSI) "
+  ) +
+  scale_x_date(expand = c(0,0)) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  geom_smooth(method = "lm") +
+  theme_classic()
+
+nn_mnth_pdsi_graph
+```
+
+#### Compare to total swe for all high elevation regions
+
+```{r, echo = FALSE}
+# read in the total weekly swe for the mountain ranges 
+mtns_swe <- read_csv("NN_whole/nn_mtns_swe_total.csv")
+
+# calculate monthly anomaly
+mtns_swe_anom <- mtns_swe %>% 
+  rename(swe_mm = sum_mts_swe_m3) %>% 
+  add_water_year() %>% 
+  calc_swe_metrics("month", mean) %>% 
+  calc_month_anom() 
+```
+
+```{r, echo = FALSE}
+#### graph percent difference from average swe against pdsi
+
+#first merge both things into the same dataframe
+mtns_swe_nn_pdsi <- left_join(nn_mnth_pdsi, mtns_swe_anom, by = "date") %>% 
+  filter(date >= "2003-10-01") %>% 
+  select(date, waterYear.x, anomaly_perc, sign.x,  pdsi, sign.y) %>% 
+  rename(pdsi_sign = sign.x,
+         swe_sign = sign.y)
+
+# now graph it
+
+nn_pdsi_swe <- mtns_swe_nn_pdsi %>% 
+  ggplot(aes(x = date)) + 
+  geom_col(aes(y = pdsi, fill = pdsi_sign), show.legend = FALSE) +
+  labs(
+    x = "Year",
+    y = "PDSI",
+    title = "Navajo Nation Palmer Drought Severity Index (PDSI) "
+  ) +
+  scale_x_date(expand = c(0,0)) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  geom_col(aes(y = anomaly_perc/100, alpha = 0.5), fill = "#1219cc") +
+  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "SWE Anomaly (scaled down by 100)"), expand = c(0,0)) +
+  scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
+  theme_classic() +
+  theme(axis.line.y.right = element_line(color = "#1219cc"),
+        axis.text.y.right = element_text(color = "#1219cc"),
+        axis.title.y.right = element_text(color = "#1219cc")) 
+  
+
+nn_pdsi_swe
+
+```
+
 

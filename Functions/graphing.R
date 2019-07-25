@@ -296,5 +296,44 @@ plot_slope_swedpth = function(df, title = "") {
   return(graph)
 }
 
+#####################################################################
+#####################################################################
+#' plot_wk_max_time
+#' 
+#' Plots what week of the year the maximum swe_mm weekly average per year occurs for each water year
+#'
+#' @param df needs to be the output dataframe of:
+#'              df %>% get_year_max() %>% mutate(wk_of_wy = to_water_week(date))
+#' @param title name of the region
+#'
+#' @return graph with trendline
+#' @export
+#'
+#' @examples pplot_wk_max_time(ch_max_weekly_yr, title = "Chuska")
 
+plot_wk_max_time = function(df, title = "") {
+  
+  # fit a linear trendline and get the coefficients for the graph
+  lm = lm(df$wk_of_wy ~ df$waterYear)
+  intercept = coef(lm)[1]
+  slope = coef(lm)[2]
+  pvalue = summary(lm)$coefficients[2,4]
+  
+  # graph it
+  graph = df %>% 
+    ggplot(aes(x = waterYear, y = wk_of_wy)) + 
+    geom_line() +
+    labs(
+      x = "Water Year",
+      y = "Week of Water Year",
+      title = sprintf("%s", title),
+      subtitle = sprintf("Trendline: y = %sx + %s \n Slope p-value: %s", 
+                         round(slope, 3), round(intercept,3), round(pvalue,2))
+    ) +
+    scale_x_continuous(expand = c(0,0), breaks = seq(2004,2019, by = 2)) +
+    ylim(5,30)+
+    geom_smooth(method = "lm", se = FALSE) +
+    theme_classic()
 
+  return(graph)
+}

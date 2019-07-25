@@ -279,7 +279,9 @@ bm_daily
 carr_weekly <- calc_swe_metrics(car_wint_wy, "1 week", mean)
 ch_weekly <- calc_swe_metrics(ch_wint_wy, "1 week", mean)
 bm_weekly <- calc_swe_metrics(bm_wint_wy, "1 week", mean)
-nm_weekly <- calc_swe_metrics(bm_wint_wy, "1 week", mean)
+nm_weekly <- calc_swe_metrics(nm_wint_wy, "1 week", mean)
+mp_weekly <- calc_swe_metrics(mp_wint_wy, "1 week", mean)
+dp_weekly <- calc_swe_metrics(dp_wint_wy, "1 week", mean)
 
 ```
 
@@ -875,35 +877,55 @@ max_ch_weekly <- ch_weekly %>%
 
 ```
 
-### Chuska annual weekly average max SWE
+### Annual weekly average max SWE
 
+Timing of Max Weekly Average SWE Value
 
+```{r, echo = FALSE}
+# make dataframes of max weekly average for each year and region
 
-```{r, echo = FALSe}
+car_max_weekly_yr <- carr_weekly %>% 
+  get_year_max() %>% 
+  mutate(wk_of_wy = to_water_week(date))
+
 ch_max_weekly_yr <- ch_weekly %>% 
+  get_year_max() %>% 
+  mutate(wk_of_wy = to_water_week(date))
+
+bm_max_weekly_yr <- bm_weekly %>% 
+  get_year_max() %>% 
+  mutate(wk_of_wy = to_water_week(date))
+
+nm_max_weekly_yr <- nm_weekly %>% 
+  get_year_max() %>% 
+  mutate(wk_of_wy = to_water_week(date))
+
+mp_max_weekly_yr <- mp_weekly %>% 
+  get_year_max() %>% 
+  mutate(wk_of_wy = to_water_week(date))
+
+dp_max_weekly_yr <- dp_weekly %>% 
   get_year_max() %>% 
   mutate(wk_of_wy = to_water_week(date))
 
 ```
 
-```{r, echo = FALSE}
-# make graph
-ch_wk_max_graph <- ch_max_weekly_yr %>% 
-  ggplot(aes(x = waterYear, y = wk_of_wy)) + 
-  geom_line() +
-  labs(
-    x = "Water Year",
-    y = "Week of Water Year",
-    title = "Timing of Chuska Max Weekly Average SWE Value",
-    subtitle = "Trendline: y = -0.1941x +  409.7176 | p-value: 0.5023"
-  ) +
-  scale_x_continuous(expand = c(0,0), breaks = seq(2004,2019, by = 2)) +
-  geom_smooth(method = "lm", se = FALSE) +
-  theme_classic()
 
-ch_wk_max_graph
+```{r, fig.width = 10, echo = FALSE}
 
+car_wk_max_graph <- plot_wk_max_time(car_max_weekly_yr, title = "Carrizo")
+ch_wk_max_graph <- plot_wk_max_time(ch_max_weekly_yr, title = "Chuska")
+bm_wk_max_graph <- plot_wk_max_time(bm_max_weekly_yr, title = "Black Mesa")
+nm_wk_max_graph <- plot_wk_max_time(nm_max_weekly_yr, title = "Navajo Mt.")
+mp_wk_max_graph <- plot_wk_max_time(mp_max_weekly_yr, title = "Mt Powell")
+dp_wk_max_graph <- plot_wk_max_time(dp_max_weekly_yr, title = "Defiance Plateau")
+
+grid.arrange(car_wk_max_graph, ch_wk_max_graph, 
+             bm_wk_max_graph, nm_wk_max_graph, 
+             mp_wk_max_graph, dp_wk_max_graph,
+             ncol = 3)
 ```
+
 
 ```{r, include=FALSE}
 # check equation for trendline
@@ -1005,3 +1027,78 @@ plot
 ```
 
 - SCA anomalies only somewhat track to SWE anomalies 
+
+
+### Make average weekly swe dataframe for all the mountain ranges combined
+
+- first I am multiplying each region's swe values by their area
+- then I will add these values up to get a total average amount of snow in the mountains for that week
+- This way when I get an average value, it's the average amount of snow in the mountains at any one point
+
+```{r, echo = FALSE}
+
+# join all the weekly data into one dataframe and convert swe_mm to meters
+wk_av_all <- join_weeks(carrizo = carr_weekly, chuska = ch_weekly, 
+                         black_mesa = bm_weekly, mt_powell = mp_weekly, 
+                         defiance_plateau = dp_weekly, navajo_mt = nm_weekly) %>% 
+  mutate(swe_m = swe_mm/1000)
+
+# now multiply each region's weekly average swe_m by its area to get swe in cubic meters
+wk_av_all$swe_total_m3 = 0
+for (i in length(wk_av_all$region)) {
+  wk_av_all$swe_total_m3 = ifelse(wk_av_all$region == "carrizo", 
+                               wk_av_all$swe_m*carrizo_area_m, wk_av_all$swe_total_m3)
+  wk_av_all$swe_total_m3 = ifelse(wk_av_all$region == "chuska", 
+                               wk_av_all$swe_m*chuska_area_m, wk_av_all$swe_total_m3)
+  wk_av_all$swe_total_m3 = ifelse(wk_av_all$region == "black_mesa", 
+                               wk_av_all$swe_m*bm_area_m, wk_av_all$swe_total_m3)
+  wk_av_all$swe_total_m3 = ifelse(wk_av_all$region == "mt_powell", 
+                               wk_av_all$swe_m*mt_powell_area_m, wk_av_all$swe_total_m3)
+  wk_av_all$swe_total_m3 = ifelse(wk_av_all$region == "navajo_mt", 
+                               wk_av_all$swe_m*nm_area_m, wk_av_all$swe_total_m3)
+  wk_av_all$swe_total_m3 = ifelse(wk_av_all$region == "defiance_plateau", 
+                               wk_av_all$swe_m*defiance_area_m, wk_av_all$swe_total_m3)
+}
+
+# now add together the weeks to get a total value
+wk_sum_all <- wk_av_all %>% 
+  group_by(date) %>% 
+  summarize(sum_mts_swe_m3 = sum(swe_total_m3))
+
+
+
+```
+
+
+```{r, echo = FALSE}
+
+# let's see what it looks like
+swe_all_mts_plot <- wk_sum_all %>% 
+  ggplot(aes(x = date, y = sum_mts_swe_m3)) +
+  geom_line() +
+  labs(
+    x = "Year",
+    y = "Weekly Average Total High Elevation SWE (cubic meters)"
+  ) +
+  scale_y_continuous(expand = c(0,0)) +
+  theme_classic()
+
+swe_all_mts_plot
+
+```
+
+```{r, fig.width = 10, echo = FALSE}
+# graph monthly anomaly
+wk_all_anom <- wk_sum_all %>% 
+  rename(swe_mm = sum_mts_swe_m3) %>% 
+  add_water_year() %>% 
+  calc_swe_metrics("month", mean) %>% 
+  calc_month_anom() 
+  
+
+wk_all_anom_plot <- plot_anomaly(wk_all_anom)
+wk_all_anom_plot
+
+```
+
+
