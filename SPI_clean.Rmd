@@ -106,6 +106,8 @@ ch_chaco_negative <- swe_spi_same(ch_chaco_spi_june, type = "negative")
 
 ## Chinle
 
+### Chinle SPI
+
 ```{r, echo = FALSE, message=FALSE}
 # read in precipitation
 chinle_precip <- read_csv("watersheds/chinle_precip.csv") 
@@ -131,6 +133,32 @@ plot_spi(chinle_spi, month = all_months, title = "Chinle SPI")
 
 # let's take a look at the 6 month June SPI of each year
 plot_spi(chinle_spi, month = c(6), title = "Chinle June SPI")
+
+```
+
+### Chinle SPI vs PDSI
+
+```{r, echo = FALSE}
+chinle_spi_pdsi <- chinle_spi_june %>% 
+  merge(chinle_pdsi_jj, by = "waterYear")
+
+
+chinle_spi_pdsi_cor <- cor.test(chinle_spi_pdsi$spi, chinle_spi_pdsi$mean_pdsi)$estimate
+
+chinle_spi_pdsi_plot <- chinle_spi_pdsi %>%
+    ggplot(aes(x = mean_pdsi, y = spi)) +
+    geom_point() +
+    geom_smooth(method = "lm", se = FALSE)+
+    labs(
+      x = "PDSI",
+      y = "SPI",
+      title = "Chinle June 6 month PDSI and SPI ",
+      subtitle = sprintf("r = %s", round(chinle_spi_pdsi_cor,3)) 
+    ) +
+    theme_classic()
+chinle_spi_pdsi_plot
+
+
 
 ```
 

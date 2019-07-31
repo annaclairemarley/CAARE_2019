@@ -663,6 +663,19 @@ plot_cor_swe_pdsi(ch_mid_sj_wint_jj, title = "Winter SWE and Mid San Juan Jan-Ju
 - Generally higher correlations with winter swe and 6 month PDSI then there were for AMJ PDSI
 - Upper Puerco has a correlation of almost 0.4
 
+```{r, include = FALSE}
+# just need to quickly grab the 6 month pdsi value for each watershed for comparing to spi
+chaco_pdsi_jj <- ch_chaco_wint_jj %>% 
+  select(waterYear.y, mean_pdsi) %>% 
+  rename(waterYear = waterYear.y)
+
+chinle_pdsi_jj <- ch_chinle_wint_jj %>% 
+  select(waterYear.y, mean_pdsi) %>% 
+  rename(waterYear = waterYear.y)
+
+
+```
+
 
 LEt's look at upper puerco and chuska on a timeline for Jan-June PDSI
 
