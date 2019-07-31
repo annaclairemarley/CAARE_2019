@@ -286,6 +286,14 @@ write.csv(west_navajo_pdsi, "Agencies/west_navajo_pdsi.csv", row.names = FALSE)
 
 ```
 
+# put the chinle watershed precip into one files
+```{r}
+
+chinle_precip <- read_chunks("data_download/data", fill_pattern = "Chinle_pr_.*", variable = "precipitation")
+
+write.csv(chinle_precip, "watersheds/chinle_precip.csv", row.names = FALSE)
+
+```
 
 
 

@@ -26,7 +26,7 @@ source('Functions/graphing.R')
 
 This Rmarkdown shows analysis of SPI at the watersheds bordering the Chuskas and Tsaile chaper
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message=FALSE}
 # first load in chuska winter anomalies
 
 ch_wint_anom <- read_csv("Chuska/ch_wint_swe_anom.csv") %>% 
@@ -43,7 +43,7 @@ all_months = c(1,2,3,4,5,6,7,8,9,10,11,12)
 
 ### Chaco SPI
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message=FALSE}
 # read in chaco precipitation
 
 chaco_precip <- read_csv("watersheds/chaco_precip.csv") %>% 
@@ -90,28 +90,88 @@ ch_chaco_spi_june <- chaco_spi_june %>%
    merge(ch_wint_anom, by = "waterYear") %>% 
    rename(swe_anom = anomaly_perc)
 
-plot_cor_swe_spi(ch_chaco_spi_june, title = "Chuska Winter SWE Anomaly and Tsaile Jan-June SPI")
+plot_cor_swe_spi(ch_chaco_spi_june, title = "Chuska Winter SWE Anomaly and Chinle Jan-June SPI")
 
-ch_tsaile_correct <- swe_spi_same(ch_chaco_spi_june, type = "total")
-ch_tsaile_positive <- swe_spi_same(ch_chaco_spi_june, type = "positive")
-ch_tsaile_negative <- swe_spi_same(ch_chaco_spi_june, type = "negative")
+ch_chaco_correct <- swe_spi_same(ch_chaco_spi_june, type = "total")
+ch_chaco_positive <- swe_spi_same(ch_chaco_spi_june, type = "positive")
+ch_chaco_negative <- swe_spi_same(ch_chaco_spi_june, type = "negative")
 
 ```
 
-- The percent of times swe the anomaly for the year and spi had the same sign `r ch_tsaile_correct*100`%
+- The percent of times swe the anomaly for the year and spi had the same sign `r ch_chaco_correct*100`%
 
-- The percent of times swe anomaly for the year was positive and was followed by a positive spi had the same sign out of all positive swe years `r ch_tsaile_positive*100`%
+- The percent of times swe anomaly for the year was positive and was followed by a positive spi had the same sign out of all positive swe years `r ch_chaco_positive*100`%
 
-- The percent of times swe anomaly for the year was negative and was followed by a negative spi had the same sign out of all negative swe years `r ch_tsaile_negative*100`%
+- The percent of times swe anomaly for the year was negative and was followed by a negative spi had the same sign out of all negative swe years `r ch_chaco_negative*100`%
 
 ## Chinle
+
+```{r, echo = FALSE, message=FALSE}
+# read in precipitation
+chinle_precip <- read_csv("watersheds/chinle_precip.csv") 
+
+# now change the precip data to spi
+chinle_spi <- precip_to_spi(chinle_precip)
+
+# SPI June
+
+chinle_spi_june <- chinle_spi %>% 
+  filter(year(date) >= 2004) %>% 
+  filter(month(date) == 6) %>% 
+  add_water_year() %>% 
+  select(waterYear, spi)
+
+```
+
+
+```{r, echo = FALSE}
+
+# whole year 6 month SPI
+plot_spi(chinle_spi, month = all_months, title = "Chinle SPI")
+
+# let's take a look at the 6 month June SPI of each year
+plot_spi(chinle_spi, month = c(6), title = "Chinle June SPI")
+
+```
+
+
+### Chinle SPI and Chuska SWE
+
+```{r, echo = FALSE}
+### now let's look at Chuska monthly swe anomaly and June 6 month SPI ###
+plot_swe_spi(chinle_spi, month = c(6), region_time = "Chinle June 6 month")
+
+```
+
+
+```{r, echo = FALSE}
+
+# let's look at the correlation between them 
+ch_chinle_spi_june <- chinle_spi_june %>% 
+   merge(ch_wint_anom, by = "waterYear") %>% 
+   rename(swe_anom = anomaly_perc)
+
+plot_cor_swe_spi(ch_chinle_spi_june, title = "Chuska Winter SWE Anomaly and Chinle Jan-June SPI")
+
+ch_chinle_correct <- swe_spi_same(ch_chinle_spi_june, type = "total")
+ch_chinle_positive <- swe_spi_same(ch_chinle_spi_june, type = "positive")
+ch_chinle_negative <- swe_spi_same(ch_chinle_spi_june, type = "negative")
+
+```
+
+- The percent of times swe the anomaly for the year and spi had the same sign `r ch_chinle_correct*100`%
+
+- The percent of times swe anomaly for the year was positive and was followed by a positive spi had the same sign out of all positive swe years `r ch_chinle_positive*100`%
+
+- The percent of times swe anomaly for the year was negative and was followed by a negative spi had the same sign out of all negative swe years `r ch_chinle_negative*100`%
+
 
 ## Middle San Juan
 
 ## Upper  Puerco
 
 
-
+----------------
 
 ## Tsaile Chapter
 
