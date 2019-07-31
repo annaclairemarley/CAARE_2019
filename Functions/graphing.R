@@ -437,12 +437,12 @@ plot_pdsi_swe = function(df, title = ""){
 #####################################################################
 #' plot_cor_swe_spi
 #' 
-#' plots the correlation between swe and pdsi
+#' plots the correlation between swe and spi
 #'
 #' @param df df 
 #' @param title whatever you want the title to be
 #'
-#' @return correlation between swe and pdsi, trendline and r value
+#' @return correlation between swe and spi, trendline and r value
 
 
 plot_cor_swe_spi = function(df, title = ""){
@@ -463,4 +463,80 @@ plot_cor_swe_spi = function(df, title = ""){
     theme_classic()
   
   return(cor_plot_test)
+}
+
+#####################################################################
+#####################################################################
+#' plot_spi
+#' 
+#' plots spi
+#'
+#' @param df df 
+#' @param title whatever you want the title to be
+#'
+#' @return bar graph of spi during the time you want it
+#' @example plot_spi(tsaile_spi, month = c(6,7,6), title = "Tsaile SPI")
+
+
+plot_spi = function(df, month, title = "") {
+    spi_graph <- df %>% 
+      filter(month(date) %in% c(month)) %>% 
+      filter(year(date) >= 2004) %>% 
+      ggplot(aes(x = date)) +
+      geom_col(aes(y = spi, fill = sign), show.legend = FALSE) +
+      scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+      labs(
+        y = "SPI",
+        x = "Water Year",
+        title = sprintf("%s", title)
+      ) +
+      scale_y_continuous(expand = c(0,0)) +
+      theme_classic()
+
+    return(spi_graph)
+}
+
+#####################################################################
+#####################################################################
+#' plot_swe_spi
+#' 
+#' plots swe anomaly and spi
+#'
+#' @param df df 
+#' @param month months of interest
+#' @param region_time the name of the region and the month of spi your plotting
+#'
+#' @return bar graph of spi during the time you want it
+#' @example plot_swe_spi(tsaile_spi, month = c(6,7,6), title = "Tsaile June")
+
+plot_swe_spi = function(spi_df, month, region_time = "") {
+
+  # clean up spi df and combine with chuska winter anomaly
+     spi_clean <- spi_df %>% 
+      filter(year(date) >= 2004) %>% 
+      filter(month(date) %in% c(month)) %>% 
+      mutate(waterYear = year(date)) %>% # note that water year is only = year(date) from Jan--end of sept
+      select(waterYear, spi, sign) 
+  
+  
+  # now combine winter chuska swe anom and the SPI
+  ch_spi_plot <- spi_clean %>% 
+    merge(ch_wint_anom, by = "waterYear") %>% 
+    select(waterYear,anomaly_perc, spi) %>% 
+    rename(SPI = spi,
+           "SWE Anomaly" = anomaly_perc) %>% 
+    melt(id.vars = "waterYear") %>% 
+    rename(metric = variable) %>% 
+    ggplot(aes(x = waterYear, y = value, fill = metric)) +
+    scale_fill_manual(values = c("#3288BD", "#99D594")) +
+    geom_col(position = "dodge") +
+    labs(
+      x = "Water Year",
+      y = "Value",
+      fill = "Metric",
+      title = sprintf("Winter SWE Anomaly and %s SPI", region_time)
+    )+
+    theme_classic()
+
+  return(ch_spi_plot)
 }

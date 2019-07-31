@@ -24,6 +24,100 @@ source("Functions/util.R")
 source('Functions/graphing.R')
 ```
 
+This Rmarkdown shows analysis of SPI at the watersheds bordering the Chuskas and Tsaile chaper
+
+```{r, echo = FALSE}
+# first load in chuska winter anomalies
+
+ch_wint_anom <- read_csv("Chuska/ch_wint_swe_anom.csv") %>% 
+  select(waterYear, anomaly_perc)
+
+# for later use:
+all_months = c(1,2,3,4,5,6,7,8,9,10,11,12)
+
+```
+
+# Watersheds
+
+## Chaco
+
+### Chaco SPI
+
+```{r, echo = FALSE}
+# read in chaco precipitation
+
+chaco_precip <- read_csv("watersheds/chaco_precip.csv") %>% 
+  rename(Precipitation = `Precipitation (mm)`,
+         date = DateTime)
+
+# now change the precip data to spi
+chaco_spi <- precip_to_spi(chaco_precip)
+
+# Chaco SPI June
+
+chaco_spi_june <- chaco_spi %>% 
+  filter(year(date) >= 2004) %>% 
+  filter(month(date) == 6) %>% 
+  add_water_year() %>% 
+  select(waterYear, spi)
+
+```
+
+```{r, echo = FALSE}
+
+# whole year 6 month SPI
+plot_spi(chaco_spi, month = all_months, title = "Chaco SPI")
+
+# let's take a look at the 6 month June SPI of each year
+plot_spi(chaco_spi, month = c(6), title = "Chaco June SPI")
+
+```
+
+
+### Chaco SPI and Chuska SWE
+
+```{r, echo = FALSE}
+### now let's look at Chuska monthly swe anomaly and June 6 month SPI ###
+plot_swe_spi(chaco_spi, month = c(6), region_time = "Chaco June 6 month")
+
+```
+
+
+```{r, echo = FALSE}
+
+# let's look at the correlation between them 
+ch_chaco_spi_june <- chaco_spi_june %>% 
+   merge(ch_wint_anom, by = "waterYear") %>% 
+   rename(swe_anom = anomaly_perc)
+
+plot_cor_swe_spi(ch_chaco_spi_june, title = "Chuska Winter SWE Anomaly and Tsaile Jan-June SPI")
+
+ch_tsaile_correct <- swe_spi_same(ch_chaco_spi_june, type = "total")
+ch_tsaile_positive <- swe_spi_same(ch_chaco_spi_june, type = "positive")
+ch_tsaile_negative <- swe_spi_same(ch_chaco_spi_june, type = "negative")
+
+```
+
+- The percent of times swe the anomaly for the year and spi had the same sign `r ch_tsaile_correct*100`%
+
+- The percent of times swe anomaly for the year was positive and was followed by a positive spi had the same sign out of all positive swe years `r ch_tsaile_positive*100`%
+
+- The percent of times swe anomaly for the year was negative and was followed by a negative spi had the same sign out of all negative swe years `r ch_tsaile_negative*100`%
+
+## Chinle
+
+## Middle San Juan
+
+## Upper  Puerco
+
+
+
+
+## Tsaile Chapter
+
+### Tsaile SPI
+
+#### 6 month SPI
 ```{r, include = FALSE}
 # read in TSAILE precipitation
 
@@ -32,55 +126,51 @@ tsaile_precip <- read_csv("Chapters/tsaile_precip.csv")
 # now change the precip data to spi
 tsaile_spi <- precip_to_spi(tsaile_precip)
 
-```
+# Tsaile SPI June
 
-```{r, echo = FALSE}
-
-# let's take a look at SPI Jan-June of each year
-tsaile_spi_graph <- tsaile_spi %>% 
-  filter(month(date) == 6) %>% 
-  filter(year(date) >= 2004) %>% 
-  ggplot(aes(x = date)) +
-  geom_col(aes(y = spi, fill = sign), show.legend = FALSE) +
-  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
-  labs(
-    y = "SPI"
-  ) +
-  scale_y_continuous(expand = c(0,0)) +
-  theme_classic()
-
-tsaile_spi_graph
-
-```
-
-```{r, echo = FALSE}
-### now let's look at Chuska monthly swe anomaly and Tsaile SPI Jan-June ###
-
-# first load in chuska winter anomalies
-
-ch_wint_anom <- read_csv("Chuska/ch_wint_swe_anom.csv") %>% 
-  select(waterYear, anomaly_perc)
-
-# clean up tsail_spi and combine with chuska
 tsaile_spi_june <- tsaile_spi %>% 
   filter(year(date) >= 2004) %>% 
   filter(month(date) == 6) %>% 
-  mutate(waterYear = year(date)) %>% 
-  select(waterYear, spi, sign) 
+  add_water_year() %>% 
+  select(waterYear, spi)
+
+```
+
+```{r, echo = FALSE}
+
+# whole year 6 month SPI
+plot_spi(tsaile_spi, month = all_months, title = "Tsaile SPI")
+
+# let's take a look at the 6 month June SPI of each year
+plot_spi(tsaile_spi, month = c(6), title = "Tsaile June SPI")
+
+```
+
+#### 3 month SPI
+```{r, include = FALSE}
+
+# now change the precip data to spi
+tsaile_spi_3 <- precip_to_spi(tsaile_precip, timeframe = 3)
+
+```
+
+```{r, echo = FALSE}
 
 
-# let's look at the winter chuska swe anom and the Jan-june SPI
-ch_tsail_spi_plot <- tsaile_spi_june %>% 
-  merge(ch_wint_anom, by = "waterYear") %>% 
-  select(waterYear,anomaly_perc, spi) %>% 
-  melt(id.vars = "waterYear") %>% 
-  rename(metric = variable) %>% 
-  ggplot(aes(x = waterYear, y = value, fill = metric)) +
-  geom_col(position = "dodge") +
-  theme_classic()
+# whole year 6 month SPI
+plot_spi(tsaile_spi, month = all_months, title = "Tsaile SPI")
 
-ch_tsail_spi_plot
+# let's take a look at the 6 month June SPI of each year
+plot_spi(tsaile_spi, month = c(6), title = "Tsaile June SPI")
 
+```
+
+
+### Tsaile SPI and Chuska SWE
+
+```{r, echo = FALSE}
+### now let's look at Chuska monthly swe anomaly and Tsaile SPI Jan-June ###
+plot_swe_spi(tsaile_spi, month = c(6), region_time = "Tsaile June 6 month")
 
 ```
 
@@ -90,13 +180,27 @@ ch_tsail_spi_plot
 ```{r, echo = FALSE}
 
 # let's look at the correlation between them 
-ch_tsaile_spi <- tsaile_spi_june %>% 
+ch_tsaile_spi_june <- tsaile_spi_june %>% 
    merge(ch_wint_anom, by = "waterYear") %>% 
    rename(swe_anom = anomaly_perc)
 
-plot_cor_swe_spi(ch_tsaile_spi, title = "Chuska Winter SWE Anomaly and Tsaile Jan-June SPI")
+plot_cor_swe_spi(ch_tsaile_spi_june, title = "Chuska Winter SWE Anomaly and Tsaile Jan-June SPI")
 
-ch_tsaile_correct <- (count(filter(ch_tsaile_spi, spi < 0 & swe_anom < 0)) + count(filter(ch_tsaile_spi, spi > 0 & swe_anom > 0))) / count(ch_tsaile_spi)
+ch_tsaile_correct <- swe_spi_same(ch_tsaile_spi_june, type = "total")
+ch_tsaile_positive <- swe_spi_same(ch_tsaile_spi_june, type = "positive")
+ch_tsaile_negative <- swe_spi_same(ch_tsaile_spi_june, type = "negative")
+
 ```
 
-The percent of times swe and pdsi had the same sign `r ch_tsaile_correct`
+- The percent of times swe the anomaly for the year and spi had the same sign `r ch_tsaile_correct*100`%
+
+- The percent of times swe anomaly for the year was positive and was followed by a positive spi had the same sign out of all positive swe years `r ch_tsaile_positive*100`%
+
+- The percent of times swe anomaly for the year was negative and was followed by a negative spi had the same sign out of all negative swe years `r ch_tsaile_negative*100`%
+
+### 3 month SPI
+```{r, echo=FALSE}
+
+plot_swe_spi(tsaile_spi_3, month = c(6), region_time = "Tsaile June 3 month")
+```
+

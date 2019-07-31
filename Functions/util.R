@@ -496,8 +496,9 @@ compare_swe_pdsi = function(swe_df, swe_mnths = c(), pdsi_df, pdsi_mnths = c()) 
 #' Changes a dataframe with columns: "Date" and "Precipitation" to a df of "date", "spi", "sign"
 #'
 #' @param df the precipitation dataframe is all you need
+#' @param timeframe the monts to calculate spi in
 
-precip_to_spi = function(df) {
+precip_to_spi = function(df, timeframe = 6) {
   
   # first you have to get the df into the right format to run the spi function on it
   spi_prep <- df %>% 
@@ -515,11 +516,48 @@ precip_to_spi = function(df) {
   class(spi_prep) <- c("data.frame", "precintcon.monthly")
   
   # SPI
-  final_spi <- spi(spi_prep, period = 6) %>% 
+  final_spi <- spi(spi_prep, period = timeframe) %>% 
     mutate(sign = ifelse(spi < 0, "negative", "positive")) %>% 
     mutate(date = ymd(paste(year, month, "01", sep = "-"))) %>% 
     select(date, spi, sign)
   
   return(final_spi)
 
+}
+
+#####################################################################
+#####################################################################
+
+#' swe_spi_same
+#'
+#' calculates what the ratio is for the number of times the swe and spi variable have the same sign
+#' if type = "posiitive", it will tell you the ratio of the number of times swe and spi were positive / the number of times swe was positive
+#'
+#' @param df the precipitation dataframe is all you need
+#' @param type can be "positive", "negative" or "total"
+#' 
+#' @example swe_spi_same(df, type = "negative")
+
+swe_spi_same = function(df, type = "") {
+  
+    #spi_calc = ifelse(type = "positive", (ch_spi_positive = count(filter(df, spi > 0 & swe_anom > 0)) / count(filter(df, swe_anom > 0))), spi_calc)
+    #spi_calc = ifelse(type = "negative", (ch_spi_negative = count(filter(df, spi < 0 & swe_anom < 0)) / count(filter(df, swe_anom < 0))), spi_calc)
+    #spi_calc =  ifelse(type = "total", (ch_spi_correct = (count(filter(df, spi < 0 & swe_anom < 0)) +
+     #                     count(filter(df, spi > 0 & swe_anom > 0))) / count(df)), spi_calc))
+
+   spi_calc = (if (type == "positive") {
+        
+        count(filter(df, spi > 0 & swe_anom > 0)) / count(filter(df, swe_anom > 0))
+        
+      } else if (type == "negative") {
+        
+        count(filter(df, spi < 0 & swe_anom < 0)) / count(filter(df, swe_anom < 0))
+        
+      } else {
+        
+        (count(filter(df, spi < 0 & swe_anom < 0)) +
+                              count(filter(df, spi > 0 & swe_anom > 0))) / count(df)
+      }
+)
+  return(spi_calc)
 }
