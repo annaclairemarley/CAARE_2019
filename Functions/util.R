@@ -475,6 +475,7 @@ compare_swe_pdsi = function(swe_df, swe_mnths = c(), pdsi_df, pdsi_mnths = c()) 
     mutate(id_no =  1:length(mean_swe)) # make a new sequential id column to join with the pdsi dataframe
   
   pdsi_filtered = pdsi_df %>% 
+    filter(waterYear >= 2004) %>% 
     filter(month(date) %in% pdsi_mnths) %>% 
     arrange(date) %>%
     rename(date_pdsi = date) %>% 
@@ -485,4 +486,40 @@ compare_swe_pdsi = function(swe_df, swe_mnths = c(), pdsi_df, pdsi_mnths = c()) 
   swe_pdsi_merge = merge(swe_filtered, pdsi_filtered, by = "id_no")
   
   return(swe_pdsi_merge)
+}
+
+#####################################################################
+#####################################################################
+
+#' precip_to_spi
+#'
+#' Changes a dataframe with columns: "Date" and "Precipitation" to a df of "date", "spi", "sign"
+#'
+#' @param df the precipitation dataframe is all you need
+
+precip_to_spi = function(df) {
+  
+  # first you have to get the df into the right format to run the spi function on it
+  spi_prep <- df %>% 
+    clean_names() %>% 
+    group_by(date = floor_date(date, "month")) %>% 
+    summarize(precipitation = sum(precipitation)) %>% 
+    mutate(year = year(date),
+           month = month(date)) %>% 
+    select(year, month, precipitation) %>% 
+    mutate(precipitation = as.integer(precipitation),
+           year = as.integer(year),
+           month = as.integer(month))
+  
+  # you have to do this to make the function work 
+  class(spi_prep) <- c("data.frame", "precintcon.monthly")
+  
+  # SPI
+  final_spi <- spi(spi_prep, period = 6) %>% 
+    mutate(sign = ifelse(spi < 0, "negative", "positive")) %>% 
+    mutate(date = ymd(paste(year, month, "01", sep = "-"))) %>% 
+    select(date, spi, sign)
+  
+  return(final_spi)
+
 }

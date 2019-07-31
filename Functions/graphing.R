@@ -432,3 +432,35 @@ plot_pdsi_swe = function(df, title = ""){
 
   return(plot)
 }
+
+#####################################################################
+#####################################################################
+#' plot_cor_swe_spi
+#' 
+#' plots the correlation between swe and pdsi
+#'
+#' @param df df 
+#' @param title whatever you want the title to be
+#'
+#' @return correlation between swe and pdsi, trendline and r value
+
+
+plot_cor_swe_spi = function(df, title = ""){
+  
+  coef = cor.test(df$swe_anom, df$spi)$estimate
+  
+  # plot the correlation
+  cor_plot_test <- df %>%
+    ggplot(aes(x = swe_anom, y = spi)) +
+    geom_point() +
+    geom_smooth(method = "lm", se = FALSE)+
+    labs(
+      x = "SWE Anomaly",
+      y = "SPI",
+      title = sprintf("%s", title),
+      subtitle = sprintf("r = %s", round(coef, 3))
+    ) +
+    theme_classic()
+  
+  return(cor_plot_test)
+}

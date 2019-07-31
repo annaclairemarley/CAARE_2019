@@ -1,7 +1,11 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
-
-regions = {
+const regionType = {
+    AGENCY: 'a',
+    CHAPTER: 'c',
+    FUSION_TABLE: 'ft'
+}
+const regions = {
     "agencies": [
         "CHINLE",
         "EASTERN NAVAJO",
@@ -124,28 +128,51 @@ puppeteer.launch({headless: false}).then(browser => {
 
     /**
      * Helper for extracting CSV data from websites.
-     * @param {string} startDate Of format yyyy-mm-dd
-     * @param {string} endDate   Of format yyyy-mm-dd
-     * @param {string} variable  A string that is: pdsi, swe or snow_Depth (snow depth)
-     * @param {string} region    Name of region. Must be in regions list
-     * @param {bool}   isChapter A boolean if the region name is a chapter name (True) or not (False)
+     * @param {string} startDate  Of format yyyy-mm-dd
+     * @param {string} endDate    Of format yyyy-mm-dd
+     * @param {string} variable   A string that is: pdsi, swe or snow_Depth (snow depth)
+     * @param {string} region     Name of region. Must be in regions list, or the name of a region in the given fusion table
+     * @param {string} type       A regionType enum telling the type of the area 
+     * @param {string} fusionID   If the regionType is FUSION_TABLE, this must be set to the fusion table ID
      */
-    async function getDataHelper(startDate, endDate, variable, regionName, isChapter){
+    async function getDataHelper(startDate, endDate, variable, regionName, type, fusionID){
         productTS = "G";
         variableTS = "pr";
         scaleTS = 4000;
-        regionName = encodeURIComponent(regionName)
-        statisticTS = "Total"
-        geom_geoms = "projects/climate-engine/featureCollections/shp_simplified/ClimateEngine_Navajo_Nation_Agencies"
-        geom_regions = "navajo_nation_agencies"
-        if (isChapter === true) {
-            geom_geoms = "projects/climate-engine/featureCollections/shp_simplified/ClimateEngine_Navajo_Nation_Chapters"
-            geom_regions = "navajo_nation_chapters"
+        regionName = encodeURIComponent(regionName);
+        statisticTS = "Total";
+        geom_geoms = "projects/climate-engine/featureCollections/shp_simplified/ClimateEngine_Navajo_Nation_Agencies";
+        geom_regions = "navajo_nation_agencies";
+        geom_types = "navajo_nation";
+        geom_meta_types = "feature_collection";
+        geom_columnnames = "Name";
+        switch(type) {
+            case regionType.AGENCY:
+                break;
+            case regionType.CHAPTER:
+                geom_geoms = "projects/climate-engine/featureCollections/shp_simplified/ClimateEngine_Navajo_Nation_Chapters";
+                geom_regions = "navajo_nation_chapters";
+                break;
+            case regionType.FUSION_TABLE:
+                geom_geoms = fusionID;
+                geom_types = "custom_fusiontable";
+                geom_meta_types = "custom_fusiontable";
+                geom_columnnames = "Name";
+                geom_regions = "";
+
         }
         switch(variable) {
+            case "pr":
+                break;
             case "pdsi":
                 productTS = "G";
                 variableTS = "pdsi";
+                scaleTS = 4000;
+                statisticTS = ""
+                break;
+            case "spi":
+                productTS = "G";
+                variableTS = "spi";
                 scaleTS = 4000;
                 statisticTS = ""
                 break;
@@ -162,7 +189,7 @@ puppeteer.launch({headless: false}).then(browser => {
         }
         
         const page = await browser.newPage();
-        console.log('https://app.climateengine.org/?toolAction=getTimeSeriesOverDateRange&timeSeriesCalc=days&variable2display=none&productTypeTS=MET' + 
+        console.log('https://app.climateengine.org/climateEngine?toolAction=getTimeSeriesOverDateRange&timeSeriesCalc=days&variable2display=none&productTypeTS=MET' + 
         '&productTS=' + productTS + 
         '&variableTS=' + variableTS + 
         '&statisticTS=' + statisticTS + 
@@ -172,12 +199,15 @@ puppeteer.launch({headless: false}).then(browser => {
         '&dateEndTS=' + endDate + 
         '&mapCenterLongLat=-109.7906%2C36.2531&mapzoom=8&chartType=line&runningMeanDays=9' +
         '&geom_geoms=' + geom_geoms + 
-        '&geom_types=navajo_nation&geom_meta_types=feature_collection&geom_displays=block&geom_checks=checked' + 
+        '&geom_types=' + geom_types +  
+        '&geom_meta_types=' + geom_meta_types + 
+        '&geom_displays=block&geom_checks=checked' + 
         '&geom_altnames=' + regionName +
-        '&geom_columnnames=Name' + 
+        '&geom_columnnames=' + geom_columnnames + 
         '&geom_regions=' + geom_regions +
         '&geom_subchoices=' + regionName)
-        await page.goto('https://app.climateengine.org/?toolAction=getTimeSeriesOverDateRange&timeSeriesCalc=days&variable2display=none&productTypeTS=MET' + 
+
+        await page.goto('https://app.climateengine.org/climateEngine?toolAction=getTimeSeriesOverDateRange&timeSeriesCalc=days&variable2display=none&productTypeTS=MET' + 
                         '&productTS=' + productTS + 
                         '&variableTS=' + variableTS + 
                         '&statisticTS=' + statisticTS + 
@@ -187,11 +217,15 @@ puppeteer.launch({headless: false}).then(browser => {
                         '&dateEndTS=' + endDate + 
                         '&mapCenterLongLat=-109.7906%2C36.2531&mapzoom=8&chartType=line&runningMeanDays=9' +
                         '&geom_geoms=' + geom_geoms + 
-                        '&geom_types=navajo_nation&geom_meta_types=feature_collection&geom_displays=block&geom_checks=checked' + 
+                        '&geom_types=' + geom_types +
+                        '&geom_meta_types=' + geom_meta_types +
+                        '&geom_displays=block&geom_checks=checked' + 
                         '&geom_altnames=' + regionName +
-                        '&geom_columnnames=Name' + 
+                        '&geom_columnnames=' + geom_columnnames + 
                         '&geom_regions=' + geom_regions +
                         '&geom_subchoices=' + regionName);
+ 
+                         
 
         // Get the "viewport" of the page, as reported by the page.
         const csv = await page.evaluate(() => {
@@ -246,20 +280,26 @@ puppeteer.launch({headless: false}).then(browser => {
     /**
      * Gets data for chapters or agencies in the navajo nation and saves it in the data folder.
      * @param {array[string]} regionNames Array of region names to download data for. Names must be as they appear in the regions array
-     * @param {bool} areChapters          If the values in the array of region names are chapters (true) or agencies (false)
+     * @param {string} type               The type of the region. Must be one of the enums of regionType
      * @param {string} startDate          The start date for data in format yyyy-mm-dd
      * @param {string} endDate            The end date for the data in format yyy-mm-dd (Inclusive)
      * @param {string} variable           The variable to get. Can be one of: swe, snow_depth or pdsi
+     * @param {array[string]} fusionIDs   [Optional] If the regionType is fusion table, then this array must be of the same length as the regionNames array, with each entry giving the corresponding fusion table
      * @param {string} customHeader       [Optional] String to use as custom header for csv file. 
      */
-    async function getData(regionNames, areChapters, startDate, endDate, variable, customHeader) {
+    async function getData(regionNames, type, startDate, endDate, variable, fusionIDs, customHeader) {
         customHeader = customHeader || null;
-        //Splt date into 6 month intervals
+        //Splt date into 3 month intervals
+        if (type === regionType.FUSION_TABLE) {
+            if (regionNames.length !== fusionIDs.length) {
+                throw Error("Fusion IDs and region names mismatched and the region type was given as FUSION_TABLE")
+            }
+        }
         timeSegments = []
         sDate = toDate(startDate);
         eDate = toDate(endDate);
         currentEndDate = toDate(startDate);
-        currentEndDate.setDate(currentEndDate.getDate() + 180);
+        currentEndDate.setDate(currentEndDate.getDate() + 30);
         if (diff_6months(eDate, sDate) < 1 ) {
             timeSegments.push([formatDate(sDate), formatDate(eDate)]);
         } else {
@@ -270,49 +310,63 @@ puppeteer.launch({headless: false}).then(browser => {
                 timeSegments.push([formatDate(sDate), formatDate(currentEndDate)]);
                 sDate = new Date(currentEndDate.getTime());
                 sDate.setDate(sDate.getDate() + 1);
-                currentEndDate.setDate(currentEndDate.getDate() + 180);
+                currentEndDate.setDate(currentEndDate.getDate() + 30);
             }
         }
         //Select regions
         regionsToUse = regionNames;
-        
+        currentEndDate = null;
         for (regionIndex in regionsToUse) {
             data = []
             header = ""
-            for (timeframeIndex in timeSegments) {
-                let csv = await getDataHelper(timeSegments[timeframeIndex][0], timeSegments[timeframeIndex][1], variable, regionsToUse[regionIndex], areChapters);
-                header = csv.shift(); //Remove header
-                data.push(...csv);
-            }
-        
-            if (customHeader !== null) {
-                header = customHeader;
-            }
-
-            fs.writeFile("data/" + regionsToUse[regionIndex] + "_" + variable + "_" + startDate + "_" + endDate + ".csv", header + "\n" + data.join("\n"), function(err) {
-                if(err) {
-                    return console.log(err);
+            try {
+                for (timeframeIndex in timeSegments) {
+                    let csv = null;
+                    if (type == regionType.FUSION_TABLE) {
+                        csv = await getDataHelper(timeSegments[timeframeIndex][0], timeSegments[timeframeIndex][1], variable, regionsToUse[regionIndex], type, fusionIDs[regionIndex]);
+                    } else {
+                        csv = await getDataHelper(timeSegments[timeframeIndex][0], timeSegments[timeframeIndex][1], variable, regionsToUse[regionIndex], type);
+                    }
+                    currentEndDate = timeSegments[timeframeIndex][1];
+                    header = csv.shift(); //Remove header
+                    data.push(...csv);
                 }
             
-                console.log(regionsToUse[regionIndex] + "_" + variable + "_" + startDate + "_" + endDate + ".csv Saved!");
-            }); 
+                if (customHeader !== null) {
+                    header = customHeader;
+                }
+            } catch(err) {
+                console.log(err);
+                console.log("Saving early...");
+                endDate = currentEndDate;
+            } finally {
+                fs.writeFile("data/" + encodeURIComponent(regionsToUse[regionIndex]) + "_" + variable + "_" + startDate + "_" + endDate + ".csv", header + "\n" + data.join("\n"), function(err) {
+                    if(err) {
+                        return console.log(err);
+                    }
+                
+                    console.log(encodeURIComponent(regionsToUse[regionIndex]) + "_" + variable + "_" + startDate + "_" + endDate + ".csv Saved!");
+                }); 
+            }
+            // app.climateengine.org/climateEngine?toolAction=getTimeSeriesOverDateRange&timeSeriesCalc=days&variable2display=none&productTypeTS=MET&productTS=G&variableTS=pr&statisticTS=Total&scaleTS=4000&unitsTS=metric&dateStartTS=1979-01-01&dateEndTS=1979-04-01&mapCenterLongLat=-109.7906%2C36.2531&mapzoom=8&chartType=line&runningMeanDays=9&geom_geoms=projects/climate-engine/featureCollections/shp_simplified/ClimateEngine_Navajo_Nation_Agencies&geom_types=navajo_nation&geom_meta_types=feature_collection&geom_displays=block&geom_checks=checked&geom_altnames=Chaco&geom_columnnames=Name&geom_regions=navajo_nation_agencies&geom_subchoices=Chaco
+            // app.climateengine.org/climateEngine?toolAction=getTimeSeriesOverDateRange&timeSeriesCalc=days&variable2display=none&productTypeTS=MET&productTS=G&variableTS=pr&statisticTS=Total&scaleTS=4000&unitsTS=metric&dateStartTS=1979-01-01&dateEndTS=2000-01-01&mapCenterLongLat=-108.2225%2C36.1686&mapzoom=8&chartType=line&runningMeanDays=9&geom_geoms=1hGYMbREmoq-66t26xMOl6rqk4Qlq45KjFP2MRGUV&geom_types=custom_fusiontable&geom_meta_types=custom_fusiontable&geom_displays=block&geom_checks=checked&geom_altnames=17002&geom_columnnames=geometry_vertex_count&geom_regions=&geom_subchoices=17002
 
             
         }
         
     }
 
-    getData(regions.agencies, false, "2003-09-01", "2019-07-17", "pdsi", "Date,Palmer Drounght Severity Index").then(() => {
-        browser.close();
-    }).catch(e => console.log(e));
+    // getData(regions.agencies, false, "2003-09-01", "2019-07-17", "pdsi", "Date,Palmer Drounght Severity Index").then(() => {
+    //     browser.close();
+    // }).catch(e => console.log(e));
     // Alternate usage:
-    /*
-    getData(regions.chapters, true, "2003-09-01", "2019-07-17", "pdsi", "Date,Palmer Drounght Severity Index").then(() => {
+    
+    // getData(regions.chapters, true, "2003-09-01", "2019-07-17", "pdsi", "Date,Palmer Drounght Severity Index").then(() => {
+    //     browser.close();
+    // }).catch(e => console.log(e));
+    getData(["Chaco"], regionType.FUSION_TABLE,"2012-02-12", "2019-07-17", "pr", ["1hGYMbREmoq-66t26xMOl6rqk4Qlq45KjFP2MRGUV"], "Date,Precipitation").then(() => {
         browser.close();
     }).catch(e => console.log(e));
-    getData(["CHINLE"], false, "2003-09-01", "2019-07-17", "pdsi", "Date,Palmer Drounght Severity Index").then(() => {
-        browser.close();
-    }).catch(e => console.log(e));
-    */
+    
     
 });
