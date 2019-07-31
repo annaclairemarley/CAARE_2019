@@ -46,9 +46,8 @@ all_months = c(1,2,3,4,5,6,7,8,9,10,11,12)
 ```{r, echo = FALSE, message=FALSE}
 # read in chaco precipitation
 
-chaco_precip <- read_csv("watersheds/chaco_precip.csv") %>% 
-  rename(Precipitation = `Precipitation (mm)`,
-         date = DateTime)
+chaco_precip <- read_csv("watersheds/chaco_precip.csv") 
+
 
 # now change the precip data to spi
 chaco_spi <- precip_to_spi(chaco_precip)
@@ -90,7 +89,7 @@ ch_chaco_spi_june <- chaco_spi_june %>%
    merge(ch_wint_anom, by = "waterYear") %>% 
    rename(swe_anom = anomaly_perc)
 
-plot_cor_swe_spi(ch_chaco_spi_june, title = "Chuska Winter SWE Anomaly and Chinle Jan-June SPI")
+plot_cor_swe_spi(ch_chaco_spi_june, title = "Chuska Winter SWE Anomaly and Chaco Jan-June SPI")
 
 ch_chaco_correct <- swe_spi_same(ch_chaco_spi_june, type = "total")
 ch_chaco_positive <- swe_spi_same(ch_chaco_spi_june, type = "positive")
