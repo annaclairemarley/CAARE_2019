@@ -49,6 +49,26 @@ up_pue_precip <- read_csv("watersheds/upper_puerco_precip.csv")
 ```
 
 
+```{r, echo = FALSE}
+# read in the watersheds' monthly pdsi data to compare to spi
+chaco_pdsi <- read_csv("watersheds/chaco_pdsi.csv", col_names=c("date", "pdsi"), skip =1) %>% 
+  add_water_year() %>% 
+  calc_pdsi_metrics("month", mean) 
+
+chinle_pdsi <- read_csv("watersheds/chinle_pdsi.csv", col_names=c("date", "pdsi"), skip =1) %>% 
+  add_water_year() %>% 
+  calc_pdsi_metrics("month", mean)
+
+up_pue_pdsi <- read_csv("watersheds/upper_puerco_pdsi.csv", col_names=c("date", "pdsi"), skip =1) %>% 
+  add_water_year() %>% 
+  calc_pdsi_metrics("month", mean)
+
+mid_sj_pdsi <- read_csv("watersheds/middle_san_juan_pdsi.csv", col_names=c("date", "pdsi"), skip =1) %>% 
+  add_water_year() %>% 
+  calc_pdsi_metrics("month", mean)
+
+```
+
 ## Chaco
 
 ### Chaco SPI
@@ -76,19 +96,17 @@ plot_spi(chaco_spi, month = c(6), title = "Chaco June SPI")
 ### Chaco PDSI and SPI
 
 ```{r, echo = FALSE}
-# read in the PDSI January-June 6 month average 
-chaco_pdsi_jun_6 <- read_csv("watersheds/chaco_pdsi_jun_6.csv")
+chaco_pdsi_spi <- chaco_spi %>% 
+  select(date, spi) %>% 
+  merge(chaco_pdsi, by = "date") %>% 
+  rename(mean_pdsi = pdsi)
 
-# merge with spi
-chaco_spi_pdsi_june <- merge_pdsi_spi(chaco_spi, months = c(6), chaco_pdsi_jun_6)
-
-# find and plot the correlation between the two
-plot_cor_pdsi_spi(chaco_spi_pdsi_june, title = "Chaco June 6 month")
+plot_cor_pdsi_spi(chaco_pdsi_spi, title = "Chaco")
 
 ```
 
 
-### Chaco SPI and Chuska SWE
+m### Chaco SPI and Chuska SWE
 
 ```{r, echo = FALSE}
 ### now let's look at Chuska monthly swe anomaly and 6 month SPI ###
@@ -203,20 +221,15 @@ plot_spi(chinle_spi, month = c(6), title = "Chinle June SPI")
 
 ### Chinle SPI vs PDSI
 
-```{r, echo = FALSE, error = TRUE}
-# read in the PDSI January-June 6 month average 
-chinle_pdsi_jun_6 <- read_csv("watersheds/chinle_pdsi_jun_6.csv")
+```{r, echo = FALSE}
+chinle_pdsi_spi <- chinle_spi %>% 
+  select(date, spi) %>% 
+  merge(chinle_pdsi, by = "date") %>% 
+  rename(mean_pdsi = pdsi)
 
-# merge with spi
-chinle_spi_pdsi_june <- merge_pdsi_spi(chinle_spi, months = c(6), chinle_pdsi_jun_6 ) 
-
-# find and plot the correlation between the two
-plot_cor_pdsi_spi(chinle_spi_pdsi_june, title = "Chinle June 6 month")
-
-
+plot_cor_pdsi_spi(chinle_pdsi_spi, title = "Chinle")
 
 ```
-
 
 ### Chinle SPI and Chuska SWE
 
@@ -313,21 +326,14 @@ plot_spi(mid_sj_spi, month = c(6), title = "Middle SJ June SPI")
 ### Middle San Juan SPI and PDSI
 
 ```{r, echo = FALSE}
-# read in the PDSI January-June 6 month average 
-mid_sj_pdsi_jun_6 <- read_csv("watersheds/mid_sj_pdsi_jun_6.csv")
+mid_sj_pdsi_spi <- mid_sj_spi %>% 
+  select(date, spi) %>% 
+  merge(mid_sj_pdsi, by = "date") %>% 
+  rename(mean_pdsi = pdsi)
 
-# merge with spi
-mid_sj_spi_pdsi_june <- merge_pdsi_spi(mid_sj_spi, months = c(6), mid_sj_pdsi_jun_6 )  
-
-
-# find and plot the correlation between the two
-mid_sj_spi_pdsi_plot <- plot_cor_pdsi_spi(mid_sj_spi_pdsi_june, 
-                                          title = "Middle San Juan June 6 month")
-mid_sj_spi_pdsi_plot
-
+plot_cor_pdsi_spi(mid_sj_pdsi_spi, title = "Middle San Juan")
 
 ```
-
 ### Middle San Juan SPI and Chuska SWE
 
 ```{r, echo = FALSE}
@@ -407,31 +413,28 @@ plot_spi(up_pue_spi, month = c(6), title = "Upper Puerco June SPI")
 
 ```
 
-### Middle San Juan SPI and PDSI
+### Upper Puerco San Juan SPI and PDSI
+
 
 ```{r, echo = FALSE}
-# read in the PDSI January-June 6 month average 
-up_puerco_pdsi_jun_6 <- read_csv("watersheds/up_puerco_pdsi_jun_6.csv")
+up_pue_pdsi_spi <- up_pue_spi %>% 
+  select(date, spi) %>% 
+  merge(up_pue_pdsi, by = "date") %>% 
+  rename(mean_pdsi = pdsi)
 
-# merge with spi
-up_puerco_spi_pdsi_june <- merge_pdsi_spi(up_pue_spi, months = c(6), up_puerco_pdsi_jun_6 )  
-
-# find and plot the correlation between the two
-up_puerco_spi_pdsi_plot <- plot_cor_pdsi_spi(up_puerco_spi_pdsi_june, 
-                                          title = "Upper Puerco June 6 month")
-up_puerco_spi_pdsi_plot
+plot_cor_pdsi_spi(up_pue_pdsi_spi, title = "Upper Puerco")
 
 ```
 
 ### Upper Puerco SPI and Chuska SWE
 
 ```{r, echo = FALSE}
-ch_up_pue_spi_apr <- merge_ch_spi(up_pue_spi, months = c(4))
+ch_up_pue_spi_apr <- merge_ch_spi(up_pue_spi, months = c(4)) 
 
 ch_up_pue_spi_apr_plot <- plot_cor_swe_spi(ch_up_pue_spi_apr, 
                  title = "Winter SWE Anomaly & April SPI")
 
-ch_up_pue_spi_may <- merge_ch_spi(up_pue_spi, months = c(5))
+ch_up_pue_spi_may <- merge_ch_spi(up_pue_spi, months = c(5)) 
 
 ch_up_pue_spi_may_plot <- plot_cor_swe_spi(ch_up_pue_spi_may, 
                  title = "Winter SWE Anomaly & May SPI")
@@ -446,9 +449,52 @@ ch_up_pue_spi_july <- merge_ch_spi(up_pue_spi, months = c(7))
 ch_up_pue_spi_july_plot <- plot_cor_swe_spi(ch_up_pue_spi_july, 
                  title = "Winter SWE Anomaly & July SPI")
 
+```
+
+```{r, echo = FALSE}
+
 grid.arrange(ch_up_pue_spi_apr_plot, ch_up_pue_spi_may_plot, 
              ch_up_pue_spi_june_plot, ch_up_pue_spi_july_plot, ncol=2)
 ```
+
+- May has the highest correlation
+
+```{r, echo = FALSE}
+# without the 2010 water year
+ch_up_pue_spi_apr_n10 <- merge_ch_spi(up_pue_spi, months = c(4)) %>% 
+  filter(waterYear != 2010)
+
+ch_up_pue_spi_apr_plot_n10 <- plot_cor_swe_spi(ch_up_pue_spi_apr_n10, 
+                 title = "Winter SWE Anomaly & April SPI")
+
+ch_up_pue_spi_may_n10 <- merge_ch_spi(up_pue_spi, months = c(5)) %>% 
+  filter(waterYear != 2010)
+
+ch_up_pue_spi_may_plot_n10 <- plot_cor_swe_spi(ch_up_pue_spi_may_n10, 
+                 title = "Winter SWE Anomaly & May SPI")
+
+ch_up_pue_spi_june_n10 <- merge_ch_spi(up_pue_spi, months = c(6))%>% 
+  filter(waterYear != 2010)
+
+ch_up_pue_spi_june_plot_n10 <- plot_cor_swe_spi(ch_up_pue_spi_june_n10, 
+                 title = "Winter SWE Anomaly & June SPI")
+
+ch_up_pue_spi_july_n10 <- merge_ch_spi(up_pue_spi, months = c(7))%>% 
+  filter(waterYear != 2010)
+
+ch_up_pue_spi_july_plot_n10 <- plot_cor_swe_spi(ch_up_pue_spi_july_n10, 
+                 title = "Winter SWE Anomaly & July SPI")
+
+```
+
+#### Removing 2010 from the correlation
+```{r, echo = FALSE}
+
+grid.arrange(ch_up_pue_spi_apr_plot_n10, ch_up_pue_spi_may_plot_n10, 
+             ch_up_pue_spi_june_plot_n10, ch_up_pue_spi_july_plot_n10, ncol=2)
+```
+
+- taking out the 2010 water year does improve the correlation, May r -> 0.436, April r -> 0.385
 
 ```{r, echo = FALSE}
 # swe and spi following for MAY spi
@@ -524,6 +570,41 @@ grid.arrange(ch_tsaile_spi_apr_plot, ch_tsaile_spi_may_plot,
 
 ```
 - May is has the higest correlation
+
+### without 2010
+```{r, echo = FALSE}
+# plot correlations between swe and different month SPIs
+
+ch_tsaile_spi_apr_n10 <- merge_ch_spi(tsaile_spi, months = c(4)) %>% 
+  filter(waterYear != 2010)
+
+ch_tsaile_spi_apr_plot_n10 <- plot_cor_swe_spi(ch_tsaile_spi_apr_n10, 
+                 title = "Winter SWE Anomaly & April SPI")
+
+ch_tsaile_spi_may_n10 <- merge_ch_spi(tsaile_spi, months = c(5)) %>% 
+  filter(waterYear != 2010)
+
+ch_tsaile_spi_may_plot_n10 <- plot_cor_swe_spi(ch_tsaile_spi_may_n10, 
+                 title = "Winter SWE Anomaly & May SPI")
+
+ch_tsaile_spi_june_n10 <- merge_ch_spi(tsaile_spi, months = c(6)) %>% 
+  filter(waterYear != 2010)
+
+ch_tsaile_spi_june_plot_n10 <- plot_cor_swe_spi(ch_tsaile_spi_june_n10, 
+                 title = "Winter SWE Anomaly & June SPI")
+
+ch_tsaile_spi_july_n10 <- merge_ch_spi(tsaile_spi, months = c(7)) %>% 
+  filter(waterYear != 2010)
+
+ch_tsaile_spi_july_plot_n10 <- plot_cor_swe_spi(ch_tsaile_spi_july_n10, 
+                 title = "Winter SWE Anomaly & July SPI")
+
+grid.arrange(ch_tsaile_spi_apr_plot_n10, ch_tsaile_spi_may_plot_n10, 
+             ch_tsaile_spi_june_plot_n10, ch_tsaile_spi_july_plot_n10, ncol=2)
+
+```
+
+- taking out 2010 improves the correlation quite a bit
 
 ```{r, echo = FALSE}
 # swe and spi following for MAY spi

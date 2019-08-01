@@ -581,7 +581,7 @@ plot_cor_pdsi_spi = function(df, title = "") {
         x = "PDSI",
         y = "SPI",
         title = sprintf("%s PDSI and SPI", title),
-        subtitle = sprintf("r = %s | p-value: %s", round(coef,3), round(p_value, 3)) 
+        subtitle = sprintf("r = %s | p-value: %s", round(coef,3), p_value) 
       ) +
       theme_classic()
 

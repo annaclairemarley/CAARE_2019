@@ -1,0 +1,26 @@
+---
+title: "SPI from CHRPS"
+author: "AnnaClaire Marley"
+date: "8/1/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+# load the packages
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(gridExtra)
+library(grid)
+library(dataRetrieval)
+library(reshape2)
+library(corrplot)
+library(precintcon)
+source("Functions/util.R")
+source('Functions/graphing.R')
+```
+
