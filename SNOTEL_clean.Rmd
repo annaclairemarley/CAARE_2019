@@ -1,0 +1,97 @@
+---
+title: "SNOTEL"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+# load the packages
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(gridExtra)
+library(grid)
+library(dataRetrieval)
+library(reshape2)
+library(corrplot)
+library(precintcon)
+source("Functions/util.R")
+source('Functions/graphing.R')
+```
+
+```{r, echo = FALSE}
+
+beaver_spring <- read_csv("SNOTEL/beaver_spring.csv") 
+whiskey_creek <- read_csv("SNOTEL/whiskey_creek.csv") 
+
+```
+
+```{r, echo = FALSE}
+# read in chuska data for comparison
+ch_swe <- read_csv("winter_wy/ch_swe_wy_03_19.csv")
+
+```
+
+
+### Whiskey Creek
+```{r, echo = FALSE}
+# SWE
+
+wh_ck_swe <- whiskey_creek %>% 
+  select(date, swe_mm) %>% 
+  add_water_year()
+
+wh_ck_swe_plot <- wh_ck_swe %>% 
+  ggplot(aes(x = date, y = swe_mm)) +
+  geom_line() +
+  scale_y_continuous(expand = c(0,0)) +
+  theme_classic()
+
+wh_ck_swe_plot
+
+```
+
+```{r, fig.width=20,fig.height=5, echo= FALSE}
+
+# monthly
+
+wh_ck_mnth <- calc_swe_metrics(wh_ck_swe, "month", mean)
+
+graph_with_wateryear(wh_ck_mnth, "Whisky Creek", type = geom_col)
+
+wh_ck_mnth_anom <- calc_month_anom(wh_ck_mnth)
+
+plot_anomaly(wh_ck_mnth_anom, title = "Whiskey Creek Monthly Anomaly")
+
+```
+
+```{r, echo = FALSE}
+# weekly swe compare to Chuska 
+
+wh_ck_swe_04 <- wh_ck_swe %>% 
+  filter(waterYear >= 2004) %>% 
+  calc_swe_metrics("1 week", mean)
+
+ch_swe_wk <- calc_swe_metrics(ch_swe, "1 week", mean)
+
+
+plot(ch_swe_wk$swe_mm, wh_ck_swe_04$swe_mm)
+cor.test(ch_swe_wk$swe_mm, wh_ck_swe_04$swe_mm)
+```
+
+```{r}
+
+# monthly swe
+wh_ck_mnth_swe_04 <- wh_ck_mnth %>% 
+  filter(waterYear >= 2004)
+
+ch_swe_mnth <- calc_swe_metrics(ch_swe, "month", mean)
+
+
+plot(ch_swe_mnth$swe_mm, wh_ck_mnth_swe_04$swe_mm)
+cor.test(ch_swe_mnth$swe_mm, wh_ck_mnth_swe_04$swe_mm)
+```
+

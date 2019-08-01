@@ -51,19 +51,6 @@ chaco_precip <- read_csv("watersheds/chaco_precip.csv")
 # now change the precip data to spi
 chaco_spi <- precip_to_spi(chaco_precip)
 
-# Chaco SPI June
-
-chaco_spi_june <- chaco_spi %>% 
-  filter(year(date) >= 2004) %>% 
-  filter(month(date) == 6) %>% 
-  add_water_year() %>% 
-  select(waterYear, spi)
-
-chaco_spi_july <-chaco_spi %>% 
-  filter(year(date) >= 2004) %>% 
-  filter(month(date) == 7) %>% 
-  add_water_year() %>% 
-  select(waterYear, spi)
 
 ```
 
