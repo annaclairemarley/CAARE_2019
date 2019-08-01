@@ -448,6 +448,7 @@ plot_pdsi_swe = function(df, title = ""){
 plot_cor_swe_spi = function(df, title = ""){
   
   coef = cor.test(df$swe_anom, df$spi)$estimate
+  p_value = cor.test(df$swe_anom, df$spi)$p.value
   
   # plot the correlation
   cor_plot_test <- df %>%
@@ -458,7 +459,7 @@ plot_cor_swe_spi = function(df, title = ""){
       x = "SWE Anomaly",
       y = "SPI",
       title = sprintf("%s", title),
-      subtitle = sprintf("r = %s", round(coef, 3))
+      subtitle = sprintf("r = %s | p-value = %s", round(coef, 3), round(p_value, 3))
     ) +
     theme_classic()
   
@@ -472,16 +473,29 @@ plot_cor_swe_spi = function(df, title = ""){
 #' plots spi
 #'
 #' @param df df 
+#' @param month is the months you want to calculate spi for 
 #' @param title whatever you want the title to be
+#' @param years is whether you want the whole timeline or just from 2004 water year
 #'
 #' @return bar graph of spi during the time you want it
 #' @example plot_spi(tsaile_spi, month = c(6,7,6), title = "Tsaile SPI")
 
 
-plot_spi = function(df, month, title = "") {
-    spi_graph <- df %>% 
+plot_spi = function(df, month, title = "", years = "2004") {
+    
+  if (years == "all") {
+  
+    spi_clean <- df %>% 
+      filter(month(date) %in% c(month)) 
+    
+  } else {
+    
+    spi_clean <- df %>% 
       filter(month(date) %in% c(month)) %>% 
-      filter(year(date) >= 2004) %>% 
+      filter(year(date) >= 2004)
+  }
+  
+  spi_graph <- spi_clean %>% 
       ggplot(aes(x = date)) +
       geom_col(aes(y = spi, fill = sign), show.legend = FALSE) +
       scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
@@ -512,13 +526,13 @@ plot_spi = function(df, month, title = "") {
 plot_swe_spi = function(spi_df, month, region_time = "") {
 
   # clean up spi df and combine with chuska winter anomaly
-     spi_clean <- spi_df %>% 
+     
+      spi_clean <- spi_df %>% 
       filter(year(date) >= 2004) %>% 
       filter(month(date) %in% c(month)) %>% 
       mutate(waterYear = year(date)) %>% # note that water year is only = year(date) from Jan--end of sept
       select(waterYear, spi, sign) 
-  
-  
+    
   # now combine winter chuska swe anom and the SPI
   ch_spi_plot <- spi_clean %>% 
     merge(ch_wint_anom, by = "waterYear") %>% 

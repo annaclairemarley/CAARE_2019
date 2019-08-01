@@ -39,14 +39,21 @@ all_months = c(1,2,3,4,5,6,7,8,9,10,11,12)
 
 # Watersheds
 
+```{r, include = FALSE}
+# read in all the watersheds precipitation data
+chaco_precip <- read_csv("watersheds/chaco_precip.csv") 
+chinle_precip <- read_csv("watersheds/chinle_precip.csv") 
+mid_sj_precip <- read_csv("watersheds/mid_sj_precip.csv") 
+up_pue_precip <- read_csv("watersheds/upper_puerco_precip.csv") 
+
+```
+
+
 ## Chaco
 
 ### Chaco SPI
 
 ```{r, echo = FALSE, message=FALSE}
-# read in chaco precipitation
-
-chaco_precip <- read_csv("watersheds/chaco_precip.csv") 
 
 # now change the precip data to spi
 chaco_spi <- precip_to_spi(chaco_precip)
@@ -57,22 +64,9 @@ chaco_spi <- precip_to_spi(chaco_precip)
 ```{r, echo = FALSE}
 
 # whole year 6 month SPI
-plot_spi(chaco_spi, month = all_months, title = "Chaco SPI") 
+plot_spi(chaco_spi, month = all_months, title = "Chaco SPI", years = "all") 
 
-  chaco_spi_graph <- chaco_spi %>% 
-      filter(month(date) %in% all_months) %>% 
-      ggplot(aes(x = date, y = spi)) +
-      geom_col(aes(fill = sign), show.legend = FALSE) +
-      scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
-      labs(
-        y = "SPI",
-        x = "Water Year"
-      ) +
-      scale_y_continuous(expand = c(0,0)) +
-    geom_smooth(method = "lm") +
-      theme_classic()
-  
-  chaco_spi_graph
+
 
 # let's take a look at the 6 month June SPI of each year
 plot_spi(chaco_spi, month = c(6), title = "Chaco June SPI")
@@ -86,11 +80,10 @@ plot_spi(chaco_spi, month = c(6), title = "Chaco June SPI")
 chaco_pdsi_jun_6 <- read_csv("watersheds/chaco_pdsi_jun_6.csv")
 
 # merge with spi
-chaco_spi_pdsi <- chaco_spi_june %>% 
-  merge(chaco_pdsi_jun_6, by = "waterYear")
+chaco_spi_pdsi_june <- merge_pdsi_spi(chaco_spi, months = c(6), chaco_pdsi_jun_6)
 
 # find and plot the correlation between the two
-plot_cor_pdsi_spi(chaco_spi_pdsi, title = "Chaco Jan-June 6 month")
+plot_cor_pdsi_spi(chaco_spi_pdsi_june, title = "Chaco June 6 month")
 
 ```
 
@@ -98,10 +91,9 @@ plot_cor_pdsi_spi(chaco_spi_pdsi, title = "Chaco Jan-June 6 month")
 ### Chaco SPI and Chuska SWE
 
 ```{r, echo = FALSE}
-### now let's look at Chuska monthly swe anomaly and June 6 month SPI ###
-plot_swe_spi(chaco_spi, month = c(5), region_time = "Chaco May 6 month")
+### now let's look at Chuska monthly swe anomaly and 6 month SPI ###
+
 plot_swe_spi(chaco_spi, month = c(6), region_time = "Chaco June 6 month")
-plot_swe_spi(chaco_spi, month = c(7), region_time = "Chaco July 6 month")
 ```
 
 ```{r, echo = FALSE}
@@ -109,7 +101,7 @@ plot_swe_spi(chaco_spi, month = c(7), region_time = "Chaco July 6 month")
 # let's look at the correlation between them 
 ch_chaco_spi_june <- merge_ch_spi(chaco_spi, months = c(6)) 
 ch_chaco_spi_june_plot <- plot_cor_swe_spi(ch_chaco_spi_june,
-                                           title = "Chuska Winter SWE Anomaly and Chaco June SPI")
+                                           title = "Winter SWE Anomaly & June SPI")
 
 
 ch_chaco_correct <- swe_spi_same(ch_chaco_spi_june, type = "total")
@@ -130,18 +122,18 @@ ch_chaco_negative <- swe_spi_same(ch_chaco_spi_june, type = "negative")
 ch_chaco_spi_july <- merge_ch_spi(chaco_spi, months = c(7)) 
 
 ch_chaco_spi_july_plot <- plot_cor_swe_spi(ch_chaco_spi_july, 
-                                           title = "Chuska Winter SWE Anomaly and Chaco July SPI")
+                                           title = "Winter SWE Anomaly & July SPI")
 
 
 ```
 
-- January -- June SPI seems to be much more correlated to winter SWE than does Feb -- July SPI
+
 
 ```{r, echo = FALSE}
 # let's try for May spi
 
 ch_chaco_spi_may <- merge_ch_spi(chaco_spi, months = c(5))
-ch_chaco_spi_may_plot <- plot_cor_swe_spi(ch_chaco_spi_may, title = "Chuska Winter SWE Anomaly and Chaco May SPI")
+ch_chaco_spi_may_plot <- plot_cor_swe_spi(ch_chaco_spi_may, title = "Winter SWE Anomaly & May SPI")
 
 
 ```
@@ -155,12 +147,6 @@ ch_chaco_negative_may <- swe_spi_same(ch_chaco_spi_may, type = "negative")
 
 ```
 
-- The percent of times swe the anomaly for the year and spi had the same sign `r ch_chaco_correct_may*100`%
-
-- The percent of times swe anomaly for the year was positive and was followed by a positive spi had the same sign out of all positive swe years `r ch_chaco_positive_may*100`%
-
-- The percent of times swe anomaly for the year was negative and was followed by a negative spi had the same sign out of all negative swe years `r ch_chaco_negative_may*100`%
-
 
 ```{r, echo = FALSE}
 # let's try for April spi
@@ -168,7 +154,7 @@ ch_chaco_negative_may <- swe_spi_same(ch_chaco_spi_may, type = "negative")
 ch_chaco_spi_apr <- merge_ch_spi(chaco_spi, months = c(4)) 
   
 ch_chaco_spi_apr_plot <- plot_cor_swe_spi(ch_chaco_spi_apr,
-                                          title = "Chuska Winter SWE Anomaly and Chaco April SPI")
+                                          title = "Winter SWE Anomaly & April SPI")
 
 ```
 
@@ -179,15 +165,25 @@ grid.arrange(ch_chaco_spi_apr_plot, ch_chaco_spi_may_plot,
 
 ```
 
+- June SPI seems to be much more correlated to winter SWE than does July SPI
+- May is the most well correlated to winter swe
+
+```{r, echo = FALSE, error = TRUE}
+plot_swe_spi(chaco_spi, month = c(5), region_time = "Chaco May 6 month")
+
+```
+
+
+- *May* positive swe & positive spi / positive swe: `r round(ch_chaco_positive_may*100, 3)`%
+- *May* negative swe & negative spi / negative swe: `r ch_chaco_negative_may*100`%
+- *May* total correct: `r ch_chaco_correct_may*100`%
 
 ## Chinle
 
 ### Chinle SPI
 
 ```{r, echo = FALSE, message=FALSE}
-# read in precipitation
-chinle_precip <- read_csv("watersheds/chinle_precip.csv") 
-
+# read in precipita
 # now change the precip data to spi
 chinle_spi <- precip_to_spi(chinle_precip)
 
@@ -198,7 +194,7 @@ chinle_spi <- precip_to_spi(chinle_precip)
 ```{r, echo = FALSE}
 
 # whole year 6 month SPI
-plot_spi(chinle_spi, month = all_months, title = "Chinle SPI")
+plot_spi(chinle_spi, month = all_months, title = "Chinle SPI", years = "all")
 
 # let's take a look at the 6 month June SPI of each year
 plot_spi(chinle_spi, month = c(6), title = "Chinle June SPI")
@@ -212,11 +208,10 @@ plot_spi(chinle_spi, month = c(6), title = "Chinle June SPI")
 chinle_pdsi_jun_6 <- read_csv("watersheds/chinle_pdsi_jun_6.csv")
 
 # merge with spi
-chinle_spi_pdsi <- chinle_pdsi_jun_6 %>% 
-  merge(chinle_pdsi_jun_6, by = "waterYear")
+chinle_spi_pdsi_june <- merge_pdsi_spi(chinle_spi, months = c(6), chinle_pdsi_jun_6 ) 
 
 # find and plot the correlation between the two
-plot_cor_pdsi_spi(chinle_spi_pdsi, title = "Chinle June 6 month")
+plot_cor_pdsi_spi(chinle_spi_pdsi_june, title = "Chinle June 6 month")
 
 
 
@@ -235,7 +230,7 @@ plot_swe_spi(chinle_spi, month = c(6), region_time = "Chinle June 6 month")
 # let's look at the correlation between them 
 ch_chinle_spi_june <- merge_ch_spi(chinle_spi, months = c(6))
 ch_chinle_spi_june_plot <- plot_cor_swe_spi(ch_chinle_spi_june, 
-                                            title = "Chuska Winter SWE Anomaly and Chinle June SPI")
+                                            title = "Winter SWE Anomaly & June SPI")
 
 ch_chinle_correct <- swe_spi_same(ch_chinle_spi_june, type = "total")
 ch_chinle_positive <- swe_spi_same(ch_chinle_spi_june, type = "positive")
@@ -253,52 +248,65 @@ ch_chinle_negative <- swe_spi_same(ch_chinle_spi_june, type = "negative")
 # try July SPI
 ch_chinle_spi_july <- merge_ch_spi(chinle_spi, months = c(7)) 
 ch_chinle_spi_july_plot <- plot_cor_swe_spi(ch_chinle_spi_july, 
-                                      title = "Chuska Winter SWE Anomaly and Chinle July SPI")
+                                      title = "Winter SWE Anomaly & July SPI")
 
 
 ```
 
-- Chuska SWE is also much less corelated to Chinle July 6 month SPI than it is to June 6 month
 
 ```{r, echo=FALSE}
 # try May SPI
 ch_chinle_spi_may <- merge_ch_spi(chinle_spi, months = c(5)) 
 ch_chinle_spi_may_plot <- plot_cor_swe_spi(ch_chinle_spi_may, 
-                                           title = "Chuska Winter SWE Anomaly and Chinle May SPI")
+                                           title = "Winter SWE Anomaly & May SPI")
+
+# April:
+ch_chinle_spi_apr <- merge_ch_spi(chinle_spi, months = c(4)) 
+ch_chinle_spi_apr_plot <- plot_cor_swe_spi(ch_chinle_spi_apr, 
+                                           title = "Winter SWE Anomaly & April SPI")
 
 ```
 
-```{r, fig.width=7}
+```{r, echo = FALSE, fig.width=7}
 
-grid.arrange(ch_chinle_spi_may_plot, ch_chinle_spi_june_plot, ch_chinle_spi_july_plot, ncol = 2)
+grid.arrange(ch_chinle_spi_apr_plot, ch_chinle_spi_may_plot, 
+             ch_chinle_spi_june_plot, ch_chinle_spi_july_plot, ncol = 2)
 ```
 
+- Chuska SWE is much less corelated to Chinle July 6 month SPI than it is to June 6 month
+- May had the higest correlation
 
+```{r, echo = FALSE}
+plot_swe_spi(chinle_spi, month = c(5), region_time = "Chinle May 6 month")
+
+ch_chinle_correct_may <- swe_spi_same(ch_chinle_spi_may, type = "total")
+ch_chinle_positive_may <- swe_spi_same(ch_chinle_spi_may, type = "positive")
+ch_chinle_negative_may <- swe_spi_same(ch_chinle_spi_may, type = "negative")
+
+```
+
+- *May* positive swe & positive spi / positive swe: `r round(ch_chinle_positive_may*100, 3)`%
+- *May* negative swe & negative spi / negative swe: `r ch_chinle_negative_may*100`%
+- *May* total correct: `r ch_chinle_correct_may*100`%
 
 ## Middle San Juan
 
 ```{r, echo = FALSE, message=FALSE}
 # read in precipitation
-mid_sj_precip <- read_csv("watersheds/mid_sj_precip.csv") 
+
 
 # now change the precip data to spi
 mid_sj_spi <- precip_to_spi(mid_sj_precip)
 
-# SPI June
-mid_sj_spi_june <- mid_sj_spi %>% 
-  filter(year(date) >= 2004) %>% 
-  filter(month(date) == 6) %>% 
-  add_water_year() %>% 
-  select(waterYear, spi)
 
 ```
 
 ```{r, echo = FALSE}
 # whole year 6 month SPI
-plot_spi(mid_sj_spi, month = all_months, title = "Chinle SPI")
+plot_spi(mid_sj_spi, month = all_months, title = "Middle SJ SPI", years = "all")
 
 # let's take a look at the 6 month June SPI of each year
-plot_spi(mid_sj_spi, month = c(6), title = "Chinle June SPI")
+plot_spi(mid_sj_spi, month = c(6), title = "Middle SJ June SPI")
 
 ```
 
@@ -309,13 +317,13 @@ plot_spi(mid_sj_spi, month = c(6), title = "Chinle June SPI")
 mid_sj_pdsi_jun_6 <- read_csv("watersheds/mid_sj_pdsi_jun_6.csv")
 
 # merge with spi
-mid_sj_spi_pdsi <- mid_sj_spi_june %>% 
-  merge(mid_sj_pdsi_jun_6, by = "waterYear")
+mid_sj_spi_pdsi_june <- merge_pdsi_spi(mid_sj_spi, months = c(6), mid_sj_pdsi_jun_6 )  
+
 
 # find and plot the correlation between the two
-mid_sj_spi_pdsi_plot <- plot_cor_pdsi_spi(mid_sj_spi_pdsi, 
+mid_sj_spi_pdsi_plot <- plot_cor_pdsi_spi(mid_sj_spi_pdsi_june, 
                                           title = "Middle San Juan June 6 month")
-
+mid_sj_spi_pdsi_plot
 
 
 ```
@@ -333,7 +341,7 @@ plot_swe_spi(mid_sj_spi, month = c(6), region_time = "Middle San Juan June 6 mon
 ch_mid_sj_spi_june <- merge_ch_spi(mid_sj_spi, months = c(6))
 
 ch_mid_sj_spi_june_plot <- plot_cor_swe_spi(ch_mid_sj_spi_june, 
-                 title = "Chuska Winter SWE Anomaly and Middle San Juan June SPI")
+                 title = "Winter SWE Anomaly & June SPI")
 
 ch_mid_sj_correct <- swe_spi_same(ch_mid_sj_spi_june, type = "total")
 ch_mid_sj_positive <- swe_spi_same(ch_mid_sj_spi_june, type = "positive")
@@ -347,9 +355,115 @@ ch_mid_sj_negative <- swe_spi_same(ch_mid_sj_spi_june, type = "negative")
 
 - The percent of times swe anomaly for the year was negative and was followed by a negative spi had the same sign out of all negative swe years `r ch_mid_sj_negative*100`%
 
+```{r, echo = FALSE}
+ch_mid_sj_spi_apr <- merge_ch_spi(mid_sj_spi, months = c(4))
 
+ch_mid_sj_spi_apr_plot <- plot_cor_swe_spi(ch_mid_sj_spi_apr, 
+                 title = "Winter SWE Anomaly & April SPI")
+
+ch_mid_sj_spi_may <- merge_ch_spi(mid_sj_spi, months = c(5))
+
+ch_mid_sj_spi_may_plot <- plot_cor_swe_spi(ch_mid_sj_spi_may, 
+                 title = "Winter SWE Anomaly & May SPI")
+
+ch_mid_sj_spi_july <- merge_ch_spi(mid_sj_spi, months = c(7))
+
+ch_mid_sj_spi_july_plot <- plot_cor_swe_spi(ch_mid_sj_spi_july, 
+                 title = "Winter SWE Anomaly & July SPI")
+
+grid.arrange(ch_mid_sj_spi_apr_plot, ch_mid_sj_spi_may_plot, 
+             ch_mid_sj_spi_june_plot, ch_mid_sj_spi_july_plot, ncol=2)
+```
+
+```{r, echo = FALSE}
+# swe and spi following for MAY spi
+plot_swe_spi(mid_sj_spi, month = c(5), region_time = "Middle San Juan May 6 month")
+
+ch_mid_sj_correct_may <- swe_spi_same(ch_mid_sj_spi_may, type = "total")
+ch_mid_sj_positive_may <- swe_spi_same(ch_mid_sj_spi_may, type = "positive")
+ch_mid_sj_negative_may <- swe_spi_same(ch_mid_sj_spi_may, type = "negative")
+```
+
+
+- *May* positive swe & positive spi / positive swe: `r round(ch_mid_sj_positive_may*100, 3)`%
+- *May* negative swe & negative spi / negative swe: `r ch_mid_sj_negative_may*100`%
+- *May* total correct: `r ch_mid_sj_correct_may*100`%
 
 ## Upper  Puerco
+
+```{r, echo = FALSE, message=FALSE}
+
+# now change the precip data to spi
+up_pue_spi <- precip_to_spi(up_pue_precip)
+
+```
+
+```{r, echo = FALSE}
+# whole year 6 month SPI
+plot_spi(up_pue_spi, month = all_months, title = "Upper Puerco SPI", years = "all")
+
+# let's take a look at the 6 month June SPI of each year
+plot_spi(up_pue_spi, month = c(6), title = "Upper Puerco June SPI")
+
+```
+
+### Middle San Juan SPI and PDSI
+
+```{r, echo = FALSE}
+# read in the PDSI January-June 6 month average 
+up_puerco_pdsi_jun_6 <- read_csv("watersheds/up_puerco_pdsi_jun_6.csv")
+
+# merge with spi
+up_puerco_spi_pdsi_june <- merge_pdsi_spi(up_pue_spi, months = c(6), up_puerco_pdsi_jun_6 )  
+
+# find and plot the correlation between the two
+up_puerco_spi_pdsi_plot <- plot_cor_pdsi_spi(up_puerco_spi_pdsi_june, 
+                                          title = "Upper Puerco June 6 month")
+up_puerco_spi_pdsi_plot
+
+```
+
+### Upper Puerco SPI and Chuska SWE
+
+```{r, echo = FALSE}
+ch_up_pue_spi_apr <- merge_ch_spi(up_pue_spi, months = c(4))
+
+ch_up_pue_spi_apr_plot <- plot_cor_swe_spi(ch_up_pue_spi_apr, 
+                 title = "Winter SWE Anomaly & April SPI")
+
+ch_up_pue_spi_may <- merge_ch_spi(up_pue_spi, months = c(5))
+
+ch_up_pue_spi_may_plot <- plot_cor_swe_spi(ch_up_pue_spi_may, 
+                 title = "Winter SWE Anomaly & May SPI")
+
+ch_up_pue_spi_june <- merge_ch_spi(up_pue_spi, months = c(6))
+
+ch_up_pue_spi_june_plot <- plot_cor_swe_spi(ch_up_pue_spi_june, 
+                 title = "Winter SWE Anomaly & June SPI")
+
+ch_up_pue_spi_july <- merge_ch_spi(up_pue_spi, months = c(7))
+
+ch_up_pue_spi_july_plot <- plot_cor_swe_spi(ch_up_pue_spi_july, 
+                 title = "Winter SWE Anomaly & July SPI")
+
+grid.arrange(ch_up_pue_spi_apr_plot, ch_up_pue_spi_may_plot, 
+             ch_up_pue_spi_june_plot, ch_up_pue_spi_july_plot, ncol=2)
+```
+
+```{r, echo = FALSE}
+# swe and spi following for MAY spi
+plot_swe_spi(up_pue_spi, month = c(5), region_time = "Upper Puerco May 6 month")
+
+ch_up_pue_correct_may <- swe_spi_same(ch_up_pue_spi_may, type = "total")
+ch_up_pue_positive_may <- swe_spi_same(ch_up_pue_spi_may, type = "positive")
+ch_up_pue_negative_may <- swe_spi_same(ch_up_pue_spi_may, type = "negative")
+```
+
+
+- *May* positive swe & positive spi / positive swe: `r round(ch_up_pue_positive_may*100, 3)`%
+- *May* negative swe & negative spi / negative swe: `r ch_up_pue_negative_may*100`%
+- *May* total correct: `r ch_up_pue_correct_may*100`%
+
 
 
 ----------------
@@ -367,47 +481,63 @@ tsaile_precip <- read_csv("Chapters/tsaile_precip.csv")
 # now change the precip data to spi
 tsaile_spi <- precip_to_spi(tsaile_precip)
 
-# Tsaile SPI June
-
-tsaile_spi_june <- tsaile_spi %>% 
-  filter(year(date) >= 2004) %>% 
-  filter(month(date) == 6) %>% 
-  add_water_year() %>% 
-  select(waterYear, spi)
 
 ```
 
 ```{r, echo = FALSE}
 
 # whole year 6 month SPI
-plot_spi(tsaile_spi, month = all_months, title = "Tsaile SPI")
+plot_spi(tsaile_spi, month = all_months, title = "Tsaile SPI", years = "all")
 
 # let's take a look at the 6 month June SPI of each year
 plot_spi(tsaile_spi, month = c(6), title = "Tsaile June SPI")
 
 ```
 
-#### 3 month SPI
-```{r, include = FALSE}
-
-# now change the precip data to spi
-tsaile_spi_3 <- precip_to_spi(tsaile_precip, timeframe = 3)
-
-```
+#### Tsaile SPI and Chuska SWE anomaly
 
 ```{r, echo = FALSE}
+# plot correlations between swe and different month SPIs
 
+ch_tsaile_spi_apr <- merge_ch_spi(tsaile_spi, months = c(4))
 
-# whole year 6 month SPI
-plot_spi(tsaile_spi, month = all_months, title = "Tsaile SPI")
+ch_tsaile_spi_apr_plot <- plot_cor_swe_spi(ch_tsaile_spi_apr, 
+                 title = "Winter SWE Anomaly & April SPI")
 
-# let's take a look at the 6 month June SPI of each year
-plot_spi(tsaile_spi, month = c(6), title = "Tsaile June SPI")
+ch_tsaile_spi_may <- merge_ch_spi(tsaile_spi, months = c(5))
+
+ch_tsaile_spi_may_plot <- plot_cor_swe_spi(ch_tsaile_spi_may, 
+                 title = "Winter SWE Anomaly & May SPI")
+
+ch_tsaile_spi_june <- merge_ch_spi(tsaile_spi, months = c(6))
+
+ch_tsaile_spi_june_plot <- plot_cor_swe_spi(ch_tsaile_spi_june, 
+                 title = "Winter SWE Anomaly & June SPI")
+
+ch_tsaile_spi_july <- merge_ch_spi(tsaile_spi, months = c(7))
+
+ch_tsaile_spi_july_plot <- plot_cor_swe_spi(ch_tsaile_spi_july, 
+                 title = "Winter SWE Anomaly & July SPI")
+
+grid.arrange(ch_tsaile_spi_apr_plot, ch_tsaile_spi_may_plot, 
+             ch_tsaile_spi_june_plot, ch_tsaile_spi_july_plot, ncol=2)
 
 ```
+- May is has the higest correlation
 
+```{r, echo = FALSE}
+# swe and spi following for MAY spi
+plot_swe_spi(tsaile_spi, month = c(5), region_time = "Tsaile May 6 month")
 
-### Tsaile SPI and Chuska SWE
+ch_tsaile_spi_correct_may <- swe_spi_same(ch_tsaile_spi_may, type = "total")
+ch_tsaile_spi_positive_may <- swe_spi_same(ch_tsaile_spi_may, type = "positive")
+ch_tsaile_spi_negative_may <- swe_spi_same(ch_tsaile_spi_may, type = "negative")
+```
+
+- *May* positive swe & positive spi / positive swe: `r round(ch_tsaile_spi_positive_may*100, 3)`%
+- *May* negative swe & negative spi / negative swe: `r ch_tsaile_spi_negative_may*100`%
+- *May* total correct: `r ch_tsaile_spi_correct_may*100`%
+
 
 ```{r, echo = FALSE}
 ### now let's look at Chuska monthly swe anomaly and Tsaile SPI Jan-June ###
@@ -415,17 +545,8 @@ plot_swe_spi(tsaile_spi, month = c(6), region_time = "Tsaile June 6 month")
 
 ```
 
-- 7/10 of negative swe years followed by negative spi
-- 4/6 of positive swe years followed by positive spi 
-
 ```{r, echo = FALSE}
-
 # let's look at the correlation between them 
-ch_tsaile_spi_june <- tsaile_spi_june %>% 
-   merge(ch_wint_anom, by = "waterYear") %>% 
-   rename(swe_anom = anomaly_perc)
-
-plot_cor_swe_spi(ch_tsaile_spi_june, title = "Chuska Winter SWE Anomaly and Tsaile Jan-June SPI")
 
 ch_tsaile_correct <- swe_spi_same(ch_tsaile_spi_june, type = "total")
 ch_tsaile_positive <- swe_spi_same(ch_tsaile_spi_june, type = "positive")
@@ -438,9 +559,4 @@ ch_tsaile_negative <- swe_spi_same(ch_tsaile_spi_june, type = "negative")
 - The percent of times swe anomaly for the year was positive and was followed by a positive spi had the same sign out of all positive swe years `r ch_tsaile_positive*100`%
 
 - The percent of times swe anomaly for the year was negative and was followed by a negative spi had the same sign out of all negative swe years `r ch_tsaile_negative*100`%
-
-### 3 month SPI
-```{r, echo=FALSE}
-plot_swe_spi(tsaile_spi_3, month = c(6), region_time = "Tsaile June 3 month")
-```
 

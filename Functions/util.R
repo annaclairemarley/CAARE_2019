@@ -586,3 +586,30 @@ merge_ch_spi = function(df_spi, df_swe = ch_wint_anom, months) {
 
 }
 
+#####################################################################
+#####################################################################
+#' merge_pdsi_spi
+#'
+#' merges pdsi with the month of spi of your choosing
+#'
+#' @param df_spi spi dataframe
+#' @param months months to filter spi in
+#' @param df_pdsi the swe anomaly dataframe, set to be the chuska winter anomaly
+#' 
+#' @example merge_pdsi_spi(chaco_spi, months = c(6), chaco_pdsi_jun_6)
+
+merge_pdsi_spi = function(df_spi, months, df_pdsi) {
+  
+  # cleans up the spi data and filters it to the month of interest
+  spi_mnth <- df_spi %>% 
+    filter(year(date) >= 2004) %>% 
+    filter(month(date) %in% c(months)) %>% 
+    add_water_year() %>% 
+    select(waterYear, spi)
+  
+  pdsi_spi <- spi_mnth %>% 
+    merge(df_pdsi, by = "waterYear") 
+  
+  return(pdsi_spi)
+  
+}

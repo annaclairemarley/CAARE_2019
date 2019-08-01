@@ -18,18 +18,21 @@ library(dataRetrieval)
 library(reshape2)
 library(corrplot)
 library(precintcon)
+library(zoo)
+library(tseries)
+library(forecast)
 source("Functions/util.R")
 source('Functions/graphing.R')
 ```
 
-```{r, echo = FALSE}
+```{r, include = FALSE}
 
 beaver_spring <- read_csv("SNOTEL/beaver_spring.csv") 
 whiskey_creek <- read_csv("SNOTEL/whiskey_creek.csv") 
 
 ```
 
-```{r, echo = FALSE}
+```{r, include = FALSE}
 # read in chuska data for comparison
 ch_swe <- read_csv("winter_wy/ch_swe_wy_03_19.csv")
 
@@ -37,7 +40,7 @@ ch_swe <- read_csv("winter_wy/ch_swe_wy_03_19.csv")
 
 
 ### Whiskey Creek
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.width=7}
 # SWE
 
 wh_ck_swe <- whiskey_creek %>% 
@@ -54,19 +57,84 @@ wh_ck_swe_plot
 
 ```
 
-```{r, fig.width=20,fig.height=5, echo= FALSE}
+```{r, fig.width=20, fig.height=5, echo = FALSE}
 
 # monthly
 
 wh_ck_mnth <- calc_swe_metrics(wh_ck_swe, "month", mean)
 
-graph_with_wateryear(wh_ck_mnth, "Whisky Creek", type = geom_col)
+graph_with_wateryear(wh_ck_mnth, "Whisky Creek", type = geom_col) 
 
 wh_ck_mnth_anom <- calc_month_anom(wh_ck_mnth)
 
 plot_anomaly(wh_ck_mnth_anom, title = "Whiskey Creek Monthly Anomaly")
 
 ```
+
+#### Whiskey Creek SWE ANomaly using the 1980-2000 average 
+
+```{r, echo = FALSE, fig.width=10}
+
+  df_month = wh_ck_mnth %>%
+    mutate(month = month(date))  
+  
+  intra_month = df_month %>% 
+    filter(waterYear <= 2000) %>% 
+    group_by(month) %>% 
+    summarize(mean_swe = mean(swe_mm))
+  
+  wh_ck_anom_1980_levles = merge(df_month, intra_month, by = "month")%>%
+    mutate(anomaly = swe_mm - mean_swe) %>% 
+    mutate(anomaly_perc = (anomaly/mean_swe)*100) %>% 
+    mutate(sign = ifelse(anomaly < 0, "negative", "positive") )
+  
+plot_anomaly(wh_ck_anom_1980_levles, title = "Whiskey Creek Monthly Anomaly from 1980-2000 Average")
+```
+
+
+```{r, echo = FALSE, fig.width=10}
+
+ggplot(wh_ck_mnth, aes(x = date, y = swe_mm)) +
+  geom_col(aes(alpha = 0.5)) +
+  geom_line(aes(y = rollmean(swe_mm, 30, na.pad=TRUE)), color = "red") +
+  scale_y_continuous(expand = c(0,0)) +
+  theme_classic() 
+
+
+  
+
+```
+
+### Time series analysis
+
+```{r, echo=FALSE}
+
+swe_mnth_ts <- ts(wh_ck_mnth$swe_mm, frequency = 12)
+
+plot(swe_mnth_ts)
+
+swe_mnth_ts_decomp <- decompose(swe_mnth_ts)
+
+plot(swe_mnth_ts_decomp)
+
+ggseasonplot(swe_mnth_ts) +
+  theme_bw()
+```
+
+```{r}
+
+sma_res <- ma(swe_mnth_ts, order = 10)
+# Just view the moving average on its own: 
+plot(sma_res)
+
+# Or in combo with the original data
+plot(swe_mnth_ts)
+lines(sma_res, col = "red")
+
+```
+
+
+### Comparison of SWE from Whiskey creek to average for Chuska
 
 ```{r, echo = FALSE}
 # weekly swe compare to Chuska 
@@ -82,7 +150,7 @@ plot(ch_swe_wk$swe_mm, wh_ck_swe_04$swe_mm)
 cor.test(ch_swe_wk$swe_mm, wh_ck_swe_04$swe_mm)
 ```
 
-```{r}
+```{r, echo = FALSE}
 
 # monthly swe
 wh_ck_mnth_swe_04 <- wh_ck_mnth %>% 
