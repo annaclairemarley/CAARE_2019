@@ -539,11 +539,6 @@ precip_to_spi = function(df, timeframe = 6) {
 #' @example swe_spi_same(df, type = "negative")
 
 swe_spi_same = function(df, type = "") {
-  
-    #spi_calc = ifelse(type = "positive", (ch_spi_positive = count(filter(df, spi > 0 & swe_anom > 0)) / count(filter(df, swe_anom > 0))), spi_calc)
-    #spi_calc = ifelse(type = "negative", (ch_spi_negative = count(filter(df, spi < 0 & swe_anom < 0)) / count(filter(df, swe_anom < 0))), spi_calc)
-    #spi_calc =  ifelse(type = "total", (ch_spi_correct = (count(filter(df, spi < 0 & swe_anom < 0)) +
-     #                     count(filter(df, spi > 0 & swe_anom > 0))) / count(df)), spi_calc))
 
    spi_calc = (if (type == "positive") {
         
@@ -561,3 +556,33 @@ swe_spi_same = function(df, type = "") {
 )
   return(spi_calc)
 }
+
+#####################################################################
+#####################################################################
+#' merge_ch_spi
+#'
+#' merges chuska winter anomaly with the month of spi of your choosing
+#'
+#' @param df_spi spi dataframe
+#' @param months months to filter spi in
+#' @param df_swe the swe anomaly dataframe, set to be the chuska winter anomaly
+#' 
+#' @example merge_ch_spi(chaco_spi, months = c(5))
+
+merge_ch_spi = function(df_spi, df_swe = ch_wint_anom, months) {
+
+  # cleans up the spi data and filters it to the month of interest
+    spi_mnth <- df_spi %>% 
+      filter(year(date) >= 2004) %>% 
+      filter(month(date) %in% c(months)) %>% 
+      add_water_year() %>% 
+      select(waterYear, spi)
+  
+    swe_spi <- spi_mnth %>% 
+      merge(df_swe, by = "waterYear") %>% 
+      rename(swe_anom = anomaly_perc)
+
+  return(swe_spi)
+
+}
+

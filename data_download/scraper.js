@@ -364,7 +364,7 @@ puppeteer.launch({headless: false}).then(browser => {
     // getData(regions.chapters, true, "2003-09-01", "2019-07-17", "pdsi", "Date,Palmer Drounght Severity Index").then(() => {
     //     browser.close();
     // }).catch(e => console.log(e));
-    getData(["Chaco"], regionType.FUSION_TABLE,"2012-02-02", "2019-07-17", "pr", ["1hGYMbREmoq-66t26xMOl6rqk4Qlq45KjFP2MRGUV"], "Date,Precipitation").then(() => {
+    getData(["Middle San Juan"], regionType.FUSION_TABLE,"2013-02-25", "2019-07-17", "pr", ["1SCbzTWYImyozb3zBt3q2XpSVeF0oXVbF9U0pMujm"], "Date,Precipitation").then(() => {
         browser.close();
     }).catch(e => console.log(e));
     

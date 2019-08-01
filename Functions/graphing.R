@@ -540,3 +540,37 @@ plot_swe_spi = function(spi_df, month, region_time = "") {
 
   return(ch_spi_plot)
 }
+
+#####################################################################
+#####################################################################
+#' plot_cor_pdsi_spi
+#' 
+#' plots the correlation between pdsi and spi
+#'
+#' @param df df 
+#' @param title whatever you want the title to be
+#'
+#' @return correlation between pdsi and spi, trendline and r value
+
+# find and plot the correlation between the two
+
+plot_cor_pdsi_spi = function(df, title = "") {
+
+    coef <- cor.test(df$spi, df$mean_pdsi)$estimate
+    p_value <- cor.test(df$spi, df$mean_pdsi)$p.value
+    
+    spi_pdsi_plot <- df %>%
+      ggplot(aes(x = mean_pdsi, y = spi)) +
+      geom_point() +
+      geom_smooth(method = "lm", se = FALSE)+
+      labs(
+        x = "PDSI",
+        y = "SPI",
+        title = sprintf("%s PDSI and SPI", title),
+        subtitle = sprintf("r = %s | p-value: %s", round(coef,3), round(p_value, 3)) 
+      ) +
+      theme_classic()
+
+    return(spi_pdsi_plot)
+    
+}

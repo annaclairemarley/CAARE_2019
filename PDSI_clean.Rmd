@@ -673,6 +673,13 @@ chinle_pdsi_jj <- ch_chinle_wint_jj %>%
   select(waterYear.y, mean_pdsi) %>% 
   rename(waterYear = waterYear.y)
 
+mid_sj_pdsi_jj <- ch_mid_sj_wint_jj %>% 
+  select(waterYear.y, mean_pdsi) %>% 
+  rename(waterYear = waterYear.y)
+
+up_puerco_pdsi_jj <- ch_up_puerco_wint_jj %>% 
+  select(waterYear.y, mean_pdsi) %>% 
+  rename(waterYear = waterYear.y)
 
 ```
 
