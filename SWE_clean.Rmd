@@ -431,8 +431,8 @@ av_month_swe_all_corr <- av_month_swe_all %>%
 cor <- cor(av_month_swe_all_corr)
 corrplot(cor, method = "square", type = "upper", 
          addCoef.col = "white", tl.col = "black", tl.srt=45)
-corrplot(cor, method = "ellipse", type = "upper", 
-         addCoef.col = "black", tl.col = "black", tl.srt=45)
+#corrplot(cor, method = "ellipse", type = "upper", 
+ #        addCoef.col = "black", tl.col = "black", tl.srt=45)
 
 ```
 - Black Mesa to Mt. Powell, Black Mesa to Defiance Plateau and Defiance Plateau and Mt Powell all have the highest correlations between each other 
@@ -546,7 +546,7 @@ corr_carr_bm_lm <- lm(bm_weekly$swe_mm ~ carr_weekly$swe_mm)
 ```
 
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, include = FALSE}
 # graph it
 plot(ch_weekly$swe_mm, bm_weekly$swe_mm)
 abline(corr_chu_bm_lm)
@@ -555,14 +555,14 @@ abline(corr_chu_bm_lm)
 
 Chuska vs Black Mesa R squared: `r chu_bm_r2`
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, include = FALSE}
 plot(ch_weekly$swe_mm, carr_weekly$swe_mm)
 abline(corr_chu_carr_lm)
 ```
 
 Chuska vs Carrizo R squared: `r chu_carr_r2`
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, include = FALSE}
 plot(carr_weekly$swe_mm, bm_weekly$swe_mm)
 abline(corr_carr_bm_lm)
 
@@ -570,20 +570,11 @@ abline(corr_carr_bm_lm)
 
 Black Mesa vs Carrizo R squared: `r carr_bm_r2`
 
-## All weekly mean
-```{r}
-
-
-
-```
-
-
 
 ## Month specific time series
 
-# November
-
 ```{r, include = FALSE, echo = FALSE}
+# November
 # filter just for November
 car_nov_swe <- month_ts(carr_monthly, 11)
 ch_nov_swe <- month_ts(ch_monthly, 11)
@@ -597,35 +588,15 @@ nov_swe <- join_months(carrizo = car_nov_swe, chuska = ch_nov_swe, black_mesa = 
 ```
 
 ```{r, echo = FALSE}
-# plot it BE CAREFUL WITH THESE, NOT ENTIRELY SURE WHAT THIS SHOWS
-
-# plot_months(nov_swe, month = "November")
-
-```
-
-```{r, echo = FALSE}
 # plot box plot for each month
 
-nov_swe_plot <- nov_swe %>% 
-  ggplot(aes(x = fct_reorder(region, swe_mm, .desc = TRUE), y = swe_mm))+
-  geom_boxplot(aes(fill = region), show.legend = FALSE) +
-  labs(
-    x = "Region",
-    y = "SWE (mm)",
-    title = "November"
-  ) +
-  scale_y_continuous(limits = c(0,250)) +
-  theme_classic() 
-
-
+nov_swe_plot <- month_bplot_swe(nov_swe, "November Swe")
 
 ```
 
 
-# December 
-
 ```{r, include = FALSE}
-
+# December
 car_dec <- month_ts(carr_monthly, 12)
 ch_dec <- month_ts(ch_monthly, 12)
 bm_dec <- month_ts(bm_monthly, 12)
@@ -638,37 +609,15 @@ dec_swe <- join_months(carrizo = car_dec, chuska = ch_dec, black_mesa = bm_dec, 
 ```
 
 ```{r, echo = FALSE}
-
-# plot_months(dec_swe, month = "December")
-
-```
-
-
-```{r, echo = FALSE}
 # plot box plot for each month
 
-dec_swe_plot <- dec_swe %>% 
-  ggplot(aes(x = fct_reorder(region, swe_mm, .desc = TRUE), y = swe_mm))+
-  geom_boxplot(aes(fill = region), show.legend = FALSE) +
-  labs(
-    x = "Region",
-    y = "SWE (mm)",
-    title = "December"
-  ) +
-   scale_y_continuous(limits = c(0,250)) +
-  scale_fill_manual(values=c("#003f5c", "#444e86", "#955196", "#dd5182", "#ff6e54", "#ffa600" ))+
-  theme_classic() 
-
-
+dec_swe_plot <- month_bplot_swe(dec_swe, "December Swe")
 
 ```
 
 
-
-# January
-
 ```{r, include = FALSE}
-
+# January
 car_jan <- month_ts(carr_monthly, 1)
 ch_jan <- month_ts(ch_monthly, 1)
 bm_jan <- month_ts(bm_monthly, 1)
@@ -681,38 +630,15 @@ jan_swe <- join_months(carrizo = car_jan, chuska = ch_jan, black_mesa = bm_jan, 
 ```
 
 ```{r, echo = FALSE}
-
-# plot_months(jan_swe, month = "January")
-
-```
-
-
-```{r, echo = FALSE}
 # plot box plot for each month
 
-jan_swe_plot <- jan_swe %>% 
-  ggplot(aes(x = fct_reorder(region, swe_mm, .desc = TRUE), y = swe_mm))+
-  geom_boxplot(aes(fill = region), show.legend = FALSE) +
-  labs(
-    x = "Region",
-    y = "SWE (mm)",
-    title = "January"
-  ) +
-   scale_y_continuous(limits = c(0,250)) +
-    scale_fill_manual(values=c("#003f5c", "#444e86", "#955196", "#dd5182", "#ff6e54", "#ffa600" ))+
-  theme_classic() 
-
-
+jan_swe_plot <- month_bplot_swe(jan_swe, "January Swe")
 
 ```
 
 
-
-
-
-# February
 ```{r, include = FALSE}
-
+# February
 car_feb <- month_ts(carr_monthly, 2)
 ch_feb <- month_ts(ch_monthly, 2)
 bm_feb <- month_ts(bm_monthly, 2)
@@ -724,39 +650,16 @@ feb_swe <- join_months(carrizo = car_feb, chuska = ch_feb, black_mesa = bm_feb, 
 
 ```
 
-```{r, echo = FALSE}
-
-# plot_months(feb_swe, month = "February")
-
-```
-
 
 ```{r, echo = FALSE}
 # plot box plot for each month
-
-feb_swe_plot <- feb_swe %>% 
-  ggplot(aes(x = fct_reorder(region, swe_mm, .desc = TRUE), y = swe_mm))+
-  geom_boxplot(aes(fill = region), show.legend = FALSE) +
-  labs(
-    x = "Region",
-    y = "SWE (mm)",
-    title = "February"
-  ) +
-   scale_y_continuous(limits = c(0,250)) +
-    scale_fill_manual(values=c("#003f5c", "#444e86", "#955196", "#dd5182", "#ff6e54", "#ffa600" ))+
-  theme_classic() 
-
-
-
+feb_swe_plot <- month_bplot_swe(feb_swe, "March Swe")
 ```
 
 
 
-
-
-# March
 ```{r, include = FALSE}
-
+# March
 car_mar <- month_ts(carr_monthly, 3)
 ch_mar <- month_ts(ch_monthly, 3)
 bm_mar <- month_ts(bm_monthly, 3)
@@ -769,38 +672,15 @@ mar_swe <- join_months(carrizo = car_mar, chuska = ch_mar, black_mesa = bm_mar, 
 ```
 
 ```{r, echo = FALSE}
-
-# plot_months(mar_swe, month = "March")
-
-```
-
-
-```{r, echo = FALSE}
 # plot box plot for each month
 
-mar_swe_plot <- mar_swe %>% 
-  ggplot(aes(x = fct_reorder(region, swe_mm, .desc = TRUE), y = swe_mm))+
-  geom_boxplot(aes(fill = region), show.legend = FALSE) +
-  labs(
-    x = "Region",
-    y = "SWE (mm)",
-    title = "March"
-  ) +
-   scale_y_continuous(limits = c(0,250)) +
-    scale_fill_manual(values=c("#003f5c", "#444e86", "#955196", "#dd5182", "#ff6e54", "#ffa600" ))+
-  theme_classic() 
-
-
+mar_swe_plot <- month_bplot_swe(mar_swe, "March Swe")
 
 ```
 
 
-
-
-# April
-
 ```{r, include = FALSE}
-
+# April
 car_apr <- month_ts(carr_monthly, 4)
 ch_apr <- month_ts(ch_monthly, 4)
 bm_apr <- month_ts(bm_monthly, 4)
@@ -813,29 +693,11 @@ apr_swe <- join_months(carrizo = car_apr, chuska = ch_apr, black_mesa = bm_apr, 
 
 ```
 
-```{r, echo = FALSE}
-
-# plot_months(apr_swe, month = "April")
-
-```
-
 
 ```{r, echo = FALSE}
 # plot box plot for each month
 
-apr_swe_plot <- apr_swe %>% 
-  ggplot(aes(x = fct_reorder(region, swe_mm, .desc = TRUE), y = swe_mm))+
-  geom_boxplot(aes(fill = region), show.legend = FALSE) +
-  labs(
-    x = "Region",
-    y = "SWE (mm)",
-    title = "April"
-  ) +
-   scale_y_continuous(limits = c(0,250)) +
-  theme_classic() 
-
-
-
+apr_swe_plot <- month_bplot_swe(apr_swe, "April Swe")
 ```
 
 ### November - April Averaged SWE values
@@ -858,7 +720,7 @@ grid.arrange(dec_swe_plot, jan_swe_plot, feb_swe_plot, mar_swe_plot, ncol = 2)
 
 ## Total SWE for each region analyses
 
-```{r}
+```{r, include = FALSE}
 
 all_swe_total <- read_csv("winter_wy/all_swe_total.csv")
 
@@ -867,7 +729,6 @@ all_swe_total <- read_csv("winter_wy/all_swe_total.csv")
 
 ```
 
-### peak snowmelt chuska
 
 ```{r, echo = FALSE}
 
@@ -877,9 +738,7 @@ max_ch_weekly <- ch_weekly %>%
 
 ```
 
-### Annual weekly average max SWE
-
-Timing of Max Weekly Average SWE Value
+### Timing of Max Weekly Average SWE Value
 
 ```{r, echo = FALSE}
 # make dataframes of max weekly average for each year and region
@@ -926,6 +785,8 @@ grid.arrange(car_wk_max_graph, ch_wk_max_graph,
              ncol = 3)
 ```
 
+- All of the high elevation regions have a negative slope, with Chuska having the most negative slope, except Navajo Mt & Carrizo
+ - However, none of the trends are very statistically significant
 
 ```{r, include=FALSE}
 # check equation for trendline
@@ -965,7 +826,7 @@ ch_wk_max_graph2
 
 ### SWE compared to Suzanne's SCA
 
-```{r, echo = FALSE, warning=FALSE, echo = FALSE}
+```{r, echo = FALSE, warning=FALSE, echo = FALSE, message=FALSE}
 
 # read in SG
 ch_sca_month <- read_csv("Chuska/ch_sca_sg.csv") %>% 
@@ -995,7 +856,6 @@ sca_anom <- ch_sca_month %>%
 ```
 
 **SCA Anomaly was scaled down by a factor of 10 to improve analysis**
-
 
 ```{r, echo = FALSE}
 # now try and make Suzanne Chuska SCA anomaly overlay my Chuska anomaly

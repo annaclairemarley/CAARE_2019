@@ -232,8 +232,6 @@ plot_cor = function(df, adjr2, region = "") {
 
 # to make the averaged month over region boxplots
 
-
-
 month_bplot_dpth = function(df, title = "") {
 
   # make a loop to set the order
@@ -255,17 +253,41 @@ month_bplot_dpth = function(df, title = "") {
       y = "Depth (mm)",
       title = sprintf("%s", title)
     ) + 
-    #scale_y_continuous(limits = c(0, 950)) +
-    #scale_fill_brewer(palette = "Spectral", direction = -1)+
     scale_fill_manual(values=c("#D53E4F", "#FC8D59", "#FEE08B", "#E6F598", "#99D594", "#3288BD")) +
-   #scale_x_discrete(labels = c("Chuska" = "chuska", "Mt. Powell"= "mt_powell", "Black Mesa" = "black_mesa", "Defiance Plateau" = "defiance_plateau", "Carrizo" = "carrizo", "Navajo Mt" = "navajo_mt")) +
     theme_classic() +
     theme(plot.title = element_text(hjust = 0.5))
   
   return(plot)
 }
 
-
+## same thing but for swe
+month_bplot_swe = function(df, title = "") {
+  
+  # make a loop to set the order
+  df$region_order = 0
+  for (i in length(df$region)) {
+    df$region_order = ifelse(df$region == "chuska", "F", df$region_order)
+    df$region_order = ifelse(df$region == "defiance_plateau", "E", df$region_order)
+    df$region_order = ifelse(df$region == "black_mesa", "D", df$region_order)
+    df$region_order = ifelse(df$region == "carrizo", "C", df$region_order)
+    df$region_order = ifelse(df$region == "mt_powell", "B", df$region_order)
+    df$region_order = ifelse(df$region == "navajo_mt", "A", df$region_order)
+  }
+  
+  plot = df %>% 
+    ggplot(aes(x = fct_reorder(region, swe_mm, .desc = TRUE), y = swe_mm))+
+    geom_boxplot(aes(fill = region_order), show.legend = FALSE) +
+    labs(
+      x = "Region",
+      y = "SWE (mm)",
+      title = sprintf("%s", title)
+    ) + 
+    scale_fill_manual(values=c("#D53E4F", "#FC8D59", "#FEE08B", "#E6F598", "#99D594", "#3288BD")) +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  
+  return(plot)
+}
 
 #####################################################################
 #####################################################################
@@ -391,9 +413,9 @@ plot_pdsi = function(df, title = ""){
         y = "PDSI",
         title = sprintf("%s Palmer Drought Severity Index (PDSI)", title)
       ) +
-      scale_x_date(expand = c(0,0)) +
+      scale_x_date(expand = c(0,0), date_breaks = "3 years", date_labels = "%Y") +
       scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
-      geom_smooth(method = "lm") +
+      geom_smooth(method = "lm", se = FALSE) +
       theme_classic()
   
     return(plot)
@@ -432,6 +454,85 @@ plot_pdsi_swe = function(df, title = ""){
 
   return(plot)
 }
+
+#####################################################################
+#####################################################################
+#' plot_cor_swe_pdsi2
+#' 
+#' plots the correlation between swe and pdsi
+#'
+#' @param df df 
+#' @param title whatever you want the title to be
+#'
+#' @return correlation between swe and pdsi, trendline and r value
+
+
+plot_cor_swe_pdsi2 = function(df, title = ""){
+  
+  coef = cor.test(df$swe_anom, df$pdsi)$estimate
+  p_value = cor.test(df$swe_anom, df$pdsi)$p.value
+  
+  # plot the correlation
+  cor_plot_test <- df %>%
+    ggplot(aes(x = swe_anom, y = pdsi)) +
+    geom_point() +
+    geom_smooth(method = "lm", se = FALSE)+
+    labs(
+      x = "SWE Anomaly",
+      y = "PDSI",
+      title = sprintf("%s", title),
+      subtitle = sprintf("r = %s | p-value = %s", round(coef, 3), round(p_value, 3))
+    ) +
+    theme_classic()
+  
+  return(cor_plot_test)
+}
+
+#####################################################################
+#####################################################################
+#' plot_swe_pdsi
+#' 
+#' plots swe anomaly and pdsi
+#'
+#' @param df df 
+#' @param month months of interest
+#' @param region_time the name of the region and the month of spi your plotting
+#'
+#' @return bar graph of spi during the time you want it
+#' @example plot_swe_spi(tsaile_spi, month = c(6,7,6), title = "Tsaile June")
+
+plot_swe_pdsi = function(pdsi_df, month, swe_df = ch_wint_anom, region_time = "") {
+  
+  # clean up spi df and combine with chuska winter anomaly
+  
+ pdsi_clean <- pdsi_df %>% 
+    filter(year(date) >= 2004) %>% 
+    filter(month(date) %in% c(month)) %>% 
+    add_water_year() %>% 
+    select(waterYear, pdsi, sign) 
+  
+  # now combine winter chuska swe anom and the SPI
+  ch_pdsi_plot <- pdsi_clean %>% 
+    merge(swe_df, by = "waterYear") %>% 
+    select(waterYear, anomaly_perc, pdsi) %>% 
+    rename(PDSI = pdsi,
+           "SWE Anomaly" = anomaly_perc) %>% 
+    melt(id.vars = "waterYear") %>% 
+    rename(metric = variable) %>% 
+    ggplot(aes(x = waterYear, y = value, fill = metric)) +
+    scale_fill_manual(values = c("#3288BD", "#99D594")) +
+    geom_col(position = "dodge") +
+    labs(
+      x = "Water Year",
+      y = "Value",
+      fill = "Metric",
+      title = sprintf("Winter SWE Anomaly and %s PDSI", region_time)
+    )+
+    theme_classic()
+  
+  return(ch_pdsi_plot)
+}
+
 
 #####################################################################
 #####################################################################
@@ -496,8 +597,8 @@ plot_spi = function(df, month, title = "", years = "2004") {
   }
   
   spi_graph <- spi_clean %>% 
-      ggplot(aes(x = date)) +
-      geom_col(aes(y = spi, fill = sign), show.legend = FALSE) +
+      ggplot(aes(x = date, y = spi)) +
+      geom_col(aes(fill = sign), show.legend = FALSE) +
       scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
       labs(
         y = "SPI",
@@ -505,6 +606,8 @@ plot_spi = function(df, month, title = "", years = "2004") {
         title = sprintf("%s", title)
       ) +
       scale_y_continuous(expand = c(0,0)) +
+      scale_x_date(expand = c(0,0), date_breaks = "3 years", date_labels = "%Y") +
+      geom_smooth(method = "lm", se = FALSE) +
       theme_classic()
 
     return(spi_graph)
@@ -523,19 +626,19 @@ plot_spi = function(df, month, title = "", years = "2004") {
 #' @return bar graph of spi during the time you want it
 #' @example plot_swe_spi(tsaile_spi, month = c(6,7,6), title = "Tsaile June")
 
-plot_swe_spi = function(spi_df, month, region_time = "") {
+plot_swe_spi = function(spi_df, month, swe_df = ch_wint_anom, region_time = "") {
 
   # clean up spi df and combine with chuska winter anomaly
      
       spi_clean <- spi_df %>% 
       filter(year(date) >= 2004) %>% 
       filter(month(date) %in% c(month)) %>% 
-      mutate(waterYear = year(date)) %>% # note that water year is only = year(date) from Jan--end of sept
+      add_water_year() %>% 
       select(waterYear, spi, sign) 
     
   # now combine winter chuska swe anom and the SPI
   ch_spi_plot <- spi_clean %>% 
-    merge(ch_wint_anom, by = "waterYear") %>% 
+    merge(swe_df, by = "waterYear") %>% 
     select(waterYear,anomaly_perc, spi) %>% 
     rename(SPI = spi,
            "SWE Anomaly" = anomaly_perc) %>% 
@@ -552,6 +655,55 @@ plot_swe_spi = function(spi_df, month, region_time = "") {
     )+
     theme_classic()
 
+  return(ch_spi_plot)
+}
+
+#####################################################################
+#' plot_spi_drought_level
+#' 
+#' color codes the severity of the SPI drought for different months
+#'
+#' @param df df 
+#' @param month months of interest
+#' @param region_time the name of the region and the month of spi your plotting
+#'
+#' @return bar graph of spi during the time you want it
+#' @example plot_swe_spi(tsaile_spi, month = c(6,7,6), title = "Tsaile June")
+
+plot_spi_drought_level = function(spi_df, month, region_time = "") {
+  
+  # clean up spi df and combine with chuska winter anomaly
+  
+  spi_clean <- spi_df %>% 
+    filter(year(date) >= 2004) %>% 
+    filter(month(date) %in% c(month)) %>% 
+    add_water_year() %>% 
+    select(waterYear, spi, sign) 
+       
+  spi_clean$drought = 0      
+  for (i in length(spi_clean$spi)){
+    spi_clean$drought = ifelse(spi_clean$spi <= -1.5, "drought_emergency", spi_clean$drought)
+    spi_clean$drought = ifelse(spi_clean$spi <= -1 & spi_clean$spi >= -1.49, "drought_warning", spi_clean$drought)  
+    spi_clean$drought = ifelse(spi_clean$spi <= 0 & spi_clean$spi >= -0.99, "drought_alert", spi_clean$drought) 
+    spi_clean$drought = ifelse(spi_clean$spi >= 0, "normal", spi_clean$drought) 
+    }
+           
+  # now combine winter chuska swe anom and the SPI
+  ch_spi_plot <- spi_clean %>% 
+    rename(SPI = spi) %>% 
+    ggplot(aes(x = waterYear, y = SPI, 
+               fill = factor(drought, 
+                             levels = c("drought_emergency", "drought_warning", "drought_alert","normal")))) +
+    scale_fill_manual(values = c("#d13111", "#ffa600", "#f1d333", "#16990c")) +
+    geom_col(position = "dodge") +
+    labs(
+      x = "Water Year",
+      y = "SPI",
+      fill = "Drought Severity",
+      title = sprintf("%s SPI Drought Conditions", region_time)
+    )+
+    theme_classic()
+  
   return(ch_spi_plot)
 }
 

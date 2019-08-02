@@ -48,6 +48,14 @@ up_pue_precip <- read_csv("watersheds/upper_puerco_precip.csv")
 
 ```
 
+```{r, echo = FALSE, message=FALSE}
+# now change the precip data to spi
+chaco_spi <- precip_to_spi(chaco_precip)
+chinle_spi <- precip_to_spi(chinle_precip)
+mid_sj_spi <- precip_to_spi(mid_sj_precip)
+up_pue_spi <- precip_to_spi(up_pue_precip)
+```
+
 
 ```{r, echo = FALSE}
 # read in the watersheds' monthly pdsi data to compare to spi
@@ -69,24 +77,72 @@ mid_sj_pdsi <- read_csv("watersheds/middle_san_juan_pdsi.csv", col_names=c("date
 
 ```
 
-## Chaco
+### Correlations of watersheds SPI with CHuska winter anomaly
+```{r, echo = FALSE}
+# first join all the watersheds together
+spi_watersheds <- chaco_spi %>% 
+  rename(chaco = spi) %>% 
+  left_join(chinle_spi, by = "date") %>% 
+  rename(chinle = spi) %>% 
+  left_join(mid_sj_spi, by = "date") %>% 
+  rename(middle_san_juan = spi) %>% 
+  left_join(up_pue_spi, by = "date") %>% 
+  rename(upper_puerco = spi) %>% 
+  select(date, chaco, chinle, middle_san_juan, upper_puerco)
+  
+```
 
-### Chaco SPI
+#### Watershed April 6 month SPI and Chuska Winter Swe Anomaly
+```{r, echo = FALSE}
+# join chuska winter anomaly 
 
-```{r, echo = FALSE, message=FALSE}
+watersheds_v_chuska <- spi_watersheds %>% 
+  filter(month(date) == 4) %>% 
+  add_water_year() %>% 
+  filter(waterYear >= 2004) %>% 
+  select(-date) %>% 
+  left_join(ch_wint_anom, by = "waterYear") %>% 
+  rename(chuska_swe_anom = anomaly_perc) %>% 
+  select(-waterYear)
 
-# now change the precip data to spi
-chaco_spi <- precip_to_spi(chaco_precip)
+cor_spi_ch <- cor(watersheds_v_chuska)
+corrplot(cor_spi_ch, method = "ellipse", type = "upper", 
+         addCoef.col = "black", tl.col = "black",  tl.srt=45)
 
 
 ```
+
+- Middle San Juan watershed April SPI and Chuska appear to be most highly correlated
+
+#### Watershed May 6 month SPI and Chuska Winter Swe Anomaly
+```{r, echo = FALSE}
+# join chuska winter anomaly 
+
+watersheds_v_chuska_may <- spi_watersheds %>% 
+  filter(month(date) == 5) %>% 
+  add_water_year() %>% 
+  filter(waterYear >= 2004) %>% 
+  select(-date) %>% 
+  left_join(ch_wint_anom, by = "waterYear") %>% 
+  rename(chuska_swe_anom = anomaly_perc) %>% 
+  select(-waterYear)
+
+cor_spi_ch_may <- cor(watersheds_v_chuska_may)
+corrplot(cor_spi_ch_may, method = "ellipse", type = "upper", 
+         addCoef.col = "black", tl.col = "black",  tl.srt=45)
+
+
+```
+- Middle San Juan May SPI and Chuska appear to be most highly correlated
+
+## Chaco
+
+### Chaco SPI
 
 ```{r, echo = FALSE}
 
 # whole year 6 month SPI
 plot_spi(chaco_spi, month = all_months, title = "Chaco SPI", years = "all") 
-
-
 
 # let's take a look at the 6 month June SPI of each year
 plot_spi(chaco_spi, month = c(6), title = "Chaco June SPI")
@@ -199,15 +255,6 @@ plot_swe_spi(chaco_spi, month = c(5), region_time = "Chaco May 6 month")
 ## Chinle
 
 ### Chinle SPI
-
-```{r, echo = FALSE, message=FALSE}
-# read in precipita
-# now change the precip data to spi
-chinle_spi <- precip_to_spi(chinle_precip)
-
-# SPI June
-
-```
 
 ```{r, echo = FALSE}
 
@@ -459,6 +506,7 @@ grid.arrange(ch_up_pue_spi_apr_plot, ch_up_pue_spi_may_plot,
 
 - May has the highest correlation
 
+#### Removing 2010 from the correlation
 ```{r, echo = FALSE}
 # without the 2010 water year
 ch_up_pue_spi_apr_n10 <- merge_ch_spi(up_pue_spi, months = c(4)) %>% 
@@ -487,7 +535,7 @@ ch_up_pue_spi_july_plot_n10 <- plot_cor_swe_spi(ch_up_pue_spi_july_n10,
 
 ```
 
-#### Removing 2010 from the correlation
+
 ```{r, echo = FALSE}
 
 grid.arrange(ch_up_pue_spi_apr_plot_n10, ch_up_pue_spi_may_plot_n10, 

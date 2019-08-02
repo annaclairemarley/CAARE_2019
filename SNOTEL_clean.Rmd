@@ -29,6 +29,8 @@ source('Functions/graphing.R')
 
 beaver_spring <- read_csv("SNOTEL/beaver_spring.csv") 
 whiskey_creek <- read_csv("SNOTEL/whiskey_creek.csv") 
+whiskey_creek_all <- read_csv("SNOTEL/whiskey_creek_all.csv") %>% 
+  clean_names()
 
 ```
 
@@ -56,6 +58,20 @@ wh_ck_swe_plot <- wh_ck_swe %>%
 wh_ck_swe_plot
 
 ```
+
+```{r, echo = FALSE}
+# days of snow cover using the czchech paper's method
+# anything less than 1 cm depth is not considered a snow dat
+
+wh_ck_days_snow <- whiskey_creek_all %>% 
+  filter(year(date) >= 1998) %>% 
+  mutate(snow = ifelse(depth_cm <= 1, "no", "yes")) %>% 
+  filter(month(date) %in% c(1,2,3,4,5,6,7,8,9)) %>% 
+  filter(snow == "no")
+
+```
+
+
 
 ```{r, fig.width=20, fig.height=5, echo = FALSE}
 

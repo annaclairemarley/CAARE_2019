@@ -316,4 +316,11 @@ write.csv(mid_sj_precip, "watersheds/mid_sj_precip.csv", row.names = FALSE)
 
 ```
 
+# join together the whole NN Chrps data
+
+```{r}
+# milimeters
+nn_chrps_precip <- read_chunks("NN_whole/", fill_pattern = "nn_chrps_.*", variable = "precipitation")
+write.csv(nn_chrps_precip, "NN_whole/nn_chrps_precip_80-19.csv", row.names = FALSE)
+```
 
