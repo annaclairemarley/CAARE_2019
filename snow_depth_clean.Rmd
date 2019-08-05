@@ -331,17 +331,17 @@ nov_dpth_graph <- month_bplot_dpth(nov_dpth, title = "November")
 ```
 
 
-```{r, error = TRUE}
+```{r, error = TRUE, include = FALSE}
 # PCA?
-nov_dpth_swe <- merge(nov_dpth, nov_swe, by = c("waterYear", "region"))
-pcs <- prcomp(nov_dpth_swe[3:4], scale = TRUE)
-summary(pcs)
+#nov_dpth_swe <- merge(nov_dpth, nov_swe, by = c("waterYear", "region"))
+#pcs <- prcomp(nov_dpth_swe[3:4], scale = TRUE)
+#summary(pcs)
 
-group <-  nov_dpth_swe$region
+#group <-  nov_dpth_swe$region
 
-ggbiplot(pcs, groups = group)
+#ggbiplot(pcs, groups = group)
 
-fviz_pca_ind(pcs, col.ind = group)
+#fviz_pca_ind(pcs, col.ind = group)
 
 ```
 
@@ -441,7 +441,7 @@ grid.arrange(nov_dpth_graph, dec_dpth_graph, jan_dpth_graph, feb_dpth_graph, mar
 - decreases drastically in february and then is mostly gone by april
 - Navajo my usually has the shallowest snow depth
 
-```{r, fig.width=15}
+```{r, fig.width=15, echo = FALSE}
 
 grid.arrange(dec_dpth_graph, jan_dpth_graph, feb_dpth_graph, mar_dpth_graph, ncol = 2)
 

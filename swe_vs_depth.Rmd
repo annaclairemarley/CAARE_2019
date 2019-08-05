@@ -56,7 +56,7 @@ car_dpth_av <- calc_depth_metrics(car_dpth, "month", mean)
 
 ```
 
-```{r}
+```{r, include = FALSE}
 calc_swe_metrics(car_swe_dpth, "year", max)
 ```
 
@@ -517,7 +517,7 @@ all_density_graph
 
 ```
 
-```{r, fig.width=20,fig.height=5,}
+```{r, fig.width=20,fig.height=5, echo = FALSE}
 
 car_wk_mean_swe <- calc_swe_metrics(car_swe_dpth, "week", mean) 
 ch_wk_mean_swe <- calc_swe_metrics(ch_swe_dpth, "week", mean) 
@@ -751,7 +751,7 @@ ch_apr_anom <- ch_swe_anom %>%
 
 ```
 
-```{r, fig.width= 10}
+```{r, fig.width= 10, echo = FALSE}
 
 grid.arrange(ch_nov_anom, ch_dec_anom, ch_jan_anom, ch_feb_anom, ch_mar_anom, ch_apr_anom, ncol = 3)
 

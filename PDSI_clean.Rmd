@@ -36,7 +36,6 @@ nn_pdsi <- read_csv("NN_whole/nn_pdsi_79-19.csv") %>%
 
 
 ```{r, include = FALSE, warning=FALSE}
-
 # read in the agency data & add water year
 chinle_pdsi <- read_csv("Agencies/chinle_pdsi.csv") 
 east_navajo_pdsi <- read_csv("Agencies/east_navajo_pdsi.csv")
@@ -71,7 +70,6 @@ shiprock_an_av <- calc_pdsi_metrics(shiprock_pdsi, "year", mean)
 fort_defiance_an_av <- calc_pdsi_metrics(fort_defiance_pdsi, "year", mean)
 
 # take the monthly mean of the yearly data
-
 chinle_mnth_av <- calc_pdsi_metrics(chinle_pdsi, "month", mean)
 east_navajo_mnth_av <- calc_pdsi_metrics(east_navajo_pdsi, "month", mean)
 west_navajo_mnth_av <- calc_pdsi_metrics(west_navajo_pdsi, "month", mean)
@@ -121,7 +119,6 @@ corrplot(cor_pdsi, method = "ellipse", type = "upper",
 ```
 
 - All the agencies have a high PDSI correlation
-
 
 ```{r, echo=FALSE, warning=FALSE, message = FALSE}
 #### Now look to see if there are correlations in PDSI and swe levels ####
@@ -330,7 +327,9 @@ mtns_swe_anom <- mtns_swe %>%
   rename(swe_mm = sum_mts_swe_m3) %>% 
   add_water_year() %>% 
   calc_swe_metrics("month", mean) %>% 
-  calc_month_anom() 
+  calc_month_anom()
+
+
 ```
 
 ```{r, echo = FALSE, warning=FALSE}
@@ -394,10 +393,11 @@ nn_pdsi_swe2
 
 ```
 
-```{r, echo = FALSE, warning=FALSE}
+```{r, echo = FALSE, warning=FALSE, error = TRUE}
 # mountain ranges winter swe and all of navajo nation AMJ pdsi
 mtns_nn_wint_amj <- compare_swe_pdsi(mtns_swe_anom, swe_mnths = c(11,12,1,2,3,4), 
-                                     nn_mnth_pdsi, pdsi_mnths = c(4,5,6))
+                                     nn_mnth_pdsi, pdsi_mnths = c(4,5,6)) 
+
 plot_cor_swe_pdsi(mtns_nn_wint_amj, title = "Winter SWE and NN AMJ PDSI")
 
 mtns_nn_wint_amj_plot <- mtns_nn_wint_amj %>% 
@@ -473,6 +473,7 @@ ch_swe_anom <- chuska_swe %>%
 
 # Chuska average winter swe each year
 ch_swe_av_wint <- chuska_swe %>% 
+  calc_swe_metrics("month", mean) %>% 
   group_by(waterYear) %>% 
   summarize(mean_wint_swe = mean(swe_mm))
 
@@ -514,7 +515,6 @@ up_puerco_pdsi <- read_csv("watersheds/upper_puerco_pdsi.csv", col_names=c("date
 # middle san juan
 mid_sj_pdsi <- read_csv("watersheds/middle_san_juan_pdsi.csv", col_names=c("date", "pdsi"), skip =1) %>% 
   add_water_year()
-
 
 ```
 
@@ -673,6 +673,13 @@ chinle_pdsi_jj <- ch_chinle_wint_jj %>%
   select(waterYear.y, mean_pdsi) %>% 
   rename(waterYear = waterYear.y)
 
+mid_sj_pdsi_jj <- ch_mid_sj_wint_jj %>% 
+  select(waterYear.y, mean_pdsi) %>% 
+  rename(waterYear = waterYear.y)
+
+up_puerco_pdsi_jj <- ch_up_puerco_wint_jj %>% 
+  select(waterYear.y, mean_pdsi) %>% 
+  rename(waterYear = waterYear.y)
 
 ```
 

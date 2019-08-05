@@ -383,7 +383,7 @@ puppeteer.launch({headless: false}).then(browser => {
     // getData(regions.chapters, true, "2003-09-01", "2019-07-17", "pdsi", "Date,Palmer Drounght Severity Index").then(() => {
     //     browser.close();
     // }).catch(e => console.log(e));
-    getData(["Upper Puerco"], regionType.FUSION_TABLE,"1979-07-01", "2019-07-17", "pr", ["1YVoIDN75DjSBfZzT78k6K29ai3_MTQCNUpnfqi-n"], "Date,Precipitation").then(() => {
+    getData(["Middle San Juan"], regionType.FUSION_TABLE,"2013-02-25", "2019-07-17", "pr", ["1SCbzTWYImyozb3zBt3q2XpSVeF0oXVbF9U0pMujm"], "Date,Precipitation").then(() => {
         browser.close();
     }).catch(e => console.log(e));
     

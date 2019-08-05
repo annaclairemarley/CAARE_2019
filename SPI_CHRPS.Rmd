@@ -1,0 +1,207 @@
+---
+title: "SPI from CHRPS"
+author: "AnnaClaire Marley"
+date: "8/1/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+# load the packages
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(gridExtra)
+library(grid)
+library(dataRetrieval)
+library(reshape2)
+library(corrplot)
+library(precintcon)
+source("Functions/util.R")
+source('Functions/graphing.R')
+```
+
+- **This Rmarkdown changes CHRPS daily precipitation (mm) to SPI**
+
+```{r, echo = FALSE}
+# read in precipitation files
+nn_chrps_precip <- read_csv("NN_whole/nn_chrps_precip_80-19.csv") %>% 
+  arrange(date)
+
+# for later use:
+all_months = c(1,2,3,4,5,6,7,8,9,10,11,12)
+```
+
+## Whole Navajo Nation
+#### 6 month SPI
+```{r, echo = FALSE}
+# change precipitation to SPI
+nn_spi <- precip_to_spi(nn_chrps_precip)
+
+# check something
+
+```
+
+```{r, echo = FALSE}
+# look at it
+plot_spi(nn_spi, month = all_months, title = "", years = "all") 
+
+# the linear model info:
+nn_spi_lm <- lm(nn_spi$spi ~ nn_spi$date)
+summary(nn_spi_lm)
+```
+
+
+#### NN SPI vs PDSI
+```{r, echo = FALSE}
+# read in pdsi and get monthly mean
+nn_pdsi <- read_csv("NN_whole/nn_pdsi_79-19.csv", col_names=c("date", "pdsi"), skip =1) %>% 
+  add_water_year()
+
+nn_pdsi_mnth <- nn_pdsi %>% 
+  calc_pdsi_metrics("month", mean) %>% 
+  rename(mean_pdsi = pdsi)
+
+#merge with NN SPI
+nn_pdsi_spi <- nn_spi %>% 
+  select(date, spi) %>% 
+  merge(nn_pdsi_mnth, by = "date") 
+
+# plot their correlation
+plot_cor_pdsi_spi(nn_pdsi_spi, title = "Navajo Nation")
+```
+
+#### All mountains SWE vs NN SPI
+```{r, echo = FALSE}
+# read in mt swe
+mtns_swe <- read_csv("NN_whole/nn_mtns_swe_total.csv")
+
+# calculate winter anomaly
+# methodology:
+  # first calculate monthly mean swe, then take the mean for each water year
+  # Need to make sure this method matches pdsi
+mtns_swe_mnth_mean <- mtns_swe %>% 
+  filter(month(date) %in% c(1,2,3,4,11,12)) %>% 
+  rename(swe_mm = sum_mts_swe_m3) %>% 
+  add_water_year() %>% 
+  calc_swe_metrics("month", mean) 
+
+mtns_swe_wint_anomaly <- mtns_swe_mnth_mean %>% 
+  group_by(waterYear) %>% 
+  summarize(mean_swe = mean(swe_mm)) %>% 
+  mutate(anomaly = (mean_swe - mean(mean_swe))) %>% 
+  mutate(anomaly_perc = anomaly/mean(mean_swe))
+```
+
+```{r, echo = FALSE}
+# let's look at the correlations between SPI and mtns swe for April-July SPI first
+nn_mts_spi_apr <- merge_ch_spi(nn_spi, df_swe = mtns_swe_wint_anomaly, months = c(4)) 
+
+nn_mts_spi_apr_plot <- plot_cor_swe_spi(nn_mts_spi_apr,
+                                          title = "Winter SWE Anomaly & April SPI")
+
+nn_mts_spi_may <- merge_ch_spi(nn_spi, df_swe = mtns_swe_wint_anomaly, months = c(5)) 
+nn_mts_spi_may_plot <- plot_cor_swe_spi(nn_mts_spi_may,
+                                          title = "Winter SWE Anomaly & May SPI")
+
+nn_mts_spi_june <- merge_ch_spi(nn_spi, df_swe = mtns_swe_wint_anomaly, months = c(6)) 
+nn_mts_spi_june_plot <- plot_cor_swe_spi(nn_mts_spi_june,
+                                          title = "Winter SWE Anomaly & June SPI")
+
+nn_mts_spi_july <- merge_ch_spi(nn_spi, df_swe = mtns_swe_wint_anomaly, months = c(7)) 
+nn_mts_spi_july_plot <- plot_cor_swe_spi(nn_mts_spi_july,
+                                          title = "Winter SWE Anomaly & July SPI")
+
+```
+
+```{r, echo=FALSE, fig.width=7}
+
+grid.arrange(nn_mts_spi_apr_plot, nn_mts_spi_may_plot, 
+             nn_mts_spi_june_plot, nn_mts_spi_july_plot, ncol = 2)
+
+```
+
+#### without 2010
+```{r, echo = FALSE}
+
+# let's look at the correlations between SPI and mtns swe for April-July SPI WITHOUT 2010
+nn_mts_spi_apr_n10 <- merge_ch_spi(nn_spi, df_swe = mtns_swe_wint_anomaly, months = c(4)) %>% 
+  filter(waterYear != 2010)
+
+nn_mts_spi_apr_plot_n10 <- plot_cor_swe_spi(nn_mts_spi_apr_n10,
+                                          title = "Winter SWE Anomaly & April SPI")
+
+nn_mts_spi_may_n10 <- merge_ch_spi(nn_spi, df_swe = mtns_swe_wint_anomaly, months = c(5)) %>% 
+  filter(waterYear != 2010)
+nn_mts_spi_may_plot_n10 <- plot_cor_swe_spi(nn_mts_spi_may_n10,
+                                          title = "Winter SWE Anomaly & May SPI")
+
+nn_mts_spi_june_n10 <- merge_ch_spi(nn_spi, df_swe = mtns_swe_wint_anomaly, months = c(6)) %>% 
+  filter(waterYear != 2010)
+nn_mts_spi_june_plot_n10 <- plot_cor_swe_spi(nn_mts_spi_june_n10,
+                                          title = "Winter SWE Anomaly & June SPI")
+
+nn_mts_spi_july_n10 <- merge_ch_spi(nn_spi, df_swe = mtns_swe_wint_anomaly, months = c(7)) %>% 
+  filter(waterYear != 2010)
+nn_mts_spi_july_plot_n10 <- plot_cor_swe_spi(nn_mts_spi_july_n10,
+                                          title = "Winter SWE Anomaly & July SPI")
+
+```
+
+```{r, echo=FALSE, fig.width=7}
+
+grid.arrange(nn_mts_spi_apr_plot_n10, nn_mts_spi_may_plot_n10, 
+             nn_mts_spi_june_plot_n10, nn_mts_spi_july_plot_n10, ncol = 2)
+
+```
+
+- taking out 2010 actually just makes it worse
+
+```{r, echo = FALSE}
+# swe and spi following for MAY spi
+plot_swe_spi(nn_spi, month = c(5), swe_df = mtns_swe_wint_anomaly, region_time = "Navajo Nation May 6 month")
+
+nn_mts_correct_may <- swe_spi_same(nn_mts_spi_may, type = "total")
+nn_mts_positive_may <- swe_spi_same(nn_mts_spi_may, type = "positive")
+nn_mts_negative_may <- swe_spi_same(nn_mts_spi_may, type = "negative")
+```
+
+- *May* positive swe & positive spi / positive swe: `r round(nn_mts_positive_may*100, 3)`%
+- *May* negative swe & negative spi / negative swe: `r nn_mts_negative_may*100`%
+- *May* total correct: `r nn_mts_correct_may*100`%
+
+```{r, echo = FALSE}
+
+plot_spi_drought_level(nn_spi, month = c(5), region_time = "Navajo Nation May 6 month")
+
+
+```
+
+```{r, echo = FALSE}
+# swe and spi following for April spi
+plot_swe_spi(nn_spi, month = c(4), swe_df = mtns_swe_wint_anomaly, region_time = "Navajo Nation April 6 month")
+
+nn_mts_correct_apr <- swe_spi_same(nn_mts_spi_apr, type = "total")
+nn_mts_positive_apr <- swe_spi_same(nn_mts_spi_apr, type = "positive")
+nn_mts_negative_apr <- swe_spi_same(nn_mts_spi_apr, type = "negative")
+```
+
+- *April* positive swe & positive spi / positive swe: `r round(nn_mts_positive_apr*100, 3)`%
+- *April* negative swe & negative spi / negative swe: `r nn_mts_negative_apr*100`%
+- *April* total correct: `r nn_mts_correct_apr*100`%
+
+```{r, echo = FALSE}
+
+plot_spi_drought_level(nn_spi, month = c(4), region_time = "Navajo Nation April 6 month")
+
+```
+- every time in april there was a drought warning or a drought emergency, it was preceded by a negative anomaly winter swe
+
+
+```{r, echo = FALSE}
+plot_spi_drought_level(nn_spi, month = c(4, 5, 6), region_time = "Navajo Nation April, May, June 6 month") 
+```
+
