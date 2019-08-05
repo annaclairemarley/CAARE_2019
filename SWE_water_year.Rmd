@@ -1,0 +1,197 @@
+---
+title: "SWE Water Year Analyses"
+output: html_document
+Author: AnnaClaire Marley
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This document shows figures created using SWE analysis in water years during the winter months (November - April)
+
+
+```{r, include = FALSE}
+# load the packages
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(gridExtra)
+library(grid)
+library(dataRetrieval)
+
+
+```
+
+```{r, echo = FALSE, message = FALSE}
+# load the winter water year csvs
+black_mesa <- read_csv("Black Mesa/bm_wint_wy_04-19")
+carrizo <- read_csv("Carrizo/car_wint_wy_04-19")
+chuska <- read_csv("Chuska/ch_wint_wy_04-19")
+
+```
+
+# Daily SWE values (November - April water year)
+```{r}
+source('Functions/swe_wy_daily.R')
+
+car_daily <- swe_wy_daily(carrizo, "Carrizo")
+bm_daily <- swe_wy_daily(black_mesa, "Black Mesa")
+ch_daily <- swe_wy_daily(chuska, "Chuska")
+
+# graph them all
+car_daily
+bm_daily
+ch_daily
+
+```
+
+
+# Annual Average SWE (November - April water year)
+```{r, include = FALSE, message = FALSE}
+# This is for water years
+
+source('Functions/calc_anwy_metrics.R')
+
+carr_anwy <- calc_anwy_metrics(carrizo, mean) 
+ch_anwy <- calc_anwy_metrics(chuska, mean)
+bm_anwy <- calc_anwy_metrics(black_mesa, mean)
+
+
+
+```
+
+```{r, echo = FALSE}
+source('Functions/graph_swe_metric.R')
+# graph metrics
+  #put in what type of graph you want and then the name of the region in quotes
+
+carr_wy_graph <- graph_swe_metric(carr_anwy, "waterYear", geom_col,  "Carrizo")
+
+ch_wy_graph <- graph_swe_metric(ch_anwy, "waterYear", geom_col, "Chuska")
+
+bm_wy_graph <- graph_swe_metric(bm_anwy, "waterYear", geom_col, "Black Mesa")
+
+# visualize all next to each other 
+
+grid.arrange(carr_wy_graph, ch_wy_graph, bm_wy_graph)
+
+```
+
+# Monthly mean for each region
+```{r, include=FALSE}
+
+# first create monthly mean dataframes
+source('Functions/calc_swe_metrics.R')
+
+car_wy_av_mn <- calc_swe_metrics(carrizo, "month", mean) 
+ch_wy_av_mn <- calc_swe_metrics(chuska, "month", mean)
+bm_wy_av_mn <- calc_swe_metrics(black_mesa, "month", mean)
+
+```
+
+```{r, echo = FALSE}
+# now graph it - this is just in calendar years
+source('Functions/graph_wy.R')
+
+car_mn_av <- graph_wy(car_wy_av_mn, geom_line, "Carrizo")
+ch_mn_av <- graph_wy(ch_wy_av_mn, geom_line, "Chuska")
+bm_mn_av <- graph_wy(bm_wy_av_mn, geom_line, "Chuska")
+
+grid.arrange(car_mn_av, ch_mn_av, bm_mn_av)
+
+
+```
+
+# Monthly mean swe compared to monthly mean SCA
+
+
+```{r, echo = FALSE, include = FALSE}
+# calc month anomaly
+source('Functions/calc_month_anom.R')
+
+car_mn_anom <- calc_month_anom(car_wy_av_mn)
+bm_mn_anom <- calc_month_anom(bm_wy_av_mn)
+ch_mn_anom <- calc_month_anom(ch_wy_av_mn)
+
+
+#plot swe anomaly 
+source('Functions/plot_swe_anomaly.R')
+ 
+plot_swe_anomaly(car_mn_anom, "Carrizo")
+plot_swe_anomaly(ch_mn_anom, "Chuska")
+
+```
+
+
+```{r, echo = FALSE, message = FALSE}
+
+# read in SG
+ch_sca_month <- read_csv("Chuska/ch_sca_sg.csv") %>% 
+  clean_names() %>% 
+  mutate(date = as.Date(paste(cal_year, r_month, "01", sep="-"))) %>% 
+  select(date, water_year, mean_sca_km2, anomaly_by_month)
+
+# plot SCA
+sca_plot <- ch_sca_month %>% 
+  ggplot(aes(x = date, y = mean_sca_km2)) +
+  geom_line() +
+  scale_x_date(date_labels = "%b%Y")+
+  scale_y_continuous(expand = c(0,0)) +
+  theme_classic()
+
+# plot anomalies
+sca_anom <- ch_sca_month %>% 
+  ggplot(aes(x = date, y = anomaly_by_month)) +
+  geom_line() +
+  scale_x_date(date_labels = "%b%Y")+
+  scale_y_continuous(expand = c(0,0)) +
+  labs(
+    y = "SCA Anomaly"
+  ) +
+  theme_classic()
+
+
+```
+
+**SCA Anomaly was scaled down by a factor of 10 to improve analysis**
+
+```{r, echo = FALSE}
+
+# now try and make Suzanne Chuska SCA anomaly overlay my Chuska anomaly
+
+# make a combined swe and sca anomaly dataframe
+
+chuska_swe_sca <- ch_mn_anom %>% 
+  select(-month) %>% 
+  arrange(date) %>% 
+  merge(ch_sca_month, by = "date") %>% 
+  rename(swe_anom = anomaly,
+         sca_anom = anomaly_by_month)
+  
+# now plot them together:
+plot <- chuska_swe_sca %>% 
+    ggplot(aes(x = date)) +
+    geom_col(aes(y = swe_anom, fill = sign), show.legend = FALSE) +
+    #scale_y_continuous(limits = c(-20, 100)) +
+    scale_fill_manual(values = c("negative" = "red", "positive" = "dark green")) +
+    geom_line(aes(y = sca_anom/10)) +
+    scale_x_date(date_labels = "%b%Y") +
+    scale_y_continuous(sec.axis = sec_axis(~.*5, name = "SCA Anomaly (km2)")) +
+    labs(
+      x = "Date",
+      y = "SWE Anomaly (mm)",
+      title = "Chuska SWE vs SCA Anomaly"
+    ) +
+    theme_classic()
+
+plot
+  
+
+```
+
+
+
+
+
+
