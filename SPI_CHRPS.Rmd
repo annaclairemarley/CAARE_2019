@@ -31,8 +31,38 @@ source('Functions/graphing.R')
 nn_chrps_precip <- read_csv("NN_whole/nn_chrps_precip_80-19.csv") %>% 
   arrange(date)
 
+mid_sj_precip <- read_csv("watersheds/mid_sj_chirps.csv") %>% 
+  arrange(date)
+
 # for later use:
 all_months = c(1,2,3,4,5,6,7,8,9,10,11,12)
+```
+
+```{r, echo = FALSE}
+# read in all mountains winter swe anomaly
+mtns_swe <- read_csv("NN_whole/nn_mtns_swe_total.csv")
+
+# calculate winter anomaly
+# methodology:
+  # first calculate monthly mean swe, then take the mean for each water year
+  # Need to make sure this method matches pdsi
+mtns_swe_mnth_mean <- mtns_swe %>% 
+  filter(month(date) %in% c(1,2,3,4,11,12)) %>% 
+  rename(swe_mm = sum_mts_swe_m3) %>% 
+  add_water_year() %>% 
+  calc_swe_metrics("month", mean) 
+
+mtns_swe_wint_anomaly <- mtns_swe_mnth_mean %>% 
+  group_by(waterYear) %>% 
+  summarize(mean_swe = mean(swe_mm)) %>% 
+  mutate(anomaly = (mean_swe - mean(mean_swe))) %>% 
+  mutate(anomaly_perc = anomaly/mean(mean_swe))
+```
+
+```{r, include=FALSE}
+# read in Chuska Winter swe anomaly
+
+
 ```
 
 ## Whole Navajo Nation
@@ -75,54 +105,14 @@ plot_cor_pdsi_spi(nn_pdsi_spi, title = "Navajo Nation")
 ```
 
 #### All mountains SWE vs NN SPI
-```{r, echo = FALSE}
-# read in mt swe
-mtns_swe <- read_csv("NN_whole/nn_mtns_swe_total.csv")
 
-# calculate winter anomaly
-# methodology:
-  # first calculate monthly mean swe, then take the mean for each water year
-  # Need to make sure this method matches pdsi
-mtns_swe_mnth_mean <- mtns_swe %>% 
-  filter(month(date) %in% c(1,2,3,4,11,12)) %>% 
-  rename(swe_mm = sum_mts_swe_m3) %>% 
-  add_water_year() %>% 
-  calc_swe_metrics("month", mean) 
-
-mtns_swe_wint_anomaly <- mtns_swe_mnth_mean %>% 
-  group_by(waterYear) %>% 
-  summarize(mean_swe = mean(swe_mm)) %>% 
-  mutate(anomaly = (mean_swe - mean(mean_swe))) %>% 
-  mutate(anomaly_perc = anomaly/mean(mean_swe))
-```
-
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.width=7}
 # let's look at the correlations between SPI and mtns swe for April-July SPI first
-nn_mts_spi_apr <- merge_ch_spi(nn_spi, df_swe = mtns_swe_wint_anomaly, months = c(4)) 
-
-nn_mts_spi_apr_plot <- plot_cor_swe_spi(nn_mts_spi_apr,
-                                          title = "Winter SWE Anomaly & April SPI")
-
-nn_mts_spi_may <- merge_ch_spi(nn_spi, df_swe = mtns_swe_wint_anomaly, months = c(5)) 
-nn_mts_spi_may_plot <- plot_cor_swe_spi(nn_mts_spi_may,
-                                          title = "Winter SWE Anomaly & May SPI")
-
-nn_mts_spi_june <- merge_ch_spi(nn_spi, df_swe = mtns_swe_wint_anomaly, months = c(6)) 
-nn_mts_spi_june_plot <- plot_cor_swe_spi(nn_mts_spi_june,
-                                          title = "Winter SWE Anomaly & June SPI")
-
-nn_mts_spi_july <- merge_ch_spi(nn_spi, df_swe = mtns_swe_wint_anomaly, months = c(7)) 
-nn_mts_spi_july_plot <- plot_cor_swe_spi(nn_mts_spi_july,
-                                          title = "Winter SWE Anomaly & July SPI")
+plot_spi_swe_all(nn_spi, mtns_swe_wint_anomaly)
 
 ```
 
-```{r, echo=FALSE, fig.width=7}
 
-grid.arrange(nn_mts_spi_apr_plot, nn_mts_spi_may_plot, 
-             nn_mts_spi_june_plot, nn_mts_spi_july_plot, ncol = 2)
-
-```
 
 #### without 2010
 ```{r, echo = FALSE}
@@ -203,5 +193,32 @@ plot_spi_drought_level(nn_spi, month = c(4), region_time = "Navajo Nation April 
 
 ```{r, echo = FALSE}
 plot_spi_drought_level(nn_spi, month = c(4, 5, 6), region_time = "Navajo Nation April, May, June 6 month") 
+```
+
+## Watersheds 
+
+### Middle San Juan
+
+```{r, echo = FALSE}
+# change to spi
+mid_sj_spi <- precip_to_spi(mid_sj_precip)
+
+```
+
+#### SPI
+```{r, echo = FALSE}
+# look at it
+plot_spi(mid_sj_spi, month = all_months, title = "", years = "all") 
+
+# the linear model info:
+mid_sj_spi_lm <- lm(mid_sj_spi$spi ~ mid_sj_spi$date)
+summary(mid_sj_spi_lm)
+```
+
+#### Chuska Monthly Winter SWE Anomaly vs SPI
+
+```{r, echo = FALSE}
+
+
 ```
 

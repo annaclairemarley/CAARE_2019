@@ -324,3 +324,9 @@ nn_chrps_precip <- read_chunks("NN_whole/", fill_pattern = "nn_chrps_.*", variab
 write.csv(nn_chrps_precip, "NN_whole/nn_chrps_precip_80-19.csv", row.names = FALSE)
 ```
 
+## Middle san juan chirps
+```{r}
+mid_sj_chirps <- read_chunks("data_download/data", fill_pattern = "*Juan_CHIRPS_*", variable = "precipitation")
+write.csv(mid_sj_chirps, "watersheds/mid_sj_chirps.csv", row.names = FALSE)
+```
+

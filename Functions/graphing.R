@@ -740,3 +740,41 @@ plot_cor_pdsi_spi = function(df, title = "") {
     return(spi_pdsi_plot)
     
 }
+
+#####################################################################
+#####################################################################
+#' plot_spi_swe_all
+#' 
+#' plots April - July correlations of spi and swe
+#'
+#' @param spi_df the monthly spi data
+#' @param swe_df whatever swe anomaly you want to use
+#'
+
+
+
+plot_spi_swe_all = function(spi_df, swe_df){
+    
+    spi_apr <- merge_ch_spi(spi_df, df_swe = swe_df, months = c(4)) 
+    
+    apr_plot <- plot_cor_swe_spi(spi_apr,
+                                            title = "Winter SWE Anomaly & April SPI")
+    
+    spi_may <- merge_ch_spi(spi_df, df_swe = swe_df, months = c(5)) 
+    may_plot <- plot_cor_swe_spi(spi_may,
+                                            title = "Winter SWE Anomaly & May SPI")
+    
+    spi_june <- merge_ch_spi(spi_df, df_swe = swe_df, months = c(6)) 
+    june_plot <- plot_cor_swe_spi(spi_june,
+                                             title = "Winter SWE Anomaly & June SPI")
+    
+    spi_july <- merge_ch_spi(spi_df, df_swe = swe_df, months = c(7)) 
+    july_plot <- plot_cor_swe_spi(spi_july,
+                                             title = "Winter SWE Anomaly & July SPI")
+    
+    
+    grid <- grid.arrange(apr_plot, may_plot, 
+                 june_plot, july_plot, ncol = 2)
+
+    return(grid)
+}
