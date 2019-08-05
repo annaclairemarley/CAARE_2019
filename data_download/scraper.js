@@ -186,9 +186,16 @@ puppeteer.launch({headless: false}).then(browser => {
                 variableTS = "Snow_Depth"
                 scaleTS = 1000;
                 break;
+            case "CHIRPS_daily":
+                scaleTS = 4800;
+                productTS = "CHIRPS_DAILY";
+                variableTS = "precipitation";
+                statisticTS = "Total";
         }
-        
+
+
         const page = await browser.newPage();
+        await page.setDefaultNavigationTimeout(1000 * 60); 
         console.log('https://app.climateengine.org/climateEngine?toolAction=getTimeSeriesOverDateRange&timeSeriesCalc=days&variable2display=none&productTypeTS=MET' + 
         '&productTS=' + productTS + 
         '&variableTS=' + variableTS + 
@@ -206,8 +213,10 @@ puppeteer.launch({headless: false}).then(browser => {
         '&geom_columnnames=' + geom_columnnames + 
         '&geom_regions=' + geom_regions +
         '&geom_subchoices=' + regionName)
-
-        await page.goto('https://app.climateengine.org/climateEngine?toolAction=getTimeSeriesOverDateRange&timeSeriesCalc=days&variable2display=none&productTypeTS=MET' + 
+        let attempts = 0;
+        while (attempts < 5) {
+            try {
+                await page.goto('https://app.climateengine.org/climateEngine?toolAction=getTimeSeriesOverDateRange&timeSeriesCalc=days&variable2display=none&productTypeTS=MET' + 
                         '&productTS=' + productTS + 
                         '&variableTS=' + variableTS + 
                         '&statisticTS=' + statisticTS + 
@@ -227,14 +236,23 @@ puppeteer.launch({headless: false}).then(browser => {
  
                          
 
-        // Get the "viewport" of the page, as reported by the page.
-        const csv = await page.evaluate(() => {
-            return myChart.getCSV(true);
-        });
+                // Get the "viewport" of the page, as reported by the page.
+                const csv = await page.evaluate(() => {
+                    return myChart.getCSV(true);
+                });
 
-        page.close();
-
-        return csv.split("\n");
+                return csv.split("\n");
+            } catch (err) {
+                if (err.name == "TimeoutError" && attempts < 4) {
+                    console.log("Time out. Trying again")
+                    attempts += 1
+                } else {
+                    raise(err);
+                }
+            } finally {
+                page.close();
+            }
+        }
     };
 
     /**
@@ -364,7 +382,7 @@ puppeteer.launch({headless: false}).then(browser => {
     // getData(regions.chapters, true, "2003-09-01", "2019-07-17", "pdsi", "Date,Palmer Drounght Severity Index").then(() => {
     //     browser.close();
     // }).catch(e => console.log(e));
-    getData(["Chaco"], regionType.FUSION_TABLE,"2012-02-02", "2019-07-17", "pr", ["1hGYMbREmoq-66t26xMOl6rqk4Qlq45KjFP2MRGUV"], "Date,Precipitation").then(() => {
+    getData(["Upper Puerco"], regionType.FUSION_TABLE,"1979-07-01", "2019-07-17", "pr", ["1YVoIDN75DjSBfZzT78k6K29ai3_MTQCNUpnfqi-n"], "Date,Precipitation").then(() => {
         browser.close();
     }).catch(e => console.log(e));
     
