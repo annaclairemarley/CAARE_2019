@@ -693,9 +693,12 @@ plot_spi_drought_level = function(spi_df, month, region_time = "") {
     rename(SPI = spi) %>% 
     ggplot(aes(x = waterYear, y = SPI, 
                fill = factor(drought, 
-                             levels = c("drought_emergency", "drought_warning", "drought_alert","normal")))) +
-    scale_fill_manual(values = c("#d13111", "#ffa600", "#f1d333", "#16990c")) +
-    geom_col(position = "dodge") +
+                             levels = c("drought_emergency", "drought_warning", "drought_alert","normal"))
+               ), color = "white") +
+     scale_fill_manual(values = c("#d13111", "#ffa600", "#f1d333", "#16990c"), 
+                       labels = c("Drought Emergency", "Drought Warning", "Drought Alert", "Normal")) +
+    geom_col(position = "dodge2") +
+    scale_x_continuous(breaks=seq(2004,2019, by = 2)) +
     labs(
       x = "Water Year",
       y = "SPI",

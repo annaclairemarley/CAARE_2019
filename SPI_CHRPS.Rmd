@@ -26,7 +26,7 @@ source('Functions/graphing.R')
 
 - **This Rmarkdown changes CHRPS daily precipitation (mm) to SPI**
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message = FALSE}
 # read in precipitation files
 nn_chrps_precip <- read_csv("NN_whole/nn_chrps_precip_80-19.csv") %>% 
   arrange(date)
@@ -203,5 +203,6 @@ plot_spi_drought_level(nn_spi, month = c(4), region_time = "Navajo Nation April 
 
 ```{r, echo = FALSE}
 plot_spi_drought_level(nn_spi, month = c(4, 5, 6), region_time = "Navajo Nation April, May, June 6 month") 
+plot_spi_drought_level(nn_spi, month = all_months, region_time = "Navajo Nation 6 month") 
 ```
 
