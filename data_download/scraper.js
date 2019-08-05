@@ -1,5 +1,8 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
+
+const TIME_CHUNK_SIZE = 90;
+const TIMEOUT_SECONDS = 60;
 const regionType = {
     AGENCY: 'a',
     CHAPTER: 'c',
@@ -195,7 +198,7 @@ puppeteer.launch({headless: false}).then(browser => {
 
 
         const page = await browser.newPage();
-        await page.setDefaultNavigationTimeout(1000 * 60); 
+        await page.setDefaultNavigationTimeout(1000 * TIMEOUT_SECONDS); 
         console.log('https://app.climateengine.org/climateEngine?toolAction=getTimeSeriesOverDateRange&timeSeriesCalc=days&variable2display=none&productTypeTS=MET' + 
         '&productTS=' + productTS + 
         '&variableTS=' + variableTS + 
@@ -256,15 +259,15 @@ puppeteer.launch({headless: false}).then(browser => {
     };
 
     /**
-     * Checks size of differenc ein 3 month intervals between dates
+     * Checks size of difference, in CHUNK_SIZE of day intervals between dates.
      * @param {Date} dt2 
      * @param {Date} dt1 
      */
-    function diff_6months(dt2, dt1) {
+    function chunk_diff(dt2, dt1, chunk_size) {
 
         var diff =(dt2.getTime() - dt1.getTime()) / 1000;
         diff /= (60 * 60 * 24);
-        return Math.abs(Math.round(diff/180));
+        return Math.abs(Math.round(diff/chunk_size));
     
     }
 
@@ -317,8 +320,8 @@ puppeteer.launch({headless: false}).then(browser => {
         sDate = toDate(startDate);
         eDate = toDate(endDate);
         currentEndDate = toDate(startDate);
-        currentEndDate.setDate(currentEndDate.getDate() + 30);
-        if (diff_6months(eDate, sDate) < 1 ) {
+        currentEndDate.setDate(currentEndDate.getDate() + TIME_CHUNK_SIZE);
+        if (chunk_diff(eDate, sDate, TIME_CHUNK_SIZE) < 1 ) {
             timeSegments.push([formatDate(sDate), formatDate(eDate)]);
         } else {
             while (currentEndDate != eDate) {
@@ -366,8 +369,6 @@ puppeteer.launch({headless: false}).then(browser => {
                     console.log(encodeURIComponent(regionsToUse[regionIndex]) + "_" + variable + "_" + startDate + "_" + endDate + ".csv Saved!");
                 }); 
             }
-            // app.climateengine.org/climateEngine?toolAction=getTimeSeriesOverDateRange&timeSeriesCalc=days&variable2display=none&productTypeTS=MET&productTS=G&variableTS=pr&statisticTS=Total&scaleTS=4000&unitsTS=metric&dateStartTS=1979-01-01&dateEndTS=1979-04-01&mapCenterLongLat=-109.7906%2C36.2531&mapzoom=8&chartType=line&runningMeanDays=9&geom_geoms=projects/climate-engine/featureCollections/shp_simplified/ClimateEngine_Navajo_Nation_Agencies&geom_types=navajo_nation&geom_meta_types=feature_collection&geom_displays=block&geom_checks=checked&geom_altnames=Chaco&geom_columnnames=Name&geom_regions=navajo_nation_agencies&geom_subchoices=Chaco
-            // app.climateengine.org/climateEngine?toolAction=getTimeSeriesOverDateRange&timeSeriesCalc=days&variable2display=none&productTypeTS=MET&productTS=G&variableTS=pr&statisticTS=Total&scaleTS=4000&unitsTS=metric&dateStartTS=1979-01-01&dateEndTS=2000-01-01&mapCenterLongLat=-108.2225%2C36.1686&mapzoom=8&chartType=line&runningMeanDays=9&geom_geoms=1hGYMbREmoq-66t26xMOl6rqk4Qlq45KjFP2MRGUV&geom_types=custom_fusiontable&geom_meta_types=custom_fusiontable&geom_displays=block&geom_checks=checked&geom_altnames=17002&geom_columnnames=geometry_vertex_count&geom_regions=&geom_subchoices=17002
 
             
         }
