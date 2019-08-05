@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+data_download/.vscode
+data_download/node_modules
+data_download/data

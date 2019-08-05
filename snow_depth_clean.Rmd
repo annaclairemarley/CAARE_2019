@@ -1,0 +1,468 @@
+---
+title: "Snow Depth Analyses"
+author: "AnnaClaire Marley"
+date: "7/5/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include = FALSE}
+# load the packages
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(gridExtra)
+library(grid)
+library(dataRetrieval)
+library(reshape2)
+library(corrplot)
+library(factoextra)
+library(forcats)
+source("Functions/util.R")
+source('Functions/graphing.R')
+```
+
+```{r, include = FALSE}
+# read in csv files - they are already processed as winter months and have a water year column. refer to "Raw_data_cleaning" for code 
+
+car_depth_wy <- read_csv("Carrizo/car_dpth_wint_wy_03_19.csv") # Carrizo
+
+ch_depth_wy <- read_csv("Chuska/ch_dpth_wint_wy_03_19.csv") # Chuska
+
+bm_depth_wy <- read_csv("Black Mesa/bm_dpth_wint_wy_03_19.csv") # Black Mesa
+
+nm_depth_wy <- read_csv("navajo_mtn/nm_dpth_wint_wy_03_19.csv") # Navajo Mt
+
+mp_depth_wy <- read_csv("mt_powell/mp_dpth_wint_wy_03_19.csv") # Mt Powell
+  
+dp_depth_wy <- read_csv("defiance_plateau/dp_dpth_wint_wy_03_19.csv") # Defiance Plateau
+```
+
+
+### Daily Snow Depth Variability for Each Region (November - April Water Year)
+
+- 2004-2007, 2012, and 2018 were especially dry years across all regions
+  - 2004 & 2005 experienced almost no snow
+- Carrizo has the smallest snow depths and Chuska has the higest
+
+```{r, fig.width=20,fig.height=5, echo= FALSE}
+carr_dpth_daily <- graph_with_wateryear(car_depth_wy, "Carrizo", variable = "depth_mm", ylab = "Snow depth (mm)")
+carr_dpth_daily
+```
+
+```{r, fig.width=20,fig.height=5, echo= FALSE}
+ch_dpth_daily <- graph_with_wateryear(ch_depth_wy, "Chuska", variable = "depth_mm", ylab = "Snow depth (mm)")
+ch_dpth_daily
+```
+
+```{r, fig.width=20,fig.height=5, echo= FALSE}
+bm_dpth_daily <- graph_with_wateryear(bm_depth_wy, "Black Mesa", variable = "depth_mm", ylab = "Snow depth (mm)")
+bm_dpth_daily
+```
+
+### Annual Mean Snow Depth variability (November - April Water Year)
+
+- Lowest average snow depth across all three regions = 2004-2007 WY and 2018
+- Chuska on average always has the deepest snow
+
+```{r, echo = FALSE, include = FALSE}
+car_an_av <- graph_anwy_metrics(car_depth_wy, mean, title = "Carrizo")
+ch_an_av <- graph_anwy_metrics(ch_depth_wy, mean, title = "Chuska")
+bm_an_av <- graph_anwy_metrics(bm_depth_wy, mean, title = "Black Mesa")
+
+#graphs
+
+car_an_av
+ch_an_av
+bm_an_av
+
+```
+
+```{r, echo = FALSE}
+# graph annual average stacked on top of each other
+
+# quick function to calculate annual averages
+calc_an_region = function(df) {
+
+  av = df %>% 
+    group_by(waterYear)  %>% 
+    summarize(depth_mm = mean(depth_mm))
+
+return(av)
+}
+
+# make the annual average dataframes
+car_an <- calc_an_region(car_depth_wy)
+ch_an <- calc_an_region(ch_depth_wy)
+bm_an <- calc_an_region(bm_depth_wy)
+
+# join together
+an_av_all <- join_depth_months(carrizo = car_an, chuska = ch_an, black_mesa = bm_an)
+
+# graph it
+
+an_av_depth_graph <- an_av_all %>% 
+  ggplot(aes(x = waterYear, y = depth_mm, fill = region)) +
+  geom_bar(stat = "identity", position = "identity") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_fill_discrete(name = "Region", labels = c("Carrizo", "Chuska", "Black Mesa")) +
+  labs(
+    x = "Water Year",
+    y = "Snow depth (mm)",
+    region = "Region"
+  ) +
+  theme_classic()
+
+
+```
+
+
+
+
+## Monthly Mean Snow Depth variability (November - April Water Year)
+
+```{r, include = FALSE}
+# monthly mean
+car_mn_av <- calc_depth_metrics(car_depth_wy, "month", mean)
+ch_mn_av <- calc_depth_metrics(ch_depth_wy, "month", mean)
+bm_mn_av <- calc_depth_metrics(bm_depth_wy, "month", mean)
+nm_mn_av <- calc_depth_metrics(nm_depth_wy, "month", mean)
+mp_mn_av <- calc_depth_metrics(mp_depth_wy, "month", mean)
+dp_mn_av <- calc_depth_metrics(dp_depth_wy, "month", mean)
+
+#monthly max
+car_mn_max <- calc_depth_metrics(car_depth_wy, "month", max)
+ch_mn_max <- calc_depth_metrics(ch_depth_wy, "month", max)
+bm_mn_max <- calc_depth_metrics(bm_depth_wy, "month", max)
+nm_mn_max <- calc_depth_metrics(nm_depth_wy, "month", max)
+mp_mn_max <- calc_depth_metrics(mp_depth_wy, "month", max)
+dp_mn_max <- calc_depth_metrics(dp_depth_wy, "month", max)
+```
+
+Carrizo: 
+
+- Low years: 2004-2009, 2012, 2015, 2018
+
+```{r,fig.width=20,fig.height=5, echo = FALSE}
+# graph it
+# carrizo 
+car_mn_av_graph <- graph_with_wateryear(car_mn_av, "Carrizo", variable = "depth_mm", ylab = "Snow depth (mm)")
+car_mn_av_graph
+
+```
+
+Chuska:
+
+- low years: 2004-2007, 2014, 2018
+
+```{r,fig.width=20,fig.height=5, echo = FALSE}
+# graph it
+# chuska
+ch_mn_av_graph <- graph_with_wateryear(ch_mn_av, "Chuska", variable = "depth_mm", ylab = "Snow depth (mm)")
+ch_mn_av_graph
+
+```
+
+Black Mesa:
+
+- low years: 2004-2007, 2011-2012, 2014-2015, 2018
+
+
+```{r,fig.width=20,fig.height=5, echo = FALSE}
+# graph it
+# BLack Mesa
+bm_mn_av_graph <- graph_with_wateryear(bm_mn_av, "Black Mesa", variable = "depth_mm", ylab = "Snow depth (mm)")
+bm_mn_av_graph
+```
+
+
+### Correlation of monthly mean snow depths
+```{r, echo = FALSE}
+# correlation matrix of monthly variability
+
+# first make the dataframe
+av_month_depth_all <- car_mn_av %>% 
+  rename(carrizo = depth_mm) %>% 
+  merge(ch_mn_av, by = "date") %>% 
+  rename(chuska = depth_mm) %>% 
+  merge(bm_mn_av, by = "date") %>% 
+  rename(black_mesa = depth_mm) %>% 
+  select(-waterYear, -waterYear.x, -waterYear.y) %>% 
+  merge(nm_mn_av, by = "date") %>% 
+  rename(navajo_mt = depth_mm) %>% 
+  merge(mp_mn_av, by = "date") %>% 
+  rename(mt_powell = depth_mm) %>% 
+  merge(dp_mn_av, by = "date") %>% 
+  rename(defiance_plateau = depth_mm) %>% 
+  select(-waterYear, -waterYear.x, -waterYear.y) %>% 
+  remove_rownames() %>% 
+  column_to_rownames(var = "date")
+
+
+```
+
+```{r, echo = FALSE}
+# correlation matrix
+cor <- cor(av_month_depth_all)
+corrplot(cor, method = "ellipse", type = "upper", 
+         addCoef.col = "black", tl.col = "black",  tl.srt=45)
+
+```
+
+- Least correlated are mt powell and navajo mt. This makes sense as they are the furthest sites from each other
+- Next is defiance plateau and navajo mt which are the next farthest from each other
+- This trend does not continue, because navajo mt and black mesa are the next least correlated. However, Black Mesa is the cosest mountain range to navajo mt.
+  but black mesa appears to be much lower elevation than navajo mt, which may explain
+- The higest correlation is between black mesa and defiance plateau. They are relatively close and appear to have similar elevations
+
+## Anomalies
+
+Difference from the monthly mean for each region
+
+
+Carrizo:
+
+- Anomalously dry years: 2004-2008, 2011-2012, 2018
+  - most of 2009, 2014 and 2015 also mostly negatively anomalous
+```{r, fig.width=20,fig.height=5,echo = FALSE}
+
+# Carrizo
+car_dpth_anom <- calc_mnth_depth_anom(car_mn_av)
+plot_anomaly(car_dpth_anom)
+
+```
+
+
+```{r, include = FALSE}
+# if you want to look closely at any one month use this code:
+
+# carrizo december anomaly:
+
+# plot_monthly_anomaly(car_dpth_anom, 12, title = "Carrizo December")
+
+
+```
+
+
+Chuska:
+
+- Anomalously dry years: 2004-2007, 2015, 2018
+
+```{r, fig.width=20,fig.height=5,echo = FALSE}
+# chuska
+ch_dpth_anom <- calc_mnth_depth_anom(ch_mn_av)
+plot_anomaly(ch_dpth_anom)
+
+```
+
+Black Mesa:
+
+- Anomalously dry years: 2004-2007, 2011, 2012, 2014, 2015, 2018
+
+
+```{r, fig.width=20,fig.height=5,echo = FALSE}
+# black mesa
+bm_dpth_anom<- calc_mnth_depth_anom(bm_mn_av)
+plot_anomaly(bm_dpth_anom)
+
+```
+
+### Weekly Mean Correlations between sites
+
+```{r, include = FALSE}
+
+car_wk_av <- calc_depth_metrics(car_depth_wy, "1 week", mean)
+ch_wk_av <- calc_depth_metrics(ch_depth_wy, "1 week", mean)
+bm_wk_av <- calc_depth_metrics(bm_depth_wy, "1 week", mean)
+
+```
+
+```{r, include = FALSE}
+## Correlation tests to find r2 values
+
+# carrizo vs chuska
+
+car_v_ch_wk_av_cor <- cor.test(car_wk_av$depth_mm, ch_wk_av$depth_mm)$estimate # r value
+
+car_v_ch_wk_av_r2 <- (car_v_ch_wk_av_cor)^2 # r squared
+
+# carrizo vs black mesa
+car_v_bm_wk_av_cor <- cor.test(car_wk_av$depth_mm, bm_wk_av$depth_mm)$estimate
+
+car_v_bm_wk_av_r2 <- (car_v_bm_wk_av_cor)^2 # r squared
+
+
+# black mesa vs chuska
+bm_v_ch_wk_av_cor <- cor.test(bm_wk_av$depth_mm, ch_wk_av$depth_mm)$estimate
+
+bm_v_ch_wk_av_r2 <- (bm_v_ch_wk_av_cor)^2
+
+```
+
+Pearson's R Squared values:
+
+*Black Mesa and Carrizo most closely correlated even though Carrizo and the Chuskas are closer and have more similar elevations. Black Mesa and Chuska least closely correlated*
+
+- Carrizo vs Chuska: `r round(car_v_ch_wk_av_r2, 2)`
+
+- Carrizo vs Black Mesa: `r round(car_v_bm_wk_av_r2, 2)`
+
+- Black Mesa vs Chuska: `r round(bm_v_ch_wk_av_r2, 2)`
+
+### Average snowdepth values for each months at each site
+
+```{r, echo = FALSE}
+# november
+car_nov_dpth <- month_ts(car_mn_av, 11)
+ch_nov_dpth <- month_ts(ch_mn_av, 11)
+bm_nov_dpth <- month_ts(bm_mn_av, 11)
+nm_nov_dpth <- month_ts(nm_mn_av, 11)
+dp_nov_dpth <- month_ts(dp_mn_av, 11) 
+mp_nov_dpth <- month_ts(mp_mn_av, 11)
+
+nov_dpth <- join_depth_months(carrizo = car_nov_dpth, chuska = ch_nov_dpth, black_mesa = bm_nov_dpth, defiance_plateau = dp_nov_dpth, mt_powell = mp_nov_dpth, navajo_mt = nm_nov_dpth)
+
+nov_dpth_graph <- month_bplot_dpth(nov_dpth, title = "November")
+
+```
+
+
+```{r, error = TRUE, include = FALSE}
+# PCA?
+#nov_dpth_swe <- merge(nov_dpth, nov_swe, by = c("waterYear", "region"))
+#pcs <- prcomp(nov_dpth_swe[3:4], scale = TRUE)
+#summary(pcs)
+
+#group <-  nov_dpth_swe$region
+
+#ggbiplot(pcs, groups = group)
+
+#fviz_pca_ind(pcs, col.ind = group)
+
+```
+
+   
+```{r, echo = FALSE}
+# December
+
+car_dec_dpth <- month_ts(car_mn_av, 12)
+ch_dec_dpth <- month_ts(ch_mn_av, 12)
+bm_dec_dpth <- month_ts(bm_mn_av, 12)
+nm_dec_dpth <- month_ts(nm_mn_av, 12)
+dp_dec_dpth <- month_ts(dp_mn_av, 12) 
+mp_dec_dpth <- month_ts(mp_mn_av, 12)
+
+dec_dpth <- join_depth_months(carrizo = car_dec_dpth, chuska = ch_dec_dpth, black_mesa = bm_dec_dpth, defiance_plateau = dp_dec_dpth, mt_powell = mp_dec_dpth, navajo_mt = nm_dec_dpth)
+
+dec_dpth_graph <- month_bplot_dpth(dec_dpth, title = "December") +
+  scale_x_discrete(labels = c("Chuska", "Defiance Plateau", "Black Mesa", "Mt. Powell", "Carrizo", "Navajo Mt."))
+
+```
+
+
+
+```{r, echo = FALSE}
+# January
+
+jan_dpth <- join_depth_months(carrizo = month_ts(car_mn_av, 1), 
+                              chuska = month_ts(ch_mn_av, 1),
+                              black_mesa = month_ts(bm_mn_av, 1), 
+                              defiance_plateau = month_ts(dp_mn_av, 1) , 
+                              mt_powell = month_ts(mp_mn_av, 1), 
+                              navajo_mt = month_ts(nm_mn_av, 1))
+
+jan_dpth_graph <- month_bplot_dpth(jan_dpth, title = "January") +
+  scale_x_discrete(labels = c("Chuska", "Defiance Plateau",  "Mt. Powell", "Black Mesa","Carrizo", "Navajo Mt."))
+
+```
+
+
+
+```{r, echo = FALSE}
+# Februrary
+
+feb_dpth <- join_depth_months(carrizo = month_ts(car_mn_av, 2), 
+                              chuska = month_ts(ch_mn_av, 2),
+                              black_mesa = month_ts(bm_mn_av, 2), 
+                              defiance_plateau = month_ts(dp_mn_av, 2) , 
+                              mt_powell = month_ts(mp_mn_av, 2), 
+                              navajo_mt = month_ts(nm_mn_av, 2))
+
+feb_dpth_graph <- month_bplot_dpth(feb_dpth, title = "February") +
+  scale_x_discrete(labels = c("Chuska", "Defiance Plateau",  "Mt. Powell", "Carrizo", "Black Mesa", "Navajo Mt."))
+
+```
+
+
+```{r, echo = FALSE}
+# March
+
+mar_dpth <- join_depth_months(carrizo = month_ts(car_mn_av, 3), 
+                              chuska = month_ts(ch_mn_av, 3),
+                              black_mesa = month_ts(bm_mn_av, 3), 
+                              defiance_plateau = month_ts(dp_mn_av, 3) , 
+                              mt_powell = month_ts(mp_mn_av, 3), 
+                              navajo_mt = month_ts(nm_mn_av, 3))
+
+mar_dpth_graph <- month_bplot_dpth(mar_dpth, title = "March") +
+  scale_x_discrete(labels = c("Chuska", "Defiance Plateau",  "Black Mesa", "Mt. Powell", "Carrizo",  "Navajo Mt."))
+
+```
+
+
+```{r, echo = FALSE}
+# April
+
+apr_dpth <- join_depth_months(carrizo = month_ts(car_mn_av, 4), 
+                              chuska = month_ts(ch_mn_av, 4),
+                              black_mesa = month_ts(bm_mn_av, 4), 
+                              defiance_plateau = month_ts(dp_mn_av, 4) , 
+                              mt_powell = month_ts(mp_mn_av, 4), 
+                              navajo_mt = month_ts(nm_mn_av, 4))
+
+apr_dpth_graph <- month_bplot_dpth(apr_dpth, title = "April") +
+  scale_x_discrete(labels = c("Chuska", "Defiance Plateau",  "Black Mesa", "Navajo Mt.", "Carrizo", "Mt. Powell"))
+
+```
+
+
+
+```{r, echo = FALSE, fig.width=20, fig.height=5}
+
+grid.arrange(nov_dpth_graph, dec_dpth_graph, jan_dpth_graph, feb_dpth_graph, mar_dpth_graph, apr_dpth_graph, ncol = 3)
+
+```
+
+- peak snow depth is usually January and sometimes February
+- decreases drastically in february and then is mostly gone by april
+- Navajo my usually has the shallowest snow depth
+
+```{r, fig.width=15, echo = FALSE}
+
+grid.arrange(dec_dpth_graph, jan_dpth_graph, feb_dpth_graph, mar_dpth_graph, ncol = 2)
+
+```
+
+
+
+```{r, echo = FALSE}
+# Since max snow depth usually occurs in January, let's see how max snow depth is changing over time 
+
+max_Depth <- join_depth_months(carrizo = month_ts(car_mn_max, 1), 
+                              chuska = month_ts(ch_mn_max, 1),
+                              black_mesa = month_ts(bm_mn_max, 1), 
+                              defiance_plateau = month_ts(dp_mn_max, 1) , 
+                              mt_powell = month_ts(mp_mn_max, 1), 
+                              navajo_mt = month_ts(nm_mn_max, 1))
+
+all_max_depth_graph <- max_Depth %>% 
+  ggplot(aes(x = waterYear, y = depth_mm, group = region, color = region)) +
+  geom_line() +
+  theme_classic() 
+
+```
+

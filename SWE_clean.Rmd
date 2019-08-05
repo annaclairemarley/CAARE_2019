@@ -1,0 +1,964 @@
+---
+title: "SWE Analysis"
+author: "AnnaClaire Marley"
+date: "03/07/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+# load the packages
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(gridExtra)
+library(grid)
+library(dataRetrieval)
+library(reshape2)
+library(corrplot)
+library(forcats)
+library(RColorBrewer)
+source("Functions/util.R")
+source('Functions/graphing.R')
+```
+
+```{r, include = FALSE}
+# read in csv files - they are already processed as winter months and have a water year column. refer to "Raw_data_cleaning" for code 
+
+car_wint_wy <- read_csv("Carrizo/car_swe_wint_wy_03_19.csv") #Carrizo
+
+ch_wint_wy <- read_csv("Chuska/ch_swe_wint_wy_03_19.csv") # Chuska
+
+bm_wint_wy <- read_csv("Black Mesa/bm_swe_wint_wy_03_19.csv") # Black Mesa
+
+mp_wint_wy <- read_csv("mt_powell/mp_swe_wint_wy_03_19.csv") # Mt Powell
+
+dp_wint_wy <- read_csv("defiance_plateau/dp_swe_wint_wy_03_19.csv") # Defiance Plateau
+
+nm_wint_wy <- read_csv("navajo_mtn/nm_swe_wint_wy_03_19.csv") # Navajo Mountain
+
+```
+
+
+```{r, include = FALSE}
+
+# km areas of each mountain range:
+carrizo_area_km = 339 #km2
+chuska_area_km = 4581 #km2
+bm_area_km = 1413 #km2
+defiance_area_km = 1106 #km2
+mt_powell_area_km = 77 #km2
+nm_area_km = 96 #km2
+nn_area_km = 67636 #km2
+
+# mm areas of each mountain range:
+carrizo_area_m = 339000
+chuska_area_m = 4581000
+bm_area_m = 1413000 
+defiance_area_m = 1106000
+mt_powell_area_m = 77000
+nm_area_m = 96000
+nn_area_m = 67636000
+```
+
+
+## Analyses:
+- All three regions generally follow the same trends in SWE over time
+- 2010 was a high SWE year
+- Black Mesa and Carrizo are the most closely correlated
+
+
+### Annual avereage SWE
+```{r, include = FALSE}
+
+
+# quick function to calculate annual averages
+calc_an_region_swe = function(df) {
+
+  av = df %>% 
+    group_by(waterYear)  %>% 
+    summarize(swe_mm = mean(swe_mm))
+
+return(av)
+}
+
+# make the annual average dataframes
+car_an_swe <- calc_an_region_swe(car_wint_wy) 
+ch_an_swe <- calc_an_region_swe(ch_wint_wy)
+bm_an_swe <- calc_an_region_swe(bm_wint_wy)
+mp_an_swe <- calc_an_region_swe(mp_wint_wy)
+dp_an_swe <- calc_an_region_swe(dp_wint_wy)
+nm_an_swe <- calc_an_region_swe(nm_wint_wy)
+
+
+```
+
+```{r, echo = FALSE}
+
+# graph annual average stacked on top of each other
+# join together
+an_av_all <- join_months(carrizo = car_an_swe, chuska = ch_an_swe, black_mesa = bm_an_swe, mt_powell = mp_an_swe, defiance_plateau = dp_an_swe, navajo_mt = nm_an_swe)
+
+# graph it
+
+an_av_swe_graph <- an_av_all %>% 
+  ggplot(aes(x = waterYear, y = swe_mm)) +
+  geom_col(aes(fill = region)) +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_continuous(breaks = seq(2004, 2019, by = 2)) +
+  scale_fill_discrete(name = "Region", labels = c("Carrizo", "Chuska", "Black Mesa", "Mt. Powell", "Defiance Plateau", "Navajo Mt.")) +
+  labs(
+    x = "Water Year",
+    y = "SWE (mm)"
+  ) +
+  theme_classic()
+
+an_av_swe_graph
+
+# list of nice colors 
+# 
+
+#003f5c
+#444e86
+#955196
+#dd5182
+#ff6e54
+#ffa600
+
+```
+
+- low swe 2004-2007 and 2018
+- Carrizo always has highest average SWE value, while Navajo mountain usually has the least 
+
+
+```{r, echo = FALSE}
+# Total amount of average winter swe
+
+# first need to change mm to m, then multiply by their area in m2
+car_an_total_swe <- car_an_swe %>% 
+  mutate(swe_m = swe_mm/1000) %>% 
+  mutate(swe_total_m3 = swe_m*carrizo_area_m)
+
+ch_an_total_swe <-ch_an_swe %>% 
+  mutate(swe_m = swe_mm/1000) %>% 
+  mutate(swe_total_m3 = swe_m*chuska_area_m)
+
+bm_an_total_swe <-bm_an_swe %>% 
+  mutate(swe_m = swe_mm/1000) %>% 
+  mutate(swe_total_m3 = swe_m*bm_area_m)
+
+mp_an_total_swe <-mp_an_swe %>% 
+  mutate(swe_m = swe_mm/1000) %>% 
+  mutate(swe_total_m3 = swe_m*mt_powell_area_m)
+
+dp_an_total_swe <-dp_an_swe %>% 
+  mutate(swe_m = swe_mm/1000) %>% 
+  mutate(swe_total_m3 = swe_m*defiance_area_m)
+
+nm_an_total_swe <-nm_an_swe %>% 
+  mutate(swe_m = swe_mm/1000) %>% 
+  mutate(swe_total_m3 = swe_m*nm_area_m)
+
+# then join the dataframes together
+# graph annual average stacked on top of each other
+# join together
+an_av_total <- join_months_m(carrizo = car_an_total_swe, chuska = ch_an_total_swe, 
+                           black_mesa = bm_an_total_swe, mt_powell = mp_an_total_swe, 
+                           defiance_plateau = dp_an_total_swe, navajo_mt = nm_an_total_swe)
+
+
+# make a loop to set the order
+an_av_total$region_order = 0
+for (i in length(an_av_total$region)) {
+  an_av_total$region_order = ifelse(an_av_total$region == "chuska", 6, an_av_total$region_order)
+  an_av_total$region_order = ifelse(an_av_total$region == "defiance_plateau", 5, an_av_total$region_order)
+   an_av_total$region_order = ifelse(an_av_total$region == "black_mesa", 4, an_av_total$region_order)
+   an_av_total$region_order = ifelse(an_av_total$region == "carrizo", 3, an_av_total$region_order)
+  an_av_total$region_order = ifelse(an_av_total$region == "mt_powell", 2, an_av_total$region_order)
+   an_av_total$region_order = ifelse(an_av_total$region == "navajo_mt", 1, an_av_total$region_order)
+   
+}
+
+
+```
+
+
+```{r, echo = FALSE}
+
+####graph it#####
+an_av_total_swe_graph <- an_av_total %>% 
+  mutate(swe_total_thousand_m3 = swe_total_m3/1000) %>% 
+  ggplot(aes(x = waterYear, y = swe_total_thousand_m3)) +
+  geom_col(aes(fill = reorder(region, region_order))) +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_continuous(breaks = seq(2004, 2019, by = 2)) +
+  scale_fill_brewer(palette = "Spectral", name = "Region", 
+                    labels = c("Navajo Mt.", "Mt. Powell", "Carrizo", "Black Mesa",  "Defiance Plateau", "Chuska")) +
+  labs(
+    y = expression(paste("SWE ", (thousand-m^3))),
+    x = "Water Year"
+    ) +
+  theme_classic()
+
+an_av_total_swe_graph
+
+
+
+```
+
+
+
+```{r, include = FALSE}
+# contribution of each region to the total
+
+contributions <- data.frame(car_an_total_swe$waterYear, 
+                       car_an_total_swe$swe_total_m3, 
+                       ch_an_total_swe$swe_total_m3,
+                       bm_an_total_swe$swe_total_m3,
+                       dp_an_total_swe$swe_total_m3,
+                       nm_an_total_swe$swe_total_m3,
+                       mp_an_total_swe$swe_total_m3) %>% 
+                rename(waterYear = car_an_total_swe.waterYear,
+                       car_swe_m3 = car_an_total_swe.swe_total_m3,
+                       ch_swe_m3 = ch_an_total_swe.swe_total_m3,
+                       bm_swe_m3 = bm_an_total_swe.swe_total_m3,
+                       nm_swe_m3 = nm_an_total_swe.swe_total_m3,
+                       mp_swe_m3 = mp_an_total_swe.swe_total_m3,
+                       dp_swe_m3 = dp_an_total_swe.swe_total_m3) %>% 
+              mutate(mt_range_sum_total = rowSums(.[, names(.) != "waterYear"])) %>% 
+              mutate(car_cont = car_swe_m3/mt_range_sum_total,
+                     ch_cont = ch_swe_m3/mt_range_sum_total,
+                     bm_cont = bm_swe_m3/mt_range_sum_total,
+                     mp_cont = mp_swe_m3/mt_range_sum_total,
+                     nm_cont = nm_swe_m3/mt_range_sum_total,
+                     dp_cont = dp_swe_m3/mt_range_sum_total)
+
+# Average annual percent contribution to the total annual average swe in all 6 mountain ranges
+chusk_cont_swe <- mean(contributions$ch_cont)
+car_cont_swe <- mean(contributions$car_cont)
+bm_cont_swe <- mean(contributions$bm_cont)
+nm_cont_swe <- mean(contributions$nm_cont)
+mp_cont_swe <- mean(contributions$mp_cont)
+dp_cont_swe <- mean(contributions$dp_cont)
+```
+
+
+
+The annual average % contribution to the total annual average swe of all 6 mountain ranges:
+
+- Chuska: `r round(chusk_cont_swe, 2)`
+- Defiance Plateau  `r round(dp_cont_swe, 2)`
+- Black Mesa  `r round(bm_cont_swe, 2)`
+- Carrizo:  `r round(car_cont_swe, 2)`
+- Navajo Mt  `r round(nm_cont_swe, 4)`
+- Mt Powell  `r round(mp_cont_swe, 4)`
+
+
+
+## Daily SWE variability (November - April Water Year)
+```{r, fig.width=20,fig.height=5, echo= FALSE}
+carr_daily <- graph_with_wateryear(car_wint_wy, "Carrizo")
+carr_daily
+```
+
+```{r, fig.width=20,fig.height=5, echo= FALSE}
+ch_daily <- graph_with_wateryear(ch_wint_wy)
+ch_daily
+```
+
+```{r, fig.width=20,fig.height=5, echo= FALSE}
+bm_daily <- graph_with_wateryear(bm_wint_wy, "Black Mesa")
+bm_daily
+```
+
+```{r, include = FALSE}
+## weekly mean variability
+carr_weekly <- calc_swe_metrics(car_wint_wy, "1 week", mean)
+ch_weekly <- calc_swe_metrics(ch_wint_wy, "1 week", mean)
+bm_weekly <- calc_swe_metrics(bm_wint_wy, "1 week", mean)
+nm_weekly <- calc_swe_metrics(nm_wint_wy, "1 week", mean)
+mp_weekly <- calc_swe_metrics(mp_wint_wy, "1 week", mean)
+dp_weekly <- calc_swe_metrics(dp_wint_wy, "1 week", mean)
+
+```
+
+```{r, include = FALSE}
+# weekly mean variance at 5 year increments
+
+# carrizo
+# so the first number means that from 2004-2007, theres that much variance and the second means from 2005-2008 theres that much variance
+  car_variances = c()
+
+  for (startYear in seq(2004, 2019 - 4, by=1)) {
+    endYear = startYear + 3
+    if (endYear > 2019) {
+      endYear = 2019
+    }
+    car_var = carr_weekly %>% 
+      filter(waterYear <= endYear & waterYear >= startYear)
+    print(mean(car_var$swe_mm))
+    car_variances = c(car_variances, mean(car_var$swe_mm))
+    
+  }
+  
+  car_variances
+
+
+```
+
+
+```{r, include=FALSE}
+## Annual Mean SWE variability (November - April Water Year)
+# create the monthly mean dataframes
+carr_annual <- calc_swe_metrics(car_wint_wy, "year", mean)
+ch_annual <- calc_swe_metrics(ch_wint_wy, "year", mean)
+bm_annual <- calc_swe_metrics(bm_wint_wy, "year", mean)
+
+# insert code below for annual with just water year
+```
+
+## Monthly Mean SWE variability (November - April Water Year)
+```{r, include=FALSE}
+# create the monthly mean dataframes
+carr_monthly <- calc_swe_metrics(car_wint_wy, "month", mean)
+ch_monthly <- calc_swe_metrics(ch_wint_wy, "month", mean)
+bm_monthly <- calc_swe_metrics(bm_wint_wy, "month", mean)
+nm_monthly <- calc_swe_metrics(nm_wint_wy, "month", mean)
+mp_monthly <- calc_swe_metrics(mp_wint_wy, "month", mean)
+dp_monthly <- calc_swe_metrics(dp_wint_wy, "month", mean)
+```
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+# graph it
+carr_mn_graph <- graph_with_wateryear(carr_monthly, "Carrizo")
+carr_mn_graph
+```
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+ch_mn_graph <- graph_with_wateryear(ch_monthly, "Chuska")
+ch_mn_graph
+```
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+bm_mn_graph <- graph_with_wateryear(bm_monthly, "Black Mesa")
+bm_mn_graph
+```
+
+```{r,fig.width=20,fig.height=5,}
+
+ch_wk_graph <- graph_with_wateryear(ch_weekly, "Chuska", type = geom_col)
+ch_wk_graph
+
+```
+
+
+## All monthly mean
+
+```{r, echo = FALSE}
+# correlation matrix of monthly variability
+
+# first make the dataframe
+av_month_swe_all <- carr_monthly %>% 
+  rename(carrizo = swe_mm) %>% 
+  merge(ch_monthly, by = "date") %>% 
+  rename(chuska = swe_mm) %>% 
+  merge(bm_monthly, by = "date") %>% 
+  rename(black_mesa = swe_mm) %>% 
+  select(-waterYear, -waterYear.x, -waterYear.y) %>% 
+  merge(nm_monthly, by = "date") %>% 
+  rename(navajo_mt = swe_mm) %>% 
+  merge(mp_monthly, by = "date") %>% 
+  rename(mt_powell = swe_mm) %>% 
+  merge(dp_monthly, by = "date") %>% 
+  rename(defiance_plateau = swe_mm) %>% 
+  select(-waterYear, -waterYear.x, -waterYear.y) %>% 
+  remove_rownames() 
+
+
+
+```
+
+
+```{r,echo=FALSE, fig.width=20, fig.height=5}
+# make the data frame for graphing
+av_mnth_swe_tidy <- av_month_swe_all %>% 
+  melt(id.vars = "date") %>% 
+  rename(swe_mm = value,
+         region = variable) %>% 
+  add_water_year()
+
+# graph it
+    # first make variables for ease of graphing  
+        startWaterYear = min(av_mnth_swe_tidy$waterYear)
+        endWaterYear = max(av_mnth_swe_tidy$waterYear)
+        # Create sequence of real dates, on which to place the water year lables
+        breakDates = seq.Date(from = ymd(paste(startWaterYear,1,1, sep='-')), length.out = endWaterYear - startWaterYear + 1, by = "1 year")
+
+
+av_mnth_all_graph <- av_mnth_swe_tidy %>% 
+  ggplot(aes(x = date, y = swe_mm, group = region, color = region)) +
+  geom_line() +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_date(breaks= breakDates, labels=seq(startWaterYear,endWaterYear,by=1)) +
+ scale_color_discrete(name = "Region", labels = c("Carrizo", "Chuska", "Black Mesa", "Navajo Mt.", "Mt. Powell", "Defiance Plateau")) +
+  labs(
+    x = "Water Year",
+    y = "SWE (mm)",
+    color = "Region"
+  ) +
+  theme_classic()
+
+av_mnth_all_graph
+
+```
+
+
+### Correlation matrix of all monthly mean swe
+```{r, echo = FALSE}
+# correlation matrix
+av_month_swe_all_corr <- av_month_swe_all %>% 
+  column_to_rownames(var = "date") %>% 
+  rename("Carrizo" = "carrizo") %>% 
+  rename("Black Mesa" = "black_mesa") %>% 
+  rename("Mt. Powell" = "mt_powell") %>% 
+  rename("Defiance Plateau" = "defiance_plateau") %>% 
+  rename("Navajo Mt." = "navajo_mt") %>% 
+  rename("Chuska" = "chuska")
+
+
+cor <- cor(av_month_swe_all_corr)
+corrplot(cor, method = "square", type = "upper", 
+         addCoef.col = "white", tl.col = "black", tl.srt=45)
+#corrplot(cor, method = "ellipse", type = "upper", 
+ #        addCoef.col = "black", tl.col = "black", tl.srt=45)
+
+```
+- Black Mesa to Mt. Powell, Black Mesa to Defiance Plateau and Defiance Plateau and Mt Powell all have the highest correlations between each other 
+- Least correlated are Black Mesa and Navajo Mt, Navajo Mt and Mt Powell, Navajo Mt and Defiance Plateau
+
+# Monthly Median
+
+```{r, include=FALSE}
+# create the monthly mean dataframes
+carr_mnth_med <- calc_swe_metrics(car_wint_wy, "month", median)
+ch_mnth_med <- calc_swe_metrics(ch_wint_wy, "month", median)
+bm_mnth_med <- calc_swe_metrics(bm_wint_wy, "month", median)
+```
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+# graph it
+carr_med_graph <- graph_with_wateryear(carr_mnth_med, "Carrizo")
+carr_med_graph
+```
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+ch_med_graph <- graph_with_wateryear(ch_mnth_med, "Chuska")
+ch_med_graph
+```
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+bm_med_graph <- graph_with_wateryear(bm_mnth_med, "Black Mesa")
+bm_med_graph
+```
+
+
+## Monthly Anomalies (November - April Water Year)
+
+```{r,include = FALSE}
+# create anomaly dataframes
+car_anom <- calc_month_anom(carr_monthly)
+ch_anom <- calc_month_anom(ch_monthly)
+bm_anom <- calc_month_anom(bm_monthly)
+nm_anom <- calc_month_anom(nm_monthly)
+mp_anom <- calc_month_anom(mp_monthly)
+dp_anom <- calc_month_anom(dp_monthly)
+
+```
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+#graph it
+car_anom_graph <- plot_anomaly(car_anom, title = "Carrizo")
+car_anom_graph
+```
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+ch_anom_graph <- plot_anomaly(ch_anom)
+ch_anom_graph
+
+```
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+bm_anom_graph <- plot_anomaly(bm_anom, title = "Black Mesa")
+bm_anom_graph
+
+```
+
+
+```{r,fig.width=20,fig.height=5, echo= FALSE}
+nm_anom_graph <- plot_anomaly(nm_anom, title = "Navajo Mountain")
+nm_anom_graph
+
+```
+
+
+## Correlations Between locations
+
+### Weekly mean correlation November - April 
+
+```{r, include = FALSE}
+# pearson's correlation
+corr_chu_bm <- cor.test(bm_weekly$swe_mm, ch_weekly$swe_mm)$estimate
+chu_bm_r2 <- (corr_chu_bm)^2
+
+corr_chu_carr <- cor.test(carr_weekly$swe_mm, ch_weekly$swe_mm)$estimate
+chu_carr_r2 <- (corr_chu_carr)^2
+
+corr_carr_bm <- cor.test(bm_weekly$swe_mm, carr_weekly$swe_mm)$estimate
+carr_bm_r2 <- (corr_carr_bm)^2
+
+
+```
+
+
+Pearson's Correlation R squared:
+
+- Chuska vs Black Mesa: `r round(chu_bm_r2, 2)`
+
+- Carrizo vs Chuska: `r round(chu_carr_r2, 2)`
+
+- Carrizo vs Black Mesa: `r round(carr_bm_r2, 2)`
+
+
+```{r, include = FALSE}
+
+# linear models
+corr_chu_bm_lm <- lm(bm_weekly$swe_mm ~ ch_weekly$swe_mm)
+  chu_bm_r2 <- summary(corr_chu_bm_lm)$r.squared
+
+corr_chu_carr_lm <- lm(carr_weekly$swe_mm ~ ch_weekly$swe_mm)
+  chu_carr_r2 <- summary(corr_chu_carr_lm)$r.squared 
+
+corr_carr_bm_lm <- lm(bm_weekly$swe_mm ~ carr_weekly$swe_mm)
+  carr_bm_r2 <- summary(corr_carr_bm_lm)$r.squared 
+
+```
+
+
+```{r, echo = FALSE, include = FALSE}
+# graph it
+plot(ch_weekly$swe_mm, bm_weekly$swe_mm)
+abline(corr_chu_bm_lm)
+
+```
+
+Chuska vs Black Mesa R squared: `r chu_bm_r2`
+
+```{r, echo = FALSE, include = FALSE}
+plot(ch_weekly$swe_mm, carr_weekly$swe_mm)
+abline(corr_chu_carr_lm)
+```
+
+Chuska vs Carrizo R squared: `r chu_carr_r2`
+
+```{r, echo = FALSE, include = FALSE}
+plot(carr_weekly$swe_mm, bm_weekly$swe_mm)
+abline(corr_carr_bm_lm)
+
+```
+
+Black Mesa vs Carrizo R squared: `r carr_bm_r2`
+
+
+## Month specific time series
+
+```{r, include = FALSE, echo = FALSE}
+# November
+# filter just for November
+car_nov_swe <- month_ts(carr_monthly, 11)
+ch_nov_swe <- month_ts(ch_monthly, 11)
+bm_nov_swe <- month_ts(bm_monthly, 11)
+nm_nov_swe <- month_ts(nm_monthly, 11)
+dp_nov_swe <- month_ts(dp_monthly, 11) 
+mp_nov_swe <- month_ts(mp_monthly, 11)
+
+nov_swe <- join_months(carrizo = car_nov_swe, chuska = ch_nov_swe, black_mesa = bm_nov_swe, defiance_plateau = dp_nov_swe, mt_powell = mp_nov_swe, navajo_mt = nm_nov_swe)
+
+```
+
+```{r, echo = FALSE}
+# plot box plot for each month
+
+nov_swe_plot <- month_bplot_swe(nov_swe, "November Swe")
+
+```
+
+
+```{r, include = FALSE}
+# December
+car_dec <- month_ts(carr_monthly, 12)
+ch_dec <- month_ts(ch_monthly, 12)
+bm_dec <- month_ts(bm_monthly, 12)
+nm_dec <- month_ts(nm_monthly, 12)
+dp_dec <- month_ts(dp_monthly, 12) 
+mp_dec <- month_ts(mp_monthly, 12)
+
+dec_swe <- join_months(carrizo = car_dec, chuska = ch_dec, black_mesa = bm_dec, defiance_plateau = dp_dec, mt_powell = mp_dec, navajo_mt = nm_dec)
+
+```
+
+```{r, echo = FALSE}
+# plot box plot for each month
+
+dec_swe_plot <- month_bplot_swe(dec_swe, "December Swe")
+
+```
+
+
+```{r, include = FALSE}
+# January
+car_jan <- month_ts(carr_monthly, 1)
+ch_jan <- month_ts(ch_monthly, 1)
+bm_jan <- month_ts(bm_monthly, 1)
+nm_jan <- month_ts(nm_monthly, 1)
+dp_jan <- month_ts(dp_monthly, 1) 
+mp_jan <- month_ts(mp_monthly, 1)
+
+jan_swe <- join_months(carrizo = car_jan, chuska = ch_jan, black_mesa = bm_jan, defiance_plateau = dp_jan, mt_powell = mp_jan, navajo_mt = nm_jan)
+
+```
+
+```{r, echo = FALSE}
+# plot box plot for each month
+
+jan_swe_plot <- month_bplot_swe(jan_swe, "January Swe")
+
+```
+
+
+```{r, include = FALSE}
+# February
+car_feb <- month_ts(carr_monthly, 2)
+ch_feb <- month_ts(ch_monthly, 2)
+bm_feb <- month_ts(bm_monthly, 2)
+nm_feb <- month_ts(nm_monthly, 2)
+dp_feb <- month_ts(dp_monthly, 2) 
+mp_feb <- month_ts(mp_monthly, 2)
+
+feb_swe <- join_months(carrizo = car_feb, chuska = ch_feb, black_mesa = bm_feb, defiance_plateau = dp_feb, mt_powell = mp_feb, navajo_mt = nm_feb)
+
+```
+
+
+```{r, echo = FALSE}
+# plot box plot for each month
+feb_swe_plot <- month_bplot_swe(feb_swe, "March Swe")
+```
+
+
+
+```{r, include = FALSE}
+# March
+car_mar <- month_ts(carr_monthly, 3)
+ch_mar <- month_ts(ch_monthly, 3)
+bm_mar <- month_ts(bm_monthly, 3)
+nm_mar <- month_ts(nm_monthly, 3)
+dp_mar <- month_ts(dp_monthly, 3) 
+mp_mar <- month_ts(mp_monthly, 3)
+
+mar_swe <- join_months(carrizo = car_mar, chuska = ch_mar, black_mesa = bm_mar, defiance_plateau = dp_mar, mt_powell = mp_mar, navajo_mt = nm_mar)
+
+```
+
+```{r, echo = FALSE}
+# plot box plot for each month
+
+mar_swe_plot <- month_bplot_swe(mar_swe, "March Swe")
+
+```
+
+
+```{r, include = FALSE}
+# April
+car_apr <- month_ts(carr_monthly, 4)
+ch_apr <- month_ts(ch_monthly, 4)
+bm_apr <- month_ts(bm_monthly, 4)
+nm_apr <- month_ts(nm_monthly, 4)
+dp_apr <- month_ts(dp_monthly, 4) 
+mp_apr <- month_ts(mp_monthly, 4)
+
+apr_swe <- join_months(carrizo = car_apr, chuska = ch_apr, black_mesa = bm_apr, defiance_plateau = dp_apr, mt_powell = mp_apr, navajo_mt = nm_apr)
+
+
+```
+
+
+```{r, echo = FALSE}
+# plot box plot for each month
+
+apr_swe_plot <- month_bplot_swe(apr_swe, "April Swe")
+```
+
+### November - April Averaged SWE values
+
+```{r, echo = FALSE, fig.width=20, fig.height=5}
+
+grid.arrange(nov_swe_plot, dec_swe_plot, jan_swe_plot, feb_swe_plot, mar_swe_plot, apr_swe_plot, ncol = 3)
+
+```
+
+- Chuska and Defiance plateau frequently have the higest av swe values, navajo mt usually has the least. 
+- most everything is melted by april
+
+
+```{r, echo = FALSE, fig.width=15}
+
+grid.arrange(dec_swe_plot, jan_swe_plot, feb_swe_plot, mar_swe_plot, ncol = 2)
+
+```
+
+## Total SWE for each region analyses
+
+```{r, include = FALSE}
+
+all_swe_total <- read_csv("winter_wy/all_swe_total.csv")
+
+# monthly mean totals for each region 
+
+
+```
+
+
+```{r, echo = FALSE}
+
+max_ch_weekly <- ch_weekly %>% 
+  group_by(waterYear)  %>% 
+  summarize(swe_mm = max(swe_mm)) 
+
+```
+
+### Timing of Max Weekly Average SWE Value
+
+```{r, echo = FALSE}
+# make dataframes of max weekly average for each year and region
+
+car_max_weekly_yr <- carr_weekly %>% 
+  get_year_max() %>% 
+  mutate(wk_of_wy = to_water_week(date))
+
+ch_max_weekly_yr <- ch_weekly %>% 
+  get_year_max() %>% 
+  mutate(wk_of_wy = to_water_week(date))
+
+bm_max_weekly_yr <- bm_weekly %>% 
+  get_year_max() %>% 
+  mutate(wk_of_wy = to_water_week(date))
+
+nm_max_weekly_yr <- nm_weekly %>% 
+  get_year_max() %>% 
+  mutate(wk_of_wy = to_water_week(date))
+
+mp_max_weekly_yr <- mp_weekly %>% 
+  get_year_max() %>% 
+  mutate(wk_of_wy = to_water_week(date))
+
+dp_max_weekly_yr <- dp_weekly %>% 
+  get_year_max() %>% 
+  mutate(wk_of_wy = to_water_week(date))
+
+```
+
+
+```{r, fig.width = 10, echo = FALSE}
+
+car_wk_max_graph <- plot_wk_max_time(car_max_weekly_yr, title = "Carrizo")
+ch_wk_max_graph <- plot_wk_max_time(ch_max_weekly_yr, title = "Chuska")
+bm_wk_max_graph <- plot_wk_max_time(bm_max_weekly_yr, title = "Black Mesa")
+nm_wk_max_graph <- plot_wk_max_time(nm_max_weekly_yr, title = "Navajo Mt.")
+mp_wk_max_graph <- plot_wk_max_time(mp_max_weekly_yr, title = "Mt Powell")
+dp_wk_max_graph <- plot_wk_max_time(dp_max_weekly_yr, title = "Defiance Plateau")
+
+grid.arrange(car_wk_max_graph, ch_wk_max_graph, 
+             bm_wk_max_graph, nm_wk_max_graph, 
+             mp_wk_max_graph, dp_wk_max_graph,
+             ncol = 3)
+```
+
+- All of the high elevation regions have a negative slope, with Chuska having the most negative slope, except Navajo Mt & Carrizo
+ - However, none of the trends are very statistically significant
+
+```{r, include=FALSE}
+# check equation for trendline
+ch_wk_max_lm <- lm(ch_max_weekly_yr$wk_of_wy ~ ch_max_weekly_yr$waterYear)
+summary(ch_wk_max_lm)
+
+# y = -0.1941x +  409.7176
+
+```
+
+```{r, echo = FALSE}
+# now graph it with the swe value
+ch_wk_max_graph2 <- ch_max_weekly_yr %>% 
+  ggplot(aes(x = waterYear)) + 
+  geom_col(aes(y = swe_mm/10)) +
+  labs(
+    x = "Water Year",
+    y = "Max SWE (mm) [scaled down by a factor of 10]",
+    title = "Timing of Chuska Max Weekly Average SWE Value"
+  ) +
+  geom_line(aes(y = wk_of_wy), color = "blue") +
+  scale_x_continuous(expand = c(0,0), breaks = seq(2004,2019, by = 2)) +
+  scale_y_continuous(expand = c(0,0),
+                     sec.axis = sec_axis(~., name = "Week of Water Year")) +
+  theme_classic()+
+  theme(axis.line.y.right = element_line(color = "blue"),
+        axis.text.y.right = element_text(color = "blue"),
+        axis.title.y.right = element_text(color = "blue")) 
+  
+
+
+ch_wk_max_graph2
+
+```
+
+
+
+### SWE compared to Suzanne's SCA
+
+```{r, echo = FALSE, warning=FALSE, echo = FALSE, message=FALSE}
+
+# read in SG
+ch_sca_month <- read_csv("Chuska/ch_sca_sg.csv") %>% 
+  clean_names() %>% 
+  mutate(date = as.Date(paste(cal_year, r_month, "01", sep="-"))) %>% 
+  select(date, water_year, mean_sca_km2, anomaly_by_month)
+
+# plot SCA
+sca_plot <- ch_sca_month %>% 
+  ggplot(aes(x = date, y = mean_sca_km2)) +
+  geom_line() +
+  scale_x_date(date_labels = "%b%Y")+
+  scale_y_continuous(expand = c(0,0)) +
+  theme_classic()
+
+# plot anomalies
+sca_anom <- ch_sca_month %>% 
+  ggplot(aes(x = date, y = anomaly_by_month)) +
+  geom_line() +
+  scale_x_date(date_labels = "%b%Y")+
+  scale_y_continuous(expand = c(0,0)) +
+  labs(
+    y = "SCA Anomaly"
+  ) +
+  theme_classic()
+
+```
+
+**SCA Anomaly was scaled down by a factor of 10 to improve analysis**
+
+```{r, echo = FALSE}
+# now try and make Suzanne Chuska SCA anomaly overlay my Chuska anomaly
+# make a combined swe and sca anomaly dataframe
+chuska_swe_sca <- ch_anom %>% 
+  select(-month) %>% 
+  arrange(date) %>% 
+  merge(ch_sca_month, by = "date") %>% 
+  rename(swe_anom = anomaly,
+         sca_anom = anomaly_by_month)
+  
+# now plot them together:
+plot <- chuska_swe_sca %>% 
+    ggplot(aes(x = date)) +
+    geom_col(aes(y = swe_anom, fill = sign), show.legend = FALSE) +
+    #scale_y_continuous(limits = c(-20, 100)) +
+    scale_fill_manual(values = c("negative" = "red", "positive" = "dark green")) +
+    geom_line(aes(y = sca_anom/10)) +
+    scale_x_date(date_labels = "%b%Y") +
+    scale_y_continuous(sec.axis = sec_axis(~.*5, name = "SCA Anomaly (km2)")) +
+    labs(
+      x = "Calendar Date",
+      y = "SWE Anomaly (mm)",
+      title = "Chuska SWE vs SCA Anomaly"
+    ) +
+    theme_classic()
+plot
+
+```
+
+- SCA anomalies only somewhat track to SWE anomalies 
+
+
+### Make average weekly swe dataframe for all the mountain ranges combined
+
+- first I am multiplying each region's swe values by their area
+- then I will add these values up to get a total average amount of snow in the mountains for that week
+- This way when I get an average value, it's the average amount of snow in the mountains at any one point
+
+```{r, echo = FALSE}
+
+# join all the weekly data into one dataframe and convert swe_mm to meters
+wk_av_all <- join_weeks(carrizo = carr_weekly, chuska = ch_weekly, 
+                         black_mesa = bm_weekly, mt_powell = mp_weekly, 
+                         defiance_plateau = dp_weekly, navajo_mt = nm_weekly) %>% 
+  mutate(swe_m = swe_mm/1000)
+
+# now multiply each region's weekly average swe_m by its area to get swe in cubic meters
+wk_av_all$swe_total_m3 = 0
+for (i in length(wk_av_all$region)) {
+  wk_av_all$swe_total_m3 = ifelse(wk_av_all$region == "carrizo", 
+                               wk_av_all$swe_m*carrizo_area_m, wk_av_all$swe_total_m3)
+  wk_av_all$swe_total_m3 = ifelse(wk_av_all$region == "chuska", 
+                               wk_av_all$swe_m*chuska_area_m, wk_av_all$swe_total_m3)
+  wk_av_all$swe_total_m3 = ifelse(wk_av_all$region == "black_mesa", 
+                               wk_av_all$swe_m*bm_area_m, wk_av_all$swe_total_m3)
+  wk_av_all$swe_total_m3 = ifelse(wk_av_all$region == "mt_powell", 
+                               wk_av_all$swe_m*mt_powell_area_m, wk_av_all$swe_total_m3)
+  wk_av_all$swe_total_m3 = ifelse(wk_av_all$region == "navajo_mt", 
+                               wk_av_all$swe_m*nm_area_m, wk_av_all$swe_total_m3)
+  wk_av_all$swe_total_m3 = ifelse(wk_av_all$region == "defiance_plateau", 
+                               wk_av_all$swe_m*defiance_area_m, wk_av_all$swe_total_m3)
+}
+
+# now add together the weeks to get a total value
+wk_sum_all <- wk_av_all %>% 
+  group_by(date) %>% 
+  summarize(sum_mts_swe_m3 = sum(swe_total_m3))
+
+
+
+```
+
+
+```{r, echo = FALSE}
+
+# let's see what it looks like
+swe_all_mts_plot <- wk_sum_all %>% 
+  ggplot(aes(x = date, y = sum_mts_swe_m3)) +
+  geom_line() +
+  labs(
+    x = "Year",
+    y = "Weekly Average Total High Elevation SWE (cubic meters)"
+  ) +
+  scale_y_continuous(expand = c(0,0)) +
+  theme_classic()
+
+swe_all_mts_plot
+
+```
+
+```{r, fig.width = 10, echo = FALSE}
+# graph monthly anomaly
+wk_all_anom <- wk_sum_all %>% 
+  rename(swe_mm = sum_mts_swe_m3) %>% 
+  add_water_year() %>% 
+  calc_swe_metrics("month", mean) %>% 
+  calc_month_anom() 
+  
+
+wk_all_anom_plot <- plot_anomaly(wk_all_anom)
+wk_all_anom_plot
+
+```
+
+

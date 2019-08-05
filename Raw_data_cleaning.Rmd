@@ -1,0 +1,326 @@
+---
+title: "Raw data cleaning"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include = FALSE}
+# packages you need to clean the data
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(reshape2)
+source("Functions/util.R")
+```
+
+
+# Snodas SWE Raw data
+
+```{r, include = FALSE}
+# read in the data:
+carrizo <- read_csv("Carrizo/carrizo_swe_03_19.csv") 
+chuska <- read_csv("Chuska/chuska_swe_03_19.csv")
+black_mesa <- read_csv("Black Mesa/BM_swe_03_19.csv")
+```
+
+```{r, include = FALSE}
+# Extract winter data
+car_wint_cal <- extract_winter_months(carrizo)
+ch_wint_cal <- extract_winter_months(chuska)
+bm_wint_cal <- extract_winter_months(black_mesa)
+
+# Adds water year. Renames column date to Date
+car_wint_wy <- add_water_year(car_wint_cal)
+ch_wint_wy <- add_water_year(ch_wint_cal)
+bm_wint_wy <- add_water_year(bm_wint_cal)
+```
+
+```{r, include=FALSE}
+# read in data
+mt_powell_swe <- read_chunks("mt_powell", fill_pattern = ".*_swe_.*", variable = "swe_mm")
+
+defiance_plat_swe <- read_chunks("defiance_plateau", fill_pattern = ".*_swe_.*", variable = "swe_mm")
+
+navajo_mt_swe <- read_chunks("navajo_mtn", fill_pattern = ".*_snodas_swe_.*", variable = "swe_mm")
+
+```
+
+```{r, include = FALSE}
+# extract winter months and add water year
+
+mp_swe_wy <- month_ts(mt_powell_swe, c(11, 12, 1, 2, 3, 4)) %>%
+            add_water_year()
+
+dp_swe_wy <- month_ts(defiance_plat_swe, c(11, 12, 1, 2, 3, 4)) %>%
+            add_water_year()
+
+nm_swe_wy <- month_ts(navajo_mt_swe, c(11, 12, 1, 2, 3, 4)) %>%
+            add_water_year()
+
+```
+
+```{r}
+# now write the winter water year data as csv files
+
+write.csv(bm_wint_wy, "Black Mesa/bm_swe_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(ch_wint_wy, "Chuska/ch_swe_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(car_wint_wy, "Carrizo/car_swe_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(mp_swe_wy, "mt_powell/mp_swe_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(dp_swe_wy, "defiance_plateau/dp_swe_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(nm_swe_wy, "navajo_mtn/nm_swe_wint_wy_03_19.csv", row.names = FALSE)
+
+```
+
+# Snodas snow Depth raw data
+
+```{r, include = FALSE}
+# clean into usable files from climate engine
+
+# CARRIZO
+car_snodas_depth <- read_chunks("Carrizo")
+
+# CHUSKA
+ch_snodas_depth <- read_chunks("Chuska")
+
+# BLACK MESA
+bm_snodas_depth <- read_chunks("Black Mesa")
+
+# Navajo Mt
+nm_snodas_depth <- read_chunks("navajo_mtn", fill_pattern = ".*_snodas_dpth_.*")
+
+# Mt Powell
+
+mp_snodas_depth <- read_chunks("mt_powell")
+
+# Defiance Plateau
+dp_snodas_depth <- read_chunks("defiance_plateau")
+
+```
+
+```{r, include = FALSE}
+# extract winter months & add water year
+car_depth_wy <- month_ts(car_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
+ch_depth_wy <- month_ts(ch_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
+bm_depth_wy <- month_ts(bm_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
+nm_depth_wy <- month_ts(nm_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
+mp_depth_wy <- month_ts(mp_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
+dp_depth_wy <- month_ts(dp_snodas_depth, c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
+```
+
+```{r}
+# now write the winter water year data as csv files
+write.csv(bm_depth_wy, "Black Mesa/bm_dpth_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(ch_depth_wy, "Chuska/ch_dpth_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(car_depth_wy, "Carrizo/car_dpth_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(nm_depth_wy, "navajo_mtn/nm_dpth_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(mp_depth_wy, "mt_powell/mp_dpth_wint_wy_03_19.csv", row.names = FALSE)
+
+write.csv(dp_depth_wy, "defiance_plateau/dp_dpth_wint_wy_03_19.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+## Navajo nation whole reservation
+NN_swe <- read_chunks("NN_whole", fill_pattern = ".*_swe_.*", variable = "swe_mm") %>% 
+  month_ts(c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year() %>% 
+  rename(NN_swe_mm = swe_mm)
+
+NN_depth <- read_chunks("NN_whole", fill_pattern = ".*_depth_.*", variable = "depth_mm") %>% 
+  month_ts(c(11, 12, 1, 2, 3, 4)) %>%
+  add_water_year()
+
+```
+
+Figure out the daily contributions of all mt range snow to navajo nation
+This doesn't work actually because swe data is for 1km2 so the error is too big to make doing this make sense
+```{r}
+# combine daily values of swe of all regions into one dataframe
+
+# read in swe data
+car_swe <- read_csv("winter_wy/car_swe_wy_03_19.csv")
+ch_swe <- read_csv("winter_wy/ch_swe_wy_03_19.csv")
+bm_swe <- read_csv("winter_wy/bm_swe_wy_03_19.csv")
+mp_swe <- read_csv("winter_wy/mp_swe_wy_03_19.csv")
+nm_swe <- read_csv("winter_wy/nm_swe_wy_03_19.csv")
+dp_swe <- read_csv("winter_wy/dp_swe_wy_03_19.csv")
+
+# merge into same dataframe
+all_swe <- car_swe %>% 
+  rename(carrizo = swe_mm) %>% 
+  merge(ch_swe, by = "date") %>% 
+  rename(chuska = swe_mm) %>% 
+  merge(bm_swe, by = "date") %>% 
+  rename(black_mesa = swe_mm) %>% 
+  select(-waterYear, -waterYear.x, -waterYear.y) %>% 
+  merge(nm_swe, by = "date") %>% 
+  rename(navajo_mt = swe_mm) %>% 
+  merge(mp_swe, by = "date") %>% 
+  rename(mt_powell = swe_mm) %>% 
+  merge(dp_swe, by = "date") %>% 
+  rename(defiance_plateau = swe_mm) %>% 
+  select(-waterYear, -waterYear.x, -waterYear.y) 
+
+# now I need to multiply each region's swe values by their area. Right now it's just the average swe value
+# multiplying by the area will give me an approximate total swe value
+
+# store all the areas as variables
+carrizo_area = 339 #km2
+chuska_area = 4581 #km2
+bm_area = 1413 #km2
+defiance_area = 1106 #km2
+mt_powell_area = 77 #km2
+nm_area = 96 #km2
+nn_area = 67636 #km2
+
+
+all_swe_total <- all_swe %>% 
+  mutate(car_total = carrizo*carrizo_area,
+         ch_total = chuska*chuska_area,
+         bm_total = black_mesa*bm_area,
+         dp_total = defiance_plateau*defiance_area,
+         nm_total = navajo_mt*nm_area,
+         mp_total = mt_powell*mt_powell_area) %>% 
+  select(date, car_total, ch_total, bm_total, dp_total, nm_total, mp_total) %>% 
+  mutate(mt_range_sum_total = rowSums(.[, names(.) != "date"])) # add across rows to get the sum of total swe in mts
+ 
+# write this as a csv
+  write.csv(all_swe_total, "winter_wy/all_swe_total.csv", row.names = FALSE)
+
+# merge this data with the whole NN nation daily swe data and create a contribution column
+NN_mt_range <- NN_swe %>% 
+  mutate(NN_total = NN_swe_mm*nn_area) %>% 
+  merge(all_swe_total, by = "date") %>% 
+  select(date, waterYear, mt_range_sum_total, NN_total) %>% 
+  mutate(contribution = mt_range_sum_total/NN_total) 
+
+plot(NN_mt_range$date, NN_mt_range$contribution, type = "l")
+
+
+# monthly average all regions swe
+all_swe_sum_month_av <- all_swe_sum %>% 
+  group_by(date = floor_date(date, "month"))  %>% 
+  summarize(mt_ranges_mean_swe = mean(sum)) 
+
+# now combine with NN nation
+NN_all_swe_month_av <- calc_swe_metrics(NN_swe, "month", mean) %>% 
+  merge(all_swe_sum_month_av, by = "date") %>% 
+  mutate(contribution = mt_ranges_mean_swe/swe_mm)
+  
+
+```
+
+- swe_mm of each mt range * it's area = total amount of swe
+- then add them together to get total amount of water
+- divide that number by the total amount of swe for nn 
+
+
+## Palmer Drought Severity Index
+
+
+```{r}
+# Agencies
+alamo_pdsi <- read_csv("data_download/data/ALAMO_pdsi_2003-09-01_2019-07-17.csv") %>% 
+             clean_names() %>% 
+            rename(pdsi = palmer_drounght_severity_index)
+
+chinle_pdsi <- read_csv("data_download/data/CHINLE_pdsi_2003-09-01_2019-07-17.csv") %>% 
+    clean_names() %>% 
+    rename(pdsi = palmer_drounght_severity_index) %>% 
+    add_water_year() 
+
+east_navajo_pdsi <- read_csv("data_download/data/EASTERN NAVAJO_pdsi_2003-09-01_2019-07-17.csv") %>% 
+             clean_names() %>% 
+            rename(pdsi = palmer_drounght_severity_index) %>% 
+             add_water_year() 
+  
+fort_defiance_pdsi <- read_csv("data_download/data/FORT DEFIANCE_pdsi_2003-09-01_2019-07-17.csv") %>% 
+             clean_names() %>% 
+            rename(pdsi = palmer_drounght_severity_index)%>% 
+             add_water_year() 
+
+shiprock_pdsi <- read_csv("data_download/data/SHIPROCK_pdsi_2003-09-01_2019-07-17.csv") %>% 
+             clean_names() %>% 
+            rename(pdsi = palmer_drounght_severity_index)%>% 
+             add_water_year() 
+
+west_navajo_pdsi <- read_csv("data_download/data/WESTERN NAVAJO_pdsi_2003-09-01_2019-07-17.csv") %>% 
+             clean_names() %>% 
+            rename(pdsi = palmer_drounght_severity_index)%>% 
+             add_water_year() 
+
+# write them as CSV as save in agency folder
+
+write.csv(alamo_pdsi, "Agencies/alamo_pdsi.csv", row.names = FALSE)
+write.csv(chinle_pdsi, "Agencies/chinle_pdsi.csv", row.names = FALSE)
+write.csv(east_navajo_pdsi, "Agencies/east_navajo_pdsi.csv", row.names = FALSE)
+write.csv(fort_defiance_pdsi, "Agencies/fort_defiance_pdsi.csv", row.names = FALSE)
+write.csv(shiprock_pdsi, "Agencies/shiprock_pdsi.csv", row.names = FALSE)
+write.csv(west_navajo_pdsi, "Agencies/west_navajo_pdsi.csv", row.names = FALSE)
+
+```
+
+# put the chaco watershed precip into one files
+```{r}
+
+chaco_precip <- read_chunks("data_download/data", fill_pattern = "Chaco_pr_.*", variable = "precipitation")
+
+write.csv(chaco_precip, "watersheds/chaco_precip.csv", row.names = FALSE)
+
+```
+
+
+
+# put the chinle watershed precip into one files
+```{r}
+
+chinle_precip <- read_chunks("data_download/data", fill_pattern = "Chinle_pr_.*", variable = "precipitation")
+
+write.csv(chinle_precip, "watersheds/chinle_precip.csv", row.names = FALSE)
+
+```
+
+
+# put the Middle San Juan watershed precip into one files
+```{r}
+
+mid_sj_precip <- read_chunks("data_download/data", fill_pattern = "Middle%20.*", variable = "precipitation")
+
+write.csv(mid_sj_precip, "watersheds/mid_sj_precip.csv", row.names = FALSE)
+
+```
+
+# join together the whole NN Chrps data
+
+```{r}
+# milimeters
+nn_chrps_precip <- read_chunks("NN_whole/", fill_pattern = "nn_chrps_.*", variable = "precipitation")
+write.csv(nn_chrps_precip, "NN_whole/nn_chrps_precip_80-19.csv", row.names = FALSE)
+```
+

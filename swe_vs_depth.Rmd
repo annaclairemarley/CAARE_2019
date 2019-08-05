@@ -1,0 +1,778 @@
+---
+title: "SWE & Snow Depth"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include = FALSE}
+# load the packages
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(gridExtra)
+library(grid)
+library(dataRetrieval)
+library(reshape2)
+source("Functions/util.R")
+source('Functions/graphing.R')
+```
+
+
+### This rmarkdown shows some of the relationships between SWE and snow depth at each location. Analyses conducted include:
+
+- Correlation between SWE and Snow Depth with the colors grouped by months
+- linear relationship between Swe and snow depth for each month
+- graph of the slopes of the monthly linear relationship
+
+
+## General Patterns
+
+#### Correlation between SWE and Snow Depth (November - April Water Year)
+
+- SWE and snow depth are highly correlated across regions (>0.9)
+- Generally, as snow depth and swe values get larger, they become less closely correlated
+
+#### Monthly linear relationships between SWE and Snow Depth 
+
+- SWE is a function of depth and density, so SWE/depth = bulk density
+- So through the water year, we see generally increasing density at all locations November to March. 
+  - However, in April, there is sometimes a drop in density depending on location - this may simply be because most of the snow has melted
+
+```{r, include = FALSE}
+# read in the daily data files
+car_swe <- read_csv("winter_wy/car_swe_wy_03_19.csv")
+car_dpth <- read_csv("winter_wy/car_dpth_wy_03_19.csv")
+
+# combine to make a dataframe of swe and dpth daily data
+car_swe_dpth <- merge_snow(car_swe, car_dpth)
+
+# monthly means correlation
+car_swe_av <- calc_swe_metrics(car_swe, "month", mean)
+car_dpth_av <- calc_depth_metrics(car_dpth, "month", mean)
+
+```
+
+```{r, include = FALSE}
+calc_swe_metrics(car_swe_dpth, "year", max)
+```
+
+
+### Carrizo 
+
+- Generally, January, February, and March swe and depth values are less correlated than other months
+
+
+```{r, include = FALSE}
+# average swe - depth metric (from swe/depth)
+car_av_ratio <- car_swe_dpth %>% 
+  filter(snow_ratio != "NaN") %>% 
+  filter(snow_ratio != "Inf") %>% 
+  group_by(month) %>% 
+  summarize(
+    mean_ratio = mean(snow_ratio)
+  )
+  
+
+car_av_snow_ratio <- mean(car_av_ratio$mean_ratio)
+  
+
+```
+
+
+```{r, echo=FALSE}
+# daily data linear regression:
+
+car_swe_dpth_lm <- lm(car_swe_dpth$swe_mm ~ car_swe_dpth$depth_mm)
+car_swedpth_r2 <- summary(car_swe_dpth_lm)$adj.r.squared
+
+```
+
+```{r, echo = FALSE}
+# graph it 
+
+car_daily_cor_swe_dpth <- plot_cor(car_swe_dpth, car_swedpth_r2, region = "Carrizo")
+ car_daily_cor_swe_dpth
+
+```
+
+Each month has it's own line:
+
+```{r,echo= FALSE}
+
+plot_cor_month(car_swe_dpth, car_swedpth_r2, region = "Carrizo")
+
+
+
+```
+
+
+Slope of the line of the linear relationship of each month's swe and snow depth
+- almost linearly increasing slop through the water year until April, where the slope decreases back down to almost the February slope
+
+
+```{r, echo = FALSE}
+# equations of the lines:
+
+car_mnth_equ <- cor_equation(car_swe_dpth)
+plot_slope_swedpth(car_mnth_equ, title = "Carrizo")
+
+```
+
+# {.tabset .tabset-fade}
+
+## Chuska 
+
+- Generally, January, February, March, amd some April swe and depth values are less correlated than other months
+
+```{r, include=FALSE}
+# read in the files
+ch_swe <- read_csv("winter_wy/ch_swe_wy_03_19.csv")
+ch_dpth <- read_csv("winter_wy/ch_dpth_wy_03_19.csv")
+
+# merge them together 
+ch_swe_dpth <- merge_snow(ch_swe, ch_dpth)
+
+```
+
+
+```{r, include = FALSE}
+# average swe - depth metric (from swe/depth)
+ch_av_ratio <- ch_swe_dpth %>% 
+  filter(snow_ratio != "NaN") %>% 
+  filter(snow_ratio != "Inf") %>% 
+  group_by(month) %>% 
+  summarize(
+    mean_ratio = mean(snow_ratio)
+  )
+  
+
+ch_av_snow_ratio <- mean(ch_av_ratio$mean_ratio)
+  
+
+
+```
+
+
+```{r, echo = FALSE}
+# linear regression
+ch_swe_v_depth_lm <- lm(ch_swe_dpth$swe_mm ~ ch_swe_dpth$depth_mm)
+ch_swedepth_r2 <- summary(ch_swe_v_depth_lm)$adj.r.squared 
+
+
+# plot it
+ch_swe_v_depth_graph <- plot_cor(ch_swe_dpth, ch_swedepth_r2, region = "Chuska")
+ch_swe_v_depth_graph 
+```
+
+
+
+Each month has it's own line:
+
+```{r, echo = FALSE}
+
+plot_cor_month(ch_swe_dpth, car_swedpth_r2, region = "") + 
+  geom_point(alpha = 0.2) + 
+  scale_color_discrete(labels= c("Jan", "Feb", "Mar", "Apr", "Nov", "Dec")) 
+
+
+```
+
+- almost perfect linear increase in the slope of the relationship between swe and depth through time
+- adjusted r squared values for all lines > 0.9
+```{r, echo = FALSE}
+# equations of the lines:
+
+ch_mnth_equ <- cor_equation(ch_swe_dpth)  
+
+plot_slope_swedpth(ch_mnth_equ, title = "Chuska")
+
+
+```
+
+# {.tabset .tabset-fade}
+
+## Black Mesa 
+
+- Generally, January, February, and March swe and depth values are less correlated than other months
+
+```{r, include=FALSE}
+# read in the files
+bm_swe <- read_csv("winter_wy/bm_swe_wy_03_19.csv")
+bm_dpth <- read_csv("winter_wy/bm_dpth_wy_03_19.csv")
+
+# merge them together 
+bm_swe_dpth <- merge_snow(bm_swe, bm_dpth)
+
+```
+
+
+```{r, include = FALSE}
+# average density (from swe/depth)
+bm_av_ratio <- bm_swe_dpth %>% 
+  filter(snow_ratio != "NaN") %>% 
+  filter(snow_ratio != "Inf") %>% 
+  group_by(month) %>% 
+  summarize(
+    mean_ratio = mean(snow_ratio)
+  )
+  
+
+bm_av_snow_ratio <- mean(bm_av_ratio$mean_ratio)
+  
+
+
+```
+
+
+```{r, echo = FALSE}
+# linear regression
+bm_swe_v_depth_lm <- lm(bm_swe_dpth$swe_mm ~ bm_swe_dpth$depth_mm)
+bm_swedepth_r2 <- summary(bm_swe_v_depth_lm)$adj.r.squared 
+
+
+# plot it
+bm_swe_v_depth_graph <- plot_cor(bm_swe_dpth, bm_swedepth_r2, region = "Black Mesa")
+bm_swe_v_depth_graph
+```
+
+
+Each month has it's own line:
+
+```{r, echo = FALSE}
+
+plot_cor_month(bm_swe_dpth, car_swedpth_r2, region = "Black Mesa")
+
+```
+
+- almost linearly increasing slop through the water year until April, where the slope decreases back down to almost the November slope
+
+```{r, echo = FALSE}
+# equations of the lines:
+
+bm_mnth_equ <- cor_equation(bm_swe_dpth)
+plot_slope_swedpth(bm_mnth_equ, title = "Black Mesa")
+```
+
+# {.tabset .tabset-fade}
+
+## Navajo Mt 
+
+- March, January, and some december most often less correlated
+```{r, include=FALSE}
+# read in the files
+nm_swe <- read_csv("winter_wy/nm_swe_wy_03_19.csv")
+nm_dpth <- read_csv("winter_wy/nm_dpth_wy_03_19.csv")
+
+# merge them together 
+nm_swe_dpth <- merge_snow(nm_swe, nm_dpth)
+
+```
+
+
+```{r, include = FALSE}
+# average density (from swe/depth)
+nm_av_ratio <- nm_swe_dpth %>% 
+  filter(snow_ratio != "NaN") %>% 
+  filter(snow_ratio != "Inf") %>% 
+  group_by(month) %>% 
+  summarize(
+    mean_ratio = mean(snow_ratio)
+  )
+  
+
+nm_av_snow_ratio <- mean(nm_av_ratio$mean_ratio)
+  
+
+
+```
+
+
+```{r, echo = FALSE}
+# linear regression
+nm_swe_v_depth_lm <- lm(nm_swe_dpth$swe_mm ~ nm_swe_dpth$depth_mm)
+nm_swedepth_r2 <- summary(nm_swe_v_depth_lm)$adj.r.squared 
+
+
+# plot it
+nm_swe_v_depth_graph <- plot_cor(nm_swe_dpth, nm_swedepth_r2, region = "Navajo Mt")
+nm_swe_v_depth_graph
+```
+
+
+Each month has it's own line:
+
+```{r, echo = FALSE}
+
+plot_cor_month(nm_swe_dpth, car_swedpth_r2, region = "Navajo Mountain")
+
+
+```
+
+- Seems to be the only location where there is not really a clear linear increase in the slope of the relationship between swe and snow depth
+
+```{r, echo = FALSE}
+
+# equations of the lines:
+
+nm_mnth_equ <- cor_equation(nm_swe_dpth)
+plot_slope_swedpth(nm_mnth_equ, title = "Navajo Mt")
+
+```
+
+# {.tabset .tabset-fade}
+
+## Mt Powell 
+
+- Jn, Feb and March seem to be outliers
+
+```{r, include=FALSE}
+# read in the files
+mp_swe <- read_csv("winter_wy/mp_swe_wy_03_19.csv")
+mp_dpth <- read_csv("winter_wy/mp_dpth_wy_03_19.csv")
+
+# merge them together 
+mp_swe_dpth <- merge_snow(mp_swe, mp_dpth)
+
+```
+
+
+```{r, include = FALSE}
+# average density (from swe/depth)
+mp_av_ratio <- mp_swe_dpth %>% 
+  filter(snow_ratio != "NaN") %>% 
+  filter(snow_ratio != "Inf") %>% 
+  group_by(month) %>% 
+  summarize(
+    mean_ratio = mean(snow_ratio)
+  )
+  
+
+mp_av_snow_ratio <- mean(mp_av_ratio$mean_ratio)
+  
+
+
+```
+
+
+```{r, echo = FALSE}
+# linear regression
+mp_swe_v_depth_lm <- lm(mp_swe_dpth$swe_mm ~ mp_swe_dpth$depth_mm)
+mp_swedepth_r2 <- summary(mp_swe_v_depth_lm)$adj.r.squared 
+
+
+# plot it
+mp_swe_v_depth_graph <- plot_cor(mp_swe_dpth, mp_swedepth_r2, region = "Mt Powell")
+mp_swe_v_depth_graph
+```
+
+
+Each month has it's own line:
+
+```{r, echo = FALSE}
+
+plot_cor_month(mp_swe_dpth, car_swedpth_r2, region = "Mt Powell")
+
+
+
+```
+
+- almost linearly increasing slop through the water year until April, where the slope decreases back down to almost the November slope
+
+```{r, echo = FALSE}
+
+# equations of the lines:
+
+mp_mnth_equ <- cor_equation(mp_swe_dpth)
+plot_slope_swedpth(mp_mnth_equ, title = "Mt Powell")
+
+```
+
+# {.tabset .tabset-fade}
+
+## Defiance Plateau 
+
+- March seems to be least correlated
+
+```{r, include=FALSE}
+# read in the files
+dp_swe <- read_csv("winter_wy/dp_swe_wy_03_19.csv")
+dp_dpth <- read_csv("winter_wy/dp_dpth_wy_03_19.csv")
+
+# merge them together 
+dp_swe_dpth <- merge_snow(dp_swe, dp_dpth)
+
+```
+
+
+```{r, include = FALSE}
+# average density (from swe/depth)
+dp_av_ratio <- dp_swe_dpth %>% 
+  filter(snow_ratio != "NaN") %>% 
+  filter(snow_ratio != "Inf") %>% 
+  group_by(month) %>% 
+  summarize(
+    mean_ratio = mean(snow_ratio)
+  )
+  
+
+dp_av_snow_ratio <- mean(dp_av_ratio$mean_ratio)
+  
+
+
+```
+
+
+```{r, echo = FALSE}
+# linear regression
+dp_swe_v_depth_lm <- lm(dp_swe_dpth$swe_mm ~ dp_swe_dpth$depth_mm)
+dp_swedepth_r2 <- summary(dp_swe_v_depth_lm)$adj.r.squared 
+
+
+# plot it
+dp_swe_v_depth_graph <- plot_cor(dp_swe_dpth, dp_swedepth_r2, region = "Defiance Plateau")
+dp_swe_v_depth_graph
+```
+
+
+Each month has it's own line:
+
+```{r, echo = FALSE}
+
+plot_cor_month(dp_swe_dpth, car_swedpth_r2, region = "Defiance Plateau")
+
+
+
+
+```
+
+- almost linearly increasing slop through the water year until April, where the slope decreases back down to almost the January slope
+
+```{r, echo = FALSE}
+
+# equations of the lines:
+
+dp_mnth_equ <- cor_equation(dp_swe_dpth)
+plot_slope_swedpth(dp_mnth_equ, title = "Defiance Plateau")
+
+```
+
+# {.tabset .tabset-fade}
+
+## SWE-depth ratio 
+
+- annual averaged metric 
+
+- **Carrizo**: `r round(car_av_snow_ratio, 3)`
+
+- **Chuska**: `r round(ch_av_snow_ratio, 3)`
+
+- **Black Mesa**: `r round(bm_av_snow_ratio, 3)`
+.
+### SWE-depth ratio (= density) monthly average: 
+
+- Generally, density increases through the water year (starting at november). This corroborates the trend seen in the correlation graph where depth and swe becomes less correlated as the water year progresses
+
+```{r, echo = FALSE}
+
+# create a dataframe of the density of each lcoation
+all_density <- merge(bm_av_ratio, ch_av_ratio, by = "month") %>% 
+  merge(car_av_ratio, by = "month") %>% 
+  rename(black_mesa = mean_ratio.x, chuska = mean_ratio.y, carrizo = mean_ratio) %>% 
+  mutate(black_mesa = round(black_mesa, 3))  %>% 
+  mutate(carrizo = round(carrizo, 3))  %>% 
+  mutate(chuska = round(chuska, 3)) %>% 
+  merge(mp_av_ratio, by = "month") %>% 
+  rename(mt_powell = mean_ratio) %>% 
+  merge(nm_av_ratio, by = "month") %>% 
+  rename(navajo_mt = mean_ratio) %>% 
+  merge(dp_av_ratio, by = "month") %>% 
+  rename(defiance_plateau = mean_ratio)
+
+all_density_tidy <- all_density %>% 
+  mutate(month_n = c("January", "February", "March", "April", "November", "December")) %>% 
+  mutate(month_n = factor(month_n, levels = c("November", "December", "January", "February", "March", "April"))) %>% 
+  mutate(month = factor(month, levels = c(11, 12, 1, 2, 3, 4))) %>% 
+  melt(id.vars= c("month", "month_n")) %>% 
+  rename(region = variable) %>% 
+  rename(density = value)
+
+
+# graph it
+
+all_density_graph <- all_density_tidy %>% 
+  ggplot(aes(x = month_n, y = density, group = region, color = region)) +
+  geom_line() +
+  theme_classic() +
+  labs(x = "Month",
+       y = "Density",
+       color = "Region") +
+  scale_color_discrete(labels = c("Black Mesa", "Chuska", "Carrizo", "Mt Powell", "Navajo Mt", "Defiance Plateau")) +
+  scale_x_discrete(expand = c(0,0))
+
+all_density_graph
+
+```
+
+```{r, fig.width=20,fig.height=5, echo = FALSE}
+
+car_wk_mean_swe <- calc_swe_metrics(car_swe_dpth, "week", mean) 
+ch_wk_mean_swe <- calc_swe_metrics(ch_swe_dpth, "week", mean) 
+nm_wk_mean_swe <- calc_swe_metrics(nm_swe_dpth, "week", mean) 
+mp_wk_mean_swe <- calc_swe_metrics(mp_swe_dpth, "week", mean) 
+dp_wk_mean_swe <- calc_swe_metrics(dp_swe_dpth, "week", mean) 
+bm_wk_mean_swe <- calc_swe_metrics(bm_swe_dpth, "week", mean) 
+
+graph_with_wateryear(car_wk_mean_swe, type = geom_col,  variable = "swe_mm", ylab = "SWE (mm)")
+
+
+
+```
+
+
+
+### SWE and Snow depth (November - April Water Year) 
+
+- Generally, snow depth is much greater than SWE, but follows the same general patter
+
+```{r, fig.width=20,fig.height=5, echo = FALSE, warning=FALSE, message=FALSE}
+# carrizo 
+graph_with_wateryear(car_swe_dpth, title = "Carrizo") +
+  geom_line(aes(y = depth_mm), color = "blue") +
+  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "Snow Depth (mm)")) +
+  theme(axis.line.y.right = element_line(color = "blue"),
+        axis.text.y.right = element_text(color = "blue"),
+        axis.title.y.right = element_text(color = "blue"))
+  
+
+```
+
+
+```{r, fig.width=20,fig.height=5, echo = FALSE, warning=FALSE, message=FALSE}
+# chuska
+graph_with_wateryear(ch_swe_dpth, title = "Chuska") +
+  geom_line(aes(y = depth_mm), color = "blue") +
+  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "Snow Depth (mm)")) +
+  theme(axis.line.y.right = element_line(color = "blue"),
+        axis.text.y.right = element_text(color = "blue"),
+        axis.title.y.right = element_text(color = "blue"))
+  
+
+```
+
+```{r, fig.width=20,fig.height=5,echo = FALSE, warning=FALSE, message=FALSE}
+# black mesa
+graph_with_wateryear(bm_swe_dpth, title = "Black Mesa") +
+  geom_line(aes(y = depth_mm), color = "blue") +
+  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "Snow Depth (mm)")) +
+  theme(axis.line.y.right = element_line(color = "blue"),
+        axis.text.y.right = element_text(color = "blue"),
+        axis.title.y.right = element_text(color = "blue")) 
+  
+
+```
+
+### Chuska SWE vs depth monthly anomaly
+
+```{r, echo = FALSE}
+## Monthly anom
+# create chuska swe anomaly 
+
+ch_swe_anom <- calc_month_anom(calc_swe_metrics(ch_swe, "month", mean)) %>% 
+  rename(swe_anomaly = anomaly) %>% 
+  rename(swe_anom_perc = anomaly_perc)
+
+# chuska depth anomaly
+
+ch_depth_anom <- calc_mnth_depth_anom(calc_depth_metrics(ch_dpth, "month", mean)) %>% 
+  rename(depth_anom_perc = anomaly_perc)
+
+# merge together 
+
+ch_swe_dpth_anom <- merge(ch_depth_anom, ch_swe_anom, by = "date") %>% 
+  select(date, waterYear.x, anomaly, swe_anom_perc, depth_anom_perc, sign.x, swe_anomaly) %>% 
+  rename(waterYear = waterYear.x)
+
+
+
+```
+
+```{r, echo = FALSE}
+
+# create graph 
+      # first make variables for ease of graphing  
+      startWaterYear = min(ch_swe_dpth_anom$waterYear)
+      endWaterYear = max(ch_swe_dpth_anom$waterYear)
+      # Create sequence of real dates, on which to place the water year lables
+      breakDates = seq.Date(from = ymd(paste(startWaterYear,1,1, sep='-')), length.out = endWaterYear - startWaterYear + 1, by = "1 year")
+      
+  ggplot(ch_swe_dpth_anom, aes(x = date)) +
+  geom_col(aes(y = anomaly, fill = sign.x), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_date(breaks= breakDates, labels=seq(startWaterYear,endWaterYear,by=1)) +
+  labs(
+    x = "Water Year",
+    y = "Snow Depth Anomaly (mm)"
+  ) +
+  theme_classic() +
+  geom_line(aes(y = swe_anomaly), color = "#1219cc") +
+  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "SWE Anomaly (mm)"), expand = c(0,0)) +
+  theme(axis.line.y.right = element_line(color = "#1219cc"),
+        axis.text.y.right = element_text(color = "#1219cc"),
+        axis.title.y.right = element_text(color = "#1219cc")) 
+
+```
+
+```{r, echo = FALSE}
+### Percent difference from average###
+# create graph 
+      # first make variables for ease of graphing  
+      startWaterYear = min(ch_swe_dpth_anom$waterYear)
+      endWaterYear = max(ch_swe_dpth_anom$waterYear)
+      # Create sequence of real dates, on which to place the water year lables
+      breakDates = seq.Date(from = ymd(paste(startWaterYear,1,1, sep='-')), length.out = endWaterYear - startWaterYear + 1, by = "1 year")
+      
+  ggplot(ch_swe_dpth_anom, aes(x = date)) +
+  geom_col(aes(y = depth_anom_perc, fill = sign.x), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_date(breaks= breakDates, labels=seq(startWaterYear,endWaterYear,by=1)) +
+  labs(
+    x = "Water Year",
+    y = "Snow Depth % Difference from Average"
+  ) +
+  theme_classic() +
+  geom_line(aes(y = swe_anom_perc), color = "#1219cc") +
+  scale_y_continuous(sec.axis = sec_axis(~., name = "SWE % Difference from Average"), 
+                     expand = c(0,0)) +
+  theme(axis.line.y.right = element_line(color = "#1219cc"),
+        axis.text.y.right = element_text(color = "#1219cc"),
+        axis.title.y.right = element_text(color = "#1219cc")) 
+
+```
+
+```{r, echo = FALSE}
+
+ch_nov_anom <- ch_swe_anom %>% 
+  filter(month == "11") %>% 
+  ggplot(aes(x = waterYear, y = swe_anom_perc)) +
+  geom_col(aes(fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_continuous(breaks = seq(2004,2019, by = 3)) +
+  labs(
+    x = "Water Year",
+    y = "SWE % Difference from Average",
+    title = "November"
+  ) +
+  theme_classic()
+
+
+
+ch_dec_anom <- ch_swe_anom %>% 
+  filter(month == "12") %>% 
+  ggplot(aes(x = waterYear, y = swe_anom_perc)) +
+  geom_col(aes(fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_continuous(breaks = seq(2004,2019, by = 3)) +
+  labs(
+    x = "Water Year",
+    y = "SWE % Difference from Average",
+    title = "December"
+  ) +
+  theme_classic()
+
+
+
+# just january anomalies
+
+ch_jan_anom <- ch_swe_anom %>% 
+  filter(month == "1") %>% 
+  ggplot(aes(x = waterYear, y = swe_anom_perc)) +
+  geom_col(aes(fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_continuous(breaks = seq(2004,2019, by = 3)) +
+  labs(
+    x = "Water Year",
+    y = "SWE % Difference from Average",
+    title = "January"
+  ) +
+  theme_classic()
+
+
+
+# just feb anomalies
+ch_feb_anom <- ch_swe_anom %>% 
+  filter(month == "2") %>% 
+  ggplot(aes(x = waterYear, y = swe_anom_perc)) +
+  geom_col(aes(fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_continuous(breaks = seq(2004,2019, by = 3)) +
+  labs(
+    x = "Water Year",
+    y = "SWE % Difference from Average",
+    title = "February"
+  ) +
+  theme_classic()
+
+
+# just march anomalies
+ch_mar_anom <- ch_swe_anom %>% 
+  filter(month == "3") %>% 
+  ggplot(aes(x = waterYear, y = swe_anom_perc)) +
+  geom_col(aes(fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_continuous(breaks = seq(2004,2019, by = 3)) +
+  labs(
+    x = "Water Year",
+    y = "SWE % Difference from Average",
+    title = "March"
+  ) +
+  theme_classic()
+
+
+
+# just march anomalies
+ch_apr_anom <- ch_swe_anom %>% 
+  filter(month == "4") %>% 
+  ggplot(aes(x = waterYear, y = swe_anom_perc)) +
+  geom_col(aes(fill = sign), show.legend = FALSE) +
+  scale_fill_manual(values = c("negative" = "#df5e3d", "positive" = "#a6c39d")) +
+  scale_x_continuous(breaks = seq(2004,2019, by = 3)) +
+  scale_y_continuous(breaks = seq(-100,800, by = 100)) +
+  labs(
+    x = "Water Year",
+    y = "SWE % Difference from Average",
+    title = "April"
+  ) +
+  theme_classic()
+
+
+```
+
+```{r, fig.width= 10, echo = FALSE}
+
+grid.arrange(ch_nov_anom, ch_dec_anom, ch_jan_anom, ch_feb_anom, ch_mar_anom, ch_apr_anom, ncol = 3)
+
+```
+
+
+### Depth scaled (depth*0.2) by swe/depth metric
+
+- shows how well correlated SWE and snow depth are
+
+```{r, fig.width=20,fig.height=5, echo = FALSE, message = FALSE}
+
+graph_with_wateryear(bm_swe_dpth, title = "Black Mesa", type = geom_col) +
+  geom_line(aes(y = depth_mm*0.2), color = "blue") +
+  scale_y_continuous(sec.axis = sec_axis(~.*5, name = "Snow Depth (mm)"), expand = c(0,0)) +
+  theme(axis.line.y.right = element_line(color = "blue"),
+        axis.text.y.right = element_text(color = "blue"),
+        axis.title.y.right = element_text(color = "blue")) 
+  
+
+```
+
+
+
