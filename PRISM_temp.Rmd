@@ -1,0 +1,63 @@
+---
+title: "PRISM_temp"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include = FALSE}
+# load the packages
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(gridExtra)
+library(grid)
+library(dataRetrieval)
+library(reshape2)
+library(corrplot)
+source("Functions/util.R")
+source('Functions/graphing.R')
+```
+
+
+This Rmarkdown uses data extracted by Suzanne Goldstein from Google EArth Engine
+
+data include:
+
+- monthly mean temperature data from PRISM  
+- anomalies for each mountain region of the Navajo Nation during the period 2002-2018 as compared to the 30-year normal for the period 1981-2010. 
+
+
+```{r, echo = FALSE}
+
+temp_anom <- read_csv("NN_whole/SG_mnthly_PRISM_anom_frm_30yr_norm_81_10.csv") %>% 
+  clean_names()
+
+```
+
+### Anomalies
+```{r, echo = FALSE}
+
+anom_graph <- temp_anom %>% 
+  ggplot(aes(x = date, y = navajo_nation)) +
+  geom_line(color = "red") +
+  geom_smooth(method = "lm") +
+  scale_x_date(expand = c(0,0)) +
+  labs(
+    x = "Year",
+    y = "Temperature Anomaly",
+    title = "Navajo Nation PRISM Temperature Anomaly"
+  ) +
+  theme_classic() 
+
+anom_graph
+
+summary(lm(temp_anom$navajo_nation ~ temp_anom$date))
+
+
+
+```
+
