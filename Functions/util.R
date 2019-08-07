@@ -674,3 +674,30 @@ merge_pdsi_spi = function(df_spi, months, df_pdsi) {
   return(pdsi_spi)
   
 }
+
+#####################################################################
+#####################################################################
+#' add_drought_severity
+#'
+#' adds drought severity to the spi of a dataframe that already has spi
+#'
+#' @param df dataframe with spi
+#' 
+#' @example add_drought_severity(chaco_spi_apr)
+#' 
+
+add_drought_severity = function(df){
+    
+  df$drought = "normal"
+    for (i in length(df$spi)){
+      df$drought = ifelse(df$spi <= -1.5,
+                               "emergency",
+                               ifelse(df$spi <= -1.0,
+                                      "warning",
+                                      ifelse(df$spi <= 0,
+                                             "alert",
+                                             "normal")))
+    }
+  
+  return(df)
+}

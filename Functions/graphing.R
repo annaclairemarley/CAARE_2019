@@ -670,22 +670,37 @@ plot_swe_spi = function(spi_df, month, swe_df = ch_wint_anom, region_time = "") 
 #' @return bar graph of spi during the time you want it
 #' @example plot_swe_spi(tsaile_spi, month = c(6,7,6), title = "Tsaile June")
 
-plot_spi_drought_level = function(spi_df, month, region_time = "") {
+plot_spi_drought_level = function(spi_df, month, region_time = "", years = "") {
   
   # clean up spi df and combine with chuska winter anomaly
   
-  spi_clean <- spi_df %>% 
-    filter(year(date) >= 2004) %>% 
-    filter(month(date) %in% c(month)) %>% 
-    add_water_year() %>% 
-    select(waterYear, spi, sign) 
+  if (years == "all") {
+    
+    spi_clean <- spi_df %>% 
+      arrange(date) %>% 
+      filter(month(date) %in% c(month)) %>% 
+      add_water_year() %>% 
+      select(waterYear, spi, sign) 
+    
+  } else {
+    
+    spi_clean <- spi_df %>% 
+      arrange(date) %>% 
+      filter(month(date) %in% c(month)) %>% 
+      filter(year(date) >= 2004) %>% 
+      add_water_year() %>% 
+      select(waterYear, spi, sign) 
+  }
        
-  spi_clean$drought = 0      
+  spi_clean$drought = "normal"
   for (i in length(spi_clean$spi)){
-    spi_clean$drought = ifelse(spi_clean$spi <= -1.5, "drought_emergency", spi_clean$drought)
-    spi_clean$drought = ifelse(spi_clean$spi <= -1 & spi_clean$spi >= -1.49, "drought_warning", spi_clean$drought)  
-    spi_clean$drought = ifelse(spi_clean$spi <= 0 & spi_clean$spi >= -0.99, "drought_alert", spi_clean$drought) 
-    spi_clean$drought = ifelse(spi_clean$spi >= 0, "normal", spi_clean$drought) 
+    spi_clean$drought = ifelse(spi_clean$spi <= -1.5,
+                               "drought_emergency",
+                               ifelse(spi_clean$spi <= -1.0,
+                                      "drought_warning",
+                                      ifelse(spi_clean$spi <= 0,
+                                             "drought_alert",
+                                             "normal")))
     }
            
   # now combine winter chuska swe anom and the SPI
@@ -693,12 +708,20 @@ plot_spi_drought_level = function(spi_df, month, region_time = "") {
     rename(SPI = spi) %>% 
     ggplot(aes(x = waterYear, y = SPI, 
                fill = factor(drought, 
-                             levels = c("drought_emergency", "drought_warning", "drought_alert","normal"))
+                             levels = c("drought_emergency",
+                                        "drought_warning",
+                                        "drought_alert",
+                                        "normal"))
                ), color = "white") +
-     scale_fill_manual(values = c("#d13111", "#ffa600", "#f1d333", "#16990c"), 
-                       labels = c("Drought Emergency", "Drought Warning", "Drought Alert", "Normal")) +
+     scale_fill_manual(values = c("#d13111", 
+                                  "#ffa600", 
+                                  "#f1d333", 
+                                  "#16990c"), 
+                       labels = c("Drought Emergency", 
+                                  "Drought Warning", 
+                                  "Drought Alert", 
+                                  "Normal")) +
     geom_col(position = "dodge2") +
-    scale_x_continuous(breaks=seq(2004,2019, by = 2)) +
     labs(
       x = "Water Year",
       y = "SPI",
@@ -706,6 +729,19 @@ plot_spi_drought_level = function(spi_df, month, region_time = "") {
       title = sprintf("%s SPI Drought Conditions", region_time)
     )+
     theme_classic()
+  
+  if (years == "all") {
+    
+    ch_spi_plot <- ch_spi_plot +
+      scale_x_continuous(breaks = seq(1981,2019, by = 5))
+    
+  } else {
+    
+    ch_spi_plot <- ch_spi_plot +
+      scale_x_continuous(breaks = seq(2004,2019, by = 2)) 
+  }
+  
+  
   
   return(ch_spi_plot)
 }

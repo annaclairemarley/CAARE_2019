@@ -326,7 +326,26 @@ write.csv(nn_chrps_precip, "NN_whole/nn_chrps_precip_80-19.csv", row.names = FAL
 
 ## Middle san juan chirps
 ```{r}
-mid_sj_chirps <- read_chunks("data_download/data", fill_pattern = "*Juan_CHIRPS_*", variable = "precipitation")
+mid_sj_chirps <- read_chunks("data_download/data",
+                             fill_pattern = "*Juan_CHIRPS_*", 
+                             variable = "precipitation")
 write.csv(mid_sj_chirps, "watersheds/mid_sj_chirps.csv", row.names = FALSE)
 ```
 
+## Upper Puerco chirps
+```{r}
+
+up_pue_chirps <- read_chunks("data_download/data", 
+                             fill_pattern = "Upper%20Puerco_CHIRPS_*",
+                             variable = "precipitation")
+write.csv(up_pue_chirps, "watersheds/up_pue_chirps.csv", row.names = FALSE)
+```
+
+## chinle chirps
+```{r}
+
+chinle_chirps <- read_chunks("data_download/data", 
+                             fill_pattern = "Chinle_CHIRPS_*",
+                             variable = "precipitation")
+write.csv(chinle_chirps, "watersheds/chinle_chirps.csv", row.names = FALSE)
+```

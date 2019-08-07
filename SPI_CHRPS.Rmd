@@ -20,6 +20,8 @@ library(dataRetrieval)
 library(reshape2)
 library(corrplot)
 library(precintcon)
+library(onewaytests)
+library(car)
 source("Functions/util.R")
 source('Functions/graphing.R')
 ```
@@ -32,6 +34,17 @@ nn_chrps_precip <- read_csv("NN_whole/nn_chrps_precip_80-19.csv") %>%
   arrange(date)
 
 mid_sj_precip <- read_csv("watersheds/mid_sj_chirps.csv") %>% 
+  arrange(date)
+
+chaco_precip <- read_csv("watersheds/chaco_chirps.csv", 
+                         col_names=c("date", "precipitation"), 
+                         skip =1) %>% 
+  arrange(date)
+
+up_pue_precip <- read_csv("watersheds/up_pue_chirps.csv") %>% 
+  arrange(date)
+
+chinle_precip <- read_csv("watersheds/chinle_chirps.csv") %>% 
   arrange(date)
 
 # for later use:
@@ -61,11 +74,74 @@ mtns_swe_wint_anomaly <- mtns_swe_mnth_mean %>%
 
 ```{r, include=FALSE}
 # read in Chuska Winter swe anomaly
+ch_wint_anom <- read_csv("Chuska/ch_wint_swe_anom.csv") %>% 
+  select(waterYear, anomaly_perc)
 
 
 ```
 
 ## Whole Navajo Nation
+### Precipitation
+```{r, echo = FALSE}
+# monthly precipitation
+nn_precip_mnth <- nn_chrps_precip %>% 
+  group_by(date = floor_date(date, "month")) %>% 
+  summarize(precipitation = mean(precipitation)) %>% 
+  ungroup()
+
+ggplot(nn_precip_mnth, aes(x = date, y = precipitation)) +
+  geom_line() +
+  scale_x_date(expand = c(0,0)) +
+  labs(
+    title = "Navajo Nation Monthly Mean Precipitation"
+  ) +
+  theme_classic()
+
+```
+
+```{r, echo = FALSE}
+# make monthly precipitation anomaly based on 1981-2001 month averages
+  precip_intra_month = nn_precip_mnth %>% 
+    arrange(date) %>% 
+    filter(year(date) <= 2001) %>% 
+    mutate(month = month(date)) %>% 
+    group_by(month) %>% 
+    summarize(mean_precipitation = mean(precipitation))
+  
+  precip_intra_month_anomaly = nn_precip_mnth %>% 
+    mutate(month = month(date)) %>% 
+    merge(precip_intra_month, by = "month")%>%
+    mutate(anomaly = precipitation - mean_precipitation) %>% 
+    mutate(anomaly_ratio = (anomaly/mean_precipitation)) %>% 
+    mutate(sign = ifelse(anomaly < 0, "negative", "positive") ) %>% 
+    arrange(date)
+    
+
+```
+
+```{r, echo = FALSE, fig.width=7}
+# graph it
+precip_anomaly_march <- precip_intra_month_anomaly %>% 
+  filter(month(date) %in% c(3)) %>% 
+  ggplot(aes(x = date, y = anomaly_ratio)) +
+  geom_col(aes(fill = sign)) +
+  labs(title = "March Anomaly") +
+  scale_fill_manual(values = c("negative" = "red", "positive" = "dark green")) +
+  theme_classic()
+
+precip_anomaly_apr <- precip_intra_month_anomaly %>% 
+  filter(month(date) %in% c(4)) %>% 
+  ggplot(aes(x = date, y = anomaly_ratio)) +
+  geom_col(aes(fill = sign)) +
+  labs(title = "April Anomaly") +
+  scale_fill_manual(values = c("negative" = "red", "positive" = "dark green")) +
+  theme_classic()
+
+
+grid.arrange(precip_anomaly_march, precip_anomaly_apr, ncol = 2)
+```
+
+
 #### 6 month SPI
 ```{r, echo = FALSE}
 # change precipitation to SPI
@@ -104,6 +180,8 @@ nn_pdsi_spi <- nn_spi %>%
 plot_cor_pdsi_spi(nn_pdsi_spi, title = "Navajo Nation")
 ```
 
+- SPI and PDSI have a pretty high correlation
+
 #### All mountains SWE vs NN SPI
 
 ```{r, echo = FALSE, fig.width=7}
@@ -112,7 +190,7 @@ plot_spi_swe_all(nn_spi, mtns_swe_wint_anomaly)
 
 ```
 
-
+- April SPI and high elevation swe anomaly have strongest correlation
 
 #### without 2010
 ```{r, echo = FALSE}
@@ -141,7 +219,7 @@ nn_mts_spi_july_plot_n10 <- plot_cor_swe_spi(nn_mts_spi_july_n10,
 
 ```
 
-```{r, echo=FALSE, fig.width=7}
+```{r, echo=FALSE, message = FALSE, fig.width=7}
 
 grid.arrange(nn_mts_spi_apr_plot_n10, nn_mts_spi_may_plot_n10, 
              nn_mts_spi_june_plot_n10, nn_mts_spi_july_plot_n10, ncol = 2)
@@ -151,8 +229,12 @@ grid.arrange(nn_mts_spi_apr_plot_n10, nn_mts_spi_may_plot_n10,
 - taking out 2010 actually just makes it worse
 
 ```{r, echo = FALSE}
+nn_mts_spi_may <- merge_ch_spi(nn_spi, df_swe = mtns_swe_wint_anomaly, months = c(5))
+
 # swe and spi following for MAY spi
-plot_swe_spi(nn_spi, month = c(5), swe_df = mtns_swe_wint_anomaly, region_time = "Navajo Nation May 6 month")
+
+plot_swe_spi(nn_spi, month = c(5), 
+             swe_df = mtns_swe_wint_anomaly, region_time = "Navajo Nation May 6 month")
 
 nn_mts_correct_may <- swe_spi_same(nn_mts_spi_may, type = "total")
 nn_mts_positive_may <- swe_spi_same(nn_mts_spi_may, type = "positive")
@@ -171,6 +253,8 @@ plot_spi_drought_level(nn_spi, month = c(5), region_time = "Navajo Nation May 6 
 ```
 
 ```{r, echo = FALSE}
+nn_mts_spi_apr <- merge_ch_spi(nn_spi, df_swe = mtns_swe_wint_anomaly, months = c(4))
+
 # swe and spi following for April spi
 plot_swe_spi(nn_spi, month = c(4), swe_df = mtns_swe_wint_anomaly, region_time = "Navajo Nation April 6 month")
 
@@ -188,23 +272,130 @@ nn_mts_negative_apr <- swe_spi_same(nn_mts_spi_apr, type = "negative")
 plot_spi_drought_level(nn_spi, month = c(4), region_time = "Navajo Nation April 6 month")
 
 ```
+
 - every time in april there was a drought warning or a drought emergency, it was preceded by a negative anomaly winter swe
 
 
-```{r, echo = FALSE}
-plot_spi_drought_level(nn_spi, month = c(4, 5, 6), region_time = "Navajo Nation April, May, June 6 month") 
-plot_spi_drought_level(nn_spi, month = all_months, region_time = "Navajo Nation 6 month") 
+```{r, echo = FALSE, fig.width=7}
+plot_spi_drought_level(nn_spi, month = c(4), 
+                       region_time = "Navajo Nation April 6 month") 
+
+plot_spi_drought_level(nn_spi, month = all_months, 
+                       region_time = "Navajo Nation 6 month", years = "all") 
 ```
 
-## Watersheds 
+- drought emergency occured in 2018, with drought warnings in 2006 and 2012
 
-### Middle San Juan
+```{r, echo = FALSE}
+# what were the swe anomalies for years that had a drought warning/drought emergency in april?
+
+nn_drought_times <- nn_mts_spi_apr %>% 
+  select(waterYear, spi, swe_anom) %>% 
+  add_drought_severity() %>% 
+  filter(drought == "warning" | drought == "emergency")
+nn_drought_times
+
+
+nn_swe_drought_apr <- nn_mts_spi_apr %>% 
+  select(waterYear, spi, swe_anom) %>% 
+  add_drought_severity() %>% 
+  ggplot(aes(x = waterYear, y = swe_anom,
+             fill = factor(drought, 
+                             levels = c("emergency",
+                                        "warning",
+                                        "alert",
+                                        "normal"))
+               )) +
+  geom_col() +
+  scale_fill_manual(values = c("#d13111", 
+                                "#ffa600", 
+                                "#f1d333", 
+                                "#16990c"), 
+                     labels = c("Drought Emergency", 
+                                "Drought Warning", 
+                                "Drought Alert", 
+                                "Normal")) +
+  labs(
+    x = "Water Year",
+    y = "SWE",
+    fill = "Drought Severity",
+    title = "Winter Swe Anomaly colored by April SPI drought warning"
+  ) +
+  theme_classic()
+
+nn_swe_drought_apr
+```
+
+
+## Watersheds 
 
 ```{r, echo = FALSE}
 # change to spi
 mid_sj_spi <- precip_to_spi(mid_sj_precip)
-
+chaco_spi <- precip_to_spi(chaco_precip)
+chinle_spi <- precip_to_spi(chinle_precip)
+up_pue_spi <- precip_to_spi(up_pue_precip)
 ```
+
+```{r, include = FALSE}
+# combine together to make a correlation matrix
+watersheds_spi <- mid_sj_spi %>% 
+  rename(middle_sj = spi) %>% 
+  left_join(chaco_spi, by = "date") %>% 
+  rename(chaco = spi) %>% 
+  left_join(chinle_spi, by = "date") %>% 
+  rename(chinle = spi) %>% 
+  left_join(up_pue_spi, by = "date") %>% 
+  rename(upper_puerco = spi) %>% 
+  select(date, middle_sj, chaco, chinle, upper_puerco)
+```
+
+
+#### April SPI and Chuska Watershed Anomaly Correlations
+```{r, echo = FALSE}
+# April SPI combined with chuska winter anomaly
+ws_ch_apr <- watersheds_spi %>% 
+  filter(month(date) == 4) %>% 
+  add_water_year() %>% 
+  select(-date) %>% 
+  filter(waterYear >= 2004) %>% 
+  left_join(ch_wint_anom, by = "waterYear") %>% 
+  rename(chuska_anom = anomaly_perc) %>% 
+  column_to_rownames(var = "waterYear")
+```
+
+```{r, echo = FALSE}
+cor_spi_ch_apr <- cor(ws_ch_apr)
+corrplot(cor_spi_ch_apr, method = "ellipse", type = "upper", 
+         addCoef.col = "black", tl.col = "black",  tl.srt=45)
+```
+
+- Middle San Juan April SPI has the highest correlation with Chuska winter swe anom, chinle has the lowest
+- Chinle also has the lowest correlations with other watersheds' SPIs
+
+#### May SPI and Chuska Watershed Anomaly Correlations
+```{r, echo = FALSE}
+# April SPI combined with chuska winter anomaly
+ws_ch_may <- watersheds_spi %>% 
+  filter(month(date) == 5) %>% 
+  add_water_year() %>% 
+  select(-date) %>% 
+  filter(waterYear >= 2004) %>% 
+  left_join(ch_wint_anom, by = "waterYear") %>% 
+  rename(chuska_anom = anomaly_perc) %>% 
+  column_to_rownames(var = "waterYear")
+```
+
+```{r, echo = FALSE}
+cor_spi_ch_may <- cor(ws_ch_may)
+corrplot(cor_spi_ch_may, method = "ellipse", type = "upper", 
+         addCoef.col = "black", tl.col = "black",  tl.srt=45)
+```
+
+- the correlations for may spi across all regions is much lower than for april
+- Middle San Juan still had the higest correlation to Chuska, and Chinle has the least
+
+### Middle San Juan
 
 #### SPI
 ```{r, echo = FALSE}
@@ -218,8 +409,415 @@ summary(mid_sj_spi_lm)
 
 #### Chuska Monthly Winter SWE Anomaly vs SPI
 
+```{r, echo = FALSE, message = FALSE}
+# let's look at the correlations between SPI and chuska swe anom for April-July SPI 
+plot_spi_swe_all(mid_sj_spi, ch_wint_anom)
+
+```
+
+
+- April SPI has the highest correlation (almost significantly!)
+
+#### April SPI and Chuska swe
+```{r, echo = FALSE}
+# dataframe of april spi and chuska
+mid_sj_spi_apr <- merge_ch_spi(mid_sj_spi, df_swe = ch_wint_anom, months = c(4)) 
+
+# swe and spi following for April spi
+plot_swe_spi(mid_sj_spi, month = c(4), swe_df = ch_wint_anom, region_time = "Navajo Nation April 6 month")
+
+mid_sj_correct_apr <- swe_spi_same(mid_sj_spi_apr, type = "total")
+mid_sj_positive_apr <- swe_spi_same(mid_sj_spi_apr, type = "positive")
+mid_sj_negative_apr <- swe_spi_same(mid_sj_spi_apr, type = "negative")
+```
+
+- *April* positive swe & positive spi / positive swe: `r round(mid_sj_positive_apr*100, 3)`%
+- *April* negative swe & negative spi / negative swe: `r mid_sj_negative_apr*100`%
+- *April* total correct: `r mid_sj_correct_apr*100`%
+
+```{r, echo = FALSE}
+plot_spi_drought_level(mid_sj_spi, 
+                       month = c(4), 
+                       region_time = "Navajo Nation April 6 month") 
+```
+
+- drought emergency in 2012 and 2018
+
+```{r, echo = FALSE}
+# chuska winter swe anom and april spi 
+mid_sj_drought_times_all <- mid_sj_spi_apr %>% 
+  select(waterYear, spi, swe_anom) %>% 
+  add_drought_severity() %>% 
+  mutate(watershed = "middle_sj") %>% 
+  select(waterYear, watershed, spi, swe_anom, drought)
+
+mid_sj_drought_times <- mid_sj_drought_times_all %>% 
+    filter(drought == "warning" | drought == "emergency") 
+mid_sj_drought_times
+```
+
+
 ```{r, echo = FALSE}
 
+# graph of swe anomaly with the color relating to what level SPI drought warning follows it
+mid_sj_swe_drought_apr <- mid_sj_spi_apr %>% 
+  select(waterYear, spi, swe_anom) %>% 
+  add_drought_severity() %>% 
+  ggplot(aes(x = waterYear, y = swe_anom,
+             fill = factor(drought, 
+                             levels = c("emergency",
+                                        "warning",
+                                        "alert",
+                                        "normal"))
+               )) +
+  geom_col() +
+  scale_fill_manual(values = c("#d13111", 
+                                "#ffa600", 
+                                "#f1d333", 
+                                "#16990c"), 
+                     labels = c("Drought Emergency", 
+                                "Drought Warning", 
+                                "Drought Alert", 
+                                "Normal")) +
+  labs(
+    x = "Water Year",
+    y = "SWE",
+    fill = "Drought Severity",
+    title = "Winter Swe Anomaly colored by April SPI drought warning"
+  ) +
+  theme_classic()
+
+mid_sj_swe_drought_apr
+```
+
+
+### Chaco 
+
+
+#### SPI
+```{r, echo = FALSE}
+# look at it
+plot_spi(chaco_spi, month = all_months, title = "", years = "all") 
+
+# the linear model info:
+chaco_spi_lm <- lm(chaco_spi$spi ~ chaco_spi$date)
+summary(chaco_spi_lm)
+```
+
+#### Chuska Monthly Winter SWE Anomaly vs SPI
+
+```{r, echo = FALSE, message = FALSE}
+# let's look at the correlations between SPI and chuska swe anom for April-July SPI 
+plot_spi_swe_all(chaco_spi, ch_wint_anom)
+
+```
+
+- April SPI has the highest correlation (almost significantly!)
+
+#### April SPI and Chuska swe
+```{r, echo = FALSE}
+# dataframe of april spi and chuska
+chaco_spi_apr <- merge_ch_spi(chaco_spi, df_swe = ch_wint_anom, months = c(4)) 
+
+# swe and spi following for April spi
+plot_swe_spi(chaco_spi, month = c(4), swe_df = ch_wint_anom, region_time = "Navajo Nation April 6 month")
+
+chaco_correct_apr <- swe_spi_same(chaco_spi_apr, type = "total")
+chaco_positive_apr <- swe_spi_same(chaco_spi_apr, type = "positive")
+chaco_negative_apr <- swe_spi_same(chaco_spi_apr, type = "negative")
+```
+
+- *April* positive swe & positive spi / positive swe: `r round(chaco_positive_apr*100, 3)`%
+- *April* negative swe & negative spi / negative swe: `r chaco_negative_apr*100`%
+- *April* total correct: `r chaco_correct_apr*100`%
+
+```{r, echo = FALSE}
+plot_spi_drought_level(chaco_spi, 
+                       month = c(4), 
+                       region_time = "Navajo Nation April 6 month") 
+```
+- drought emergencies in 2006 and 2018
+
+```{r, echo = FALSE}
+# chuska winter swe anom and april spi 
+chaco_drought_times_all <- chaco_spi_apr %>% 
+  select(waterYear, spi, swe_anom) %>% 
+  add_drought_severity() %>% 
+  mutate(watershed = "chaco") %>% 
+  select(waterYear, watershed, spi, swe_anom, drought)
+
+chaco_drought_times <- chaco_drought_times_all %>% 
+  filter(drought == "warning" | drought == "emergency") 
+chaco_drought_times
+
+```
+
+## Upper Puerco
+
+#### Chuska Monthly Winter SWE Anomaly vs SPI
+
+```{r, echo = FALSE, message = FALSE}
+# let's look at the correlations between SPI and chuska swe anom for April-July SPI 
+plot_spi_swe_all(up_pue_spi, ch_wint_anom)
+
+```
+
+#### April SPI and Chuska swe
+```{r, echo = FALSE}
+# dataframe of april spi and chuska
+up_pue_spi_apr <- merge_ch_spi(up_pue_spi, df_swe = ch_wint_anom, months = c(4)) 
+
+# swe and spi following for April spi
+plot_swe_spi(up_pue_spi, month = c(4), swe_df = ch_wint_anom, region_time = "Navajo Nation April 6 month")
+
+up_pue_correct_apr <- swe_spi_same(up_pue_spi_apr, type = "total")
+up_pue_positive_apr <- swe_spi_same(up_pue_spi_apr, type = "positive")
+up_pue_negative_apr <- swe_spi_same(up_pue_spi_apr, type = "negative")
+```
+
+- *April* positive swe & positive spi / positive swe: `r round(up_pue_positive_apr*100, 3)`%
+- *April* negative swe & negative spi / negative swe: `r up_pue_negative_apr*100`%
+- *April* total correct: `r up_pue_correct_apr*100`%
+
+### Drought severity in spring
+```{r, echo = FALSE}
+plot_spi_drought_level(up_pue_spi, 
+                       month = c(4), 
+                       region_time = "Navajo Nation March, April, May 6 month") 
+```
+
+- there was a drought emergency in 2006 & 2018
+
+
+```{r, echo = FALSE}
+# chuska winter swe anom and april spi 
+up_pue_drought_times_all <- up_pue_spi_apr %>% 
+  select(waterYear, spi, swe_anom) %>% 
+  add_drought_severity() %>% 
+  mutate(watershed = "upper_puerco") %>% 
+  select(waterYear, watershed, spi, swe_anom, drought)
+
+up_pue_drought_times <- up_pue_drought_times_all %>% 
+    filter(drought == "warning" | drought == "emergency") 
+up_pue_drought_times
+
+
+```
+
+
+## Chinle
+
+#### SPI
+
+```{r, echo = FALSE}
+# look at it
+plot_spi(chinle_spi, month = all_months, title = "", years = "all") 
+
+# the linear model info:
+chinle_spi_lm <- lm(chinle_spi$spi ~ chinle_spi$date)
+summary(chinle_spi_lm)
+```
+
+
+#### Chuska Monthly Winter SWE Anomaly vs SPI
+
+```{r, echo = FALSE, message = FALSE}
+# let's look at the correlations between SPI and chuska swe anom for April-July SPI 
+plot_spi_swe_all(chinle_spi, ch_wint_anom)
+
+```
+
+#### April SPI and Chuska swe
+```{r, echo = FALSE}
+# dataframe of april spi and chuska
+chinle_spi_apr <- merge_ch_spi(chinle_spi, df_swe = ch_wint_anom, months = c(4)) 
+
+# swe and spi following for April spi
+plot_swe_spi(chinle_spi, month = c(4), swe_df = ch_wint_anom, region_time = "Navajo Nation April 6 month")
+
+chinle_correct_apr <- swe_spi_same(chinle_spi_apr, type = "total")
+chinle_positive_apr <- swe_spi_same(chinle_spi_apr, type = "positive")
+chinle_negative_apr <- swe_spi_same(chinle_spi_apr, type = "negative")
+```
+
+- *April* positive swe & positive spi / positive swe: `r round(chinle_positive_apr*100, 3)`%
+- *April* negative swe & negative spi / negative swe: `r chinle_negative_apr*100`%
+- *April* total correct: `r chinle_correct_apr*100`%
+
+### Drought severity in spring
+```{r}
+plot_spi_drought_level(chinle_spi, 
+                       month = c(4), 
+                       region_time = "Navajo Nation March, April, May 6 month") 
+
+plot_spi_drought_level(chinle_spi, 
+                       month = all_months, 
+                       region_time = "Navajo Nation March, April, May 6 month",
+                       years = "all")
+```
+
+- drought emergency occured in 2006, 2012, 2018
+
+```{r, echo = FALSE}
+
+chinle_drought_times_all <- chinle_spi_apr %>% 
+  select(waterYear, spi, swe_anom) %>% 
+  add_drought_severity() %>% 
+  mutate(watershed = "chinle") %>% 
+  select(waterYear, watershed, spi, swe_anom, drought)
+
+chinle_drought_times <- chinle_drought_times_all %>% 
+  filter(drought == "warning" | drought == "emergency")
+chinle_drought_times
+
+```
+
+
+
+```{r, echo = FALSE}
+## Make a dataframe of the percent right
+watersheds = c("Middle San Juan", "Chaco", "Upper Puerco", "Chinle")
+
+# ratio of times a negative swe anomaly was followed by a negative spi value #  out of the number of times there was a negative swe anomaly
+negative_apr = c(mid_sj_negative_apr$n, chaco_negative_apr$n,
+                 up_pue_negative_apr$n, chinle_negative_apr$n)
+
+# ratio of times a positive swe anomaly was followed by a positive spi value #  out of the number of times there was a positive swe anomaly
+positive_apr = c(mid_sj_positive_apr$n, chaco_positive_apr$n,
+                 up_pue_positive_apr$n, chinle_positive_apr$n)
+
+# ratio of the times the signs of swe and spi were the same
+total_apr = c(mid_sj_correct_apr$n, chaco_correct_apr$n,
+                 up_pue_correct_apr$n, chinle_correct_apr$n)
+
+ws_same_sign = data.frame(watershed = c(watersheds),
+                          april_negative = c(negative_apr),
+                          april_positive = c(positive_apr),
+                          april_total = c(total_apr))
+
+ws_same_sign
+
+
+```
+
+
+### Relationships between CHuska Swe ANom and April watershed SPI distributions
+
+```{r, echo = FALSE}
+# bind the number of times 
+drought_times <- rbind(up_pue_drought_times, chaco_drought_times,
+                       mid_sj_drought_times, chinle_drought_times)
+
+drought_times_all <- rbind(up_pue_drought_times_all, chaco_drought_times_all,
+                       mid_sj_drought_times_all, chinle_drought_times_all)
+
+
+# anova test
+
+summary(aov(swe_anom ~ drought, data = drought_times_all))
+
+```
+
+```{r}
+## let's test variances
+# what are the variances
+drought_variances <- drought_times_all %>% 
+  group_by(drought) %>% 
+  summarize(standard_deviation = round(sd(swe_anom),3),
+            variance = round(var(swe_anom),3)) %>% 
+  arrange(variance)
+
+# LEvene's test to see if variances are signficiantly different
+drought_levene <- leveneTest(swe_anom ~ drought, 
+                             data = drought_times_all)
+# the p value < 0.001 so variances are not equal 
+
+
+```
+
+
+```{r, echo = FALSE}
+# visualize correlation 
+drought_times_graph <- drought_times_all %>% 
+  ggplot(aes(x = swe_anom, y = spi)) +
+  geom_point(aes(color = factor(drought, 
+                             levels = c("emergency",
+                                        "warning",
+                                        "alert",
+                                        "normal")),
+                 shape = watershed)) +
+  scale_color_manual(values = c("#d13111", 
+                                  "#ffa600", 
+                                  "#f1d333", 
+                                  "#16990c")) +
+  labs(
+    x = "Chuska SWE Winter Anomaly",
+    y = "April SPI",
+    color = "Drought Severity"
+  ) +
+  theme_classic() 
+drought_times_graph
+```
+
+
+```{r, echo = FALSE}
+drought_times_boxplot <- drought_times_all %>% 
+  ggplot(aes(x = watershed, y = swe_anom)) +
+  geom_boxplot(aes(fill = factor(drought, 
+                             levels = c("emergency",
+                                        "warning",
+                                        "alert",
+                                        "normal")
+                             )
+                   )
+               )+
+  scale_fill_manual(values = c("#d13111", 
+                                  "#ffa600", 
+                                  "#f1d333", 
+                                  "#16990c")) +
+  labs(
+    x = "Watershed",
+    y = "Chuska Winter Swe Anomaly",
+    fill = "Drought"
+  ) +
+  theme_classic()
+
+drought_times_boxplot
+```
+
+```{r, echo = FALSE}
+
+drought_times_boxplot_all <- drought_times_all %>% 
+  ggplot(aes(x = factor(drought, 
+                             levels = c("emergency",
+                                        "warning",
+                                        "alert",
+                                        "normal")), 
+                        y = swe_anom)) +
+  geom_boxplot(aes(color = factor(drought, 
+                             levels = c("emergency",
+                                        "warning",
+                                        "alert",
+                                        "normal"))
+                   ))+
+  geom_jitter(aes(color = factor(drought, 
+                             levels = c("emergency",
+                                        "warning",
+                                        "alert",
+                                        "normal"))
+                   )) +
+  scale_color_manual(values = c("#d13111", 
+                                  "#ffa600", 
+                                  "#f1d333", 
+                                  "#16990c")) +
+  labs(
+    x = "Watershed",
+    y = "Chuska Winter Swe Anomaly",
+    color = "Drought"
+  ) +
+  theme_classic()
+
+drought_times_boxplot_all
 
 ```
 

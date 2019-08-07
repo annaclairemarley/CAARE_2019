@@ -826,7 +826,7 @@ ch_wk_max_graph2
 
 ### SWE compared to Suzanne's SCA
 
-```{r, echo = FALSE, warning=FALSE, echo = FALSE, message=FALSE}
+```{r, echo = FALSE, warning=FALSE, echo = FALSE, message=FALSE, error = TRUE}
 
 # read in SG
 ch_sca_month <- read_csv("Chuska/ch_sca_sg.csv") %>% 
@@ -857,7 +857,7 @@ sca_anom <- ch_sca_month %>%
 
 **SCA Anomaly was scaled down by a factor of 10 to improve analysis**
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, error = TRUE}
 # now try and make Suzanne Chuska SCA anomaly overlay my Chuska anomaly
 # make a combined swe and sca anomaly dataframe
 chuska_swe_sca <- ch_anom %>% 
