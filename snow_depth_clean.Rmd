@@ -73,6 +73,9 @@ bm_dpth_daily
 car_an_av <- graph_anwy_metrics(car_depth_wy, mean, title = "Carrizo")
 ch_an_av <- graph_anwy_metrics(ch_depth_wy, mean, title = "Chuska")
 bm_an_av <- graph_anwy_metrics(bm_depth_wy, mean, title = "Black Mesa")
+nm_an_av
+mp_an_av
+dp_an_an
 
 #graphs
 
@@ -99,9 +102,32 @@ return(av)
 car_an <- calc_an_region(car_depth_wy)
 ch_an <- calc_an_region(ch_depth_wy)
 bm_an <- calc_an_region(bm_depth_wy)
+nm_an <- calc_an_region(nm_depth_wy)
+mp_an <- calc_an_region(mp_depth_wy)
+dp_an <- calc_an_region(dp_depth_wy)
 
 # join together
-an_av_all <- join_depth_months(carrizo = car_an, chuska = ch_an, black_mesa = bm_an)
+an_av_all <- join_depth_months("Carrizo" = car_an, "Chuska" = ch_an, 
+                               "Navajo Mt." = nm_an, "Black Mesa" = bm_an,
+                               "Mt. Powell" = mp_an, "Defiance Plateau" = dp_an)
+
+
+# graph it
+an_av_depth_facet <- an_av_all %>% 
+   ggplot(aes(x = waterYear, y = depth_mm)) +
+  geom_col() +
+  facet_wrap(~ factor(region, levels = c("Chuska", "Defiance Plateau",
+                                         "Black Mesa", "Mt. Powell",
+                                         "Carrizo", "Navajo Mt.")
+                      
+                      )) +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(
+    x = "Water Year",
+    y = "Snow Depth (mm)"
+  ) +
+  theme_bw()
+
 
 # graph it
 

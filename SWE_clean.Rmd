@@ -590,7 +590,7 @@ nov_swe <- join_months(carrizo = car_nov_swe, chuska = ch_nov_swe, black_mesa = 
 ```{r, echo = FALSE}
 # plot box plot for each month
 
-nov_swe_plot <- month_bplot_swe(nov_swe, "November Swe")
+nov_swe_plot <- month_bplot_swe(nov_swe, "November")
 
 ```
 
@@ -611,7 +611,7 @@ dec_swe <- join_months(carrizo = car_dec, chuska = ch_dec, black_mesa = bm_dec, 
 ```{r, echo = FALSE}
 # plot box plot for each month
 
-dec_swe_plot <- month_bplot_swe(dec_swe, "December Swe")
+dec_swe_plot <- month_bplot_swe(dec_swe, "December")
 
 ```
 
@@ -632,7 +632,7 @@ jan_swe <- join_months(carrizo = car_jan, chuska = ch_jan, black_mesa = bm_jan, 
 ```{r, echo = FALSE}
 # plot box plot for each month
 
-jan_swe_plot <- month_bplot_swe(jan_swe, "January Swe")
+jan_swe_plot <- month_bplot_swe(jan_swe, "January")
 
 ```
 
@@ -653,7 +653,7 @@ feb_swe <- join_months(carrizo = car_feb, chuska = ch_feb, black_mesa = bm_feb, 
 
 ```{r, echo = FALSE}
 # plot box plot for each month
-feb_swe_plot <- month_bplot_swe(feb_swe, "March Swe")
+feb_swe_plot <- month_bplot_swe(feb_swe, "February")
 ```
 
 
@@ -674,7 +674,7 @@ mar_swe <- join_months(carrizo = car_mar, chuska = ch_mar, black_mesa = bm_mar, 
 ```{r, echo = FALSE}
 # plot box plot for each month
 
-mar_swe_plot <- month_bplot_swe(mar_swe, "March Swe")
+mar_swe_plot <- month_bplot_swe(mar_swe, "March")
 
 ```
 
@@ -697,7 +697,7 @@ apr_swe <- join_months(carrizo = car_apr, chuska = ch_apr, black_mesa = bm_apr, 
 ```{r, echo = FALSE}
 # plot box plot for each month
 
-apr_swe_plot <- month_bplot_swe(apr_swe, "April Swe")
+apr_swe_plot <- month_bplot_swe(apr_swe, "April")
 ```
 
 ### November - April Averaged SWE values

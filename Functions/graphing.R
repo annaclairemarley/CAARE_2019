@@ -67,7 +67,7 @@ plot_anomaly = function(df, title = ""){
     geom_col(aes(fill = sign), show.legend = FALSE) +
     #scale_y_continuous(limits = c(-20, 100)) +
     scale_fill_manual(values = c("negative" = "red", "positive" = "dark green")) +
-    scale_x_date(date_breaks = "3 month", date_labels="%b", name="Month",
+    scale_x_date(date_breaks = "4 month", date_labels="%b", name="Month",
                  sec.axis = sec_axis(~. , name="Water Year",  breaks= breakDates, labels=seq(startWaterYear,endWaterYear,by=1))) +
     labs(
       x = "Date",
