@@ -73,8 +73,6 @@ nn_area_m = 67636000
 
 ### Annual avereage SWE
 ```{r, include = FALSE}
-
-
 # quick function to calculate annual averages
 calc_an_region_swe = function(df) {
 
@@ -445,6 +443,9 @@ corrplot(cor, method = "square", type = "upper",
 carr_mnth_med <- calc_swe_metrics(car_wint_wy, "month", median)
 ch_mnth_med <- calc_swe_metrics(ch_wint_wy, "month", median)
 bm_mnth_med <- calc_swe_metrics(bm_wint_wy, "month", median)
+nm_mnth_med <- calc_swe_metrics(nm_wint_wy, "month", median)
+mp_mnth_med <- calc_swe_metrics(mp_wint_wy, "month", median)
+dp_mnth_med <- calc_swe_metrics(dp_wint_wy, "month", median)
 ```
 
 ```{r,fig.width=20,fig.height=5, echo= FALSE}
@@ -461,6 +462,47 @@ ch_med_graph
 ```{r,fig.width=20,fig.height=5, echo= FALSE}
 bm_med_graph <- graph_with_wateryear(bm_mnth_med, "Black Mesa")
 bm_med_graph
+```
+
+#### Median monthly swe for each region for each month of the water year
+```{r, echo = FALSE}
+# monthly swe profile - median for each month for each region 
+
+# first make the dataframe
+median_swe <- carr_mnth_med %>% 
+  rename("Carrizo" = swe_mm) %>% 
+  left_join(ch_mnth_med, by = "date")  %>% 
+  rename("Chuska" = swe_mm) %>% 
+  left_join(bm_mnth_med, by = "date") %>% 
+  rename("Black Mesa" = swe_mm) %>%
+  left_join(nm_mnth_med, by = "date") %>% 
+  rename("Navajo Mt." = swe_mm) %>%
+  left_join(mp_mnth_med, by = "date") %>% 
+  rename("Mt. Powell" = swe_mm) %>%
+  left_join(dp_mnth_med, by = "date") %>% 
+  rename("Defiance Plateau" = swe_mm) %>% 
+  select(date, 
+         "Navajo Mt.", "Mt. Powell", "Carrizo", 
+         "Black Mesa", "Defiance Plateau", "Chuska") %>% 
+  melt(id.vars = "date") %>% 
+  group_by(month(date, label = TRUE), variable) %>% 
+  summarize(med = median(value))   %>% 
+  rename(month = "month(date, label = TRUE)")
+
+# plot it
+ggplot(median_swe, aes(x = factor(month,
+                                  levels = c("Nov","Dec","Jan",
+                                             "Feb", "Mar", "Apr")), 
+                       y = med, group = variable)) +
+  geom_line(aes(color = variable)) +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(x = "Month",
+       y = "SWE (mm)",
+       color = "Region") +
+  scale_color_manual(values=c("#D53E4F", "#FC8D59", "#FEE08B", "#E6F598", "#99D594", "#3288BD")) +
+  theme_classic()
+
+
 ```
 
 

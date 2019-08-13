@@ -47,9 +47,13 @@ up_pue_precip <- read_csv("watersheds/up_pue_chirps.csv") %>%
 chinle_precip <- read_csv("watersheds/chinle_chirps.csv") %>% 
   arrange(date)
 
+# Tsaile chapter chirps:
+tsaile_precip <- read_csv("Chapters/tsaile_chirps.csv")
+
 # for later use:
 all_months = c(1,2,3,4,5,6,7,8,9,10,11,12)
 ```
+
 
 ```{r, echo = FALSE}
 # read in all mountains winter swe anomaly
@@ -76,9 +80,13 @@ mtns_swe_wint_anomaly <- mtns_swe_mnth_mean %>%
 # read in Chuska Winter swe anomaly
 ch_wint_anom <- read_csv("Chuska/ch_wint_swe_anom.csv") %>% 
   select(waterYear, anomaly_perc)
-
-
 ```
+
+```{r, echo = FALSE}
+# read in Day of year snowmelt
+ch_snowmelt <- read_csv("Chuska/ch_doy_snowmelt.csv")
+```
+
 
 ## Whole Navajo Nation
 ### Precipitation
@@ -350,6 +358,55 @@ watersheds_spi <- mid_sj_spi %>%
   select(date, middle_sj, chaco, chinle, upper_puerco)
 ```
 
+#### CHIRPS SPI vs Gridmet SPI
+```{r, echo = FALSE}
+# read in gridmet precip
+chaco_precip_grid <- read_csv("watersheds/chaco_precip.csv") 
+chinle_precip_grid <- read_csv("watersheds/chinle_precip.csv") 
+mid_sj_precip_grid <- read_csv("watersheds/mid_sj_precip.csv") 
+up_pue_precip_grid <- read_csv("watersheds/upper_puerco_precip.csv") 
+
+#change to spi
+mid_sj_spi_grid <- precip_to_spi(mid_sj_precip_grid)
+chaco_spi_grid <- precip_to_spi(chaco_precip_grid)
+chinle_spi_grid <- precip_to_spi(chinle_precip_grid)
+up_pue_spi_grid <- precip_to_spi(up_pue_precip_grid)
+```
+
+```{r, echo = FALSE}
+# make conglomerate of gridmet spi
+watersheds_spi_grid <- mid_sj_spi_grid %>% 
+  rename(middle_sj_grid = spi) %>% 
+  left_join(chaco_spi_grid, by = "date") %>% 
+  rename(chaco_grid = spi) %>% 
+  left_join(chinle_spi_grid, by = "date") %>% 
+  rename(chinle_grid = spi) %>% 
+  left_join(up_pue_spi_grid, by = "date") %>% 
+  rename(upper_puerco_grid = spi) %>% 
+  select(date, middle_sj_grid, chaco_grid, chinle_grid, upper_puerco_grid) 
+
+# combine it with the other watershed data
+watersheds_spi_grid_chirps <- watersheds_spi_grid %>% 
+  filter(year(date) >= 1982) %>% 
+  left_join(watersheds_spi, by = "date") %>% 
+  column_to_rownames("date") %>% 
+  drop_na()
+```
+
+```{r, echo = FALSE}
+# correlation matrix
+
+# make correlation matrix for april 
+cor_spi_chirps_grid <- cor(watersheds_spi_grid_chirps)
+shirps_grid_p.mat <- cor.mtest(watersheds_spi_grid_chirps)$p # get p values
+
+# makes correlations that hav an insignificant p value have a cross
+corrplot(cor_spi_chirps_grid, method = "ellipse", type = "upper", 
+         addCoef.col = "black", tl.col = "black",  tl.srt=45,
+         p.mat = shirps_grid_p.mat, sig.level = 0.05)
+
+```
+
 
 #### April SPI and Chuska Watershed Anomaly Correlations
 ```{r, echo = FALSE}
@@ -365,9 +422,14 @@ ws_ch_apr <- watersheds_spi %>%
 ```
 
 ```{r, echo = FALSE}
+# make correlation matrix for april 
 cor_spi_ch_apr <- cor(ws_ch_apr)
+ch_apr_p.mat <- cor.mtest(ws_ch_apr)$p # get p values
+
+# makes correlations that hav an insignificant p value have a cross
 corrplot(cor_spi_ch_apr, method = "ellipse", type = "upper", 
-         addCoef.col = "black", tl.col = "black",  tl.srt=45)
+         addCoef.col = "black", tl.col = "black",  tl.srt=45,
+         p.mat = ch_apr_p.mat, sig.level = 0.05)
 ```
 
 - Middle San Juan April SPI has the highest correlation with Chuska winter swe anom, chinle has the lowest
@@ -607,6 +669,15 @@ up_pue_drought_times
 
 ## Chinle
 
+#### Precipitation
+```{r, echo = FALSE}
+
+ggplot(chinle_precip, aes(x = date, y = precipitation)) +
+  geom_col()
+
+```
+
+
 #### SPI
 
 ```{r, echo = FALSE}
@@ -818,6 +889,140 @@ drought_times_boxplot_all <- drought_times_all %>%
   theme_classic()
 
 drought_times_boxplot_all
+
+```
+
+```{r, echo = FALSE}
+# do some stats to see how often different things occur
+
+drought_swe_levels <- drought_times_all %>% 
+  filter(swe_anom >= 0.9) %>% 
+  count(drought) %>% 
+  mutate(perc = n/sum(n))
+
+```
+
+### Tsaile/wheatfields
+
+```{r, echo = FALSE}
+tsaile_spi <- precip_to_spi(tsaile_precip)
+```
+
+```{r, echo = FALSE}
+# look at the SPI
+plot_spi_drought_level(tsaile_spi, 
+                       month = all_months, 
+                       region_time = "Tsaile",
+                       years = "all")
+```
+
+```{r, echo = FALSE}
+# compare to chuska swe
+plot_spi_swe_all(tsaile_spi, ch_wint_anom)
+
+```
+
+```{r, echo = FALSE}
+
+tsaile_spi_apr <- merge_ch_spi(tsaile_spi, 
+                               df_swe = ch_wint_anom, 
+                               months = c(4)) 
+
+tsaile_correct_apr <- swe_spi_same(tsaile_spi_apr, type = "total")
+tsaile_positive_apr <- swe_spi_same(tsaile_spi_apr, type = "positive")
+tsaile_negative_apr <- swe_spi_same(tsaile_spi_apr, type = "negative")
+```
+
+
+### Day of year of snowmelt and SPI
+```{r, echo = FALSE}
+# average day of year of chuska snowmelt
+ch_snowmelt_graph <- ch_snowmelt %>% 
+  rename(mean_doy = doy_snowmelt) %>% 
+  melt(id.vars = "year") %>% 
+  rename(snowmelt_doy = value) %>% 
+  ggplot(aes(x = year, y = snowmelt_doy)) +
+  geom_line(aes(color = variable)) +
+  theme_classic()
+ch_snowmelt_graph
+```
+
+#### April
+```{r, echo = FALSE}
+# look at SPI watersheds and day of snowmelt
+spi_snowmelt_apr <- watersheds_spi %>% 
+  filter(year(date) >= 2001) %>% 
+  filter(year(date) <= 2015) %>% 
+  filter(month(date) == 4) %>% 
+  mutate(year = year(date)) %>% 
+  select(year, middle_sj, chaco, chinle, upper_puerco) %>% 
+  left_join(ch_snowmelt, by = "year") %>% 
+  column_to_rownames("year")
+
+# correlation matrix
+cor_spi_snowmelt_apr <- cor(spi_snowmelt_apr)
+corrplot(cor_spi_snowmelt_apr, method = "ellipse", type = "upper", 
+         addCoef.col = "black", tl.col = "black",  tl.srt=45)
+```
+#### May
+```{r, echo = FALSE}
+# look at SPI watersheds and day of snowmelt
+spi_snowmelt_may <- watersheds_spi %>% 
+  filter(year(date) >= 2001) %>% 
+  filter(year(date) <= 2015) %>% 
+  filter(month(date) == 5) %>% 
+  mutate(year = year(date)) %>% 
+  select(year, middle_sj, chaco, chinle, upper_puerco) %>% 
+  left_join(ch_snowmelt, by = "year") %>% 
+  column_to_rownames("year")
+
+# correlation matrix
+cor_spi_snowmelt_may <- cor(spi_snowmelt_may)
+p.mat <- cor.mtest(spi_snowmelt_may)$p
+corrplot(cor_spi_snowmelt_may, method = "ellipse", type = "upper", 
+         addCoef.col = "black", tl.col = "black",  tl.srt=45,
+         p.mat = p.mat, sig.level = 0.05)
+```
+
+```{r, echo = FALSE}
+# look at SPI watersheds and day of snowmelt
+spi_snowmelt_june <- watersheds_spi %>% 
+  filter(year(date) >= 2001) %>% 
+  filter(year(date) <= 2015) %>% 
+  filter(month(date) == 6) %>% 
+  mutate(year = year(date)) %>% 
+  select(year, middle_sj, chaco, chinle, upper_puerco) %>% 
+  left_join(ch_snowmelt, by = "year") %>% 
+  column_to_rownames("year")
+
+# correlation matrix
+cor_spi_snowmelt_june <- cor(spi_snowmelt_june)
+corrplot(cor_spi_snowmelt_june, method = "ellipse", type = "upper", 
+         addCoef.col = "black", tl.col = "black",  tl.srt=45)
+```
+
+
+```{r, echo = FALSE}
+# Chuska SWE average swe and doy snowmelt
+swe_snowmelt <- ch_wint_anom %>% 
+  filter(waterYear <= 2015) %>% 
+  rename(year = waterYear) %>% 
+  left_join(ch_snowmelt, by = "year") %>% 
+  column_to_rownames("year") %>% 
+  rename(mean_doy = doy_snowmelt,
+         swe_anomaly = anomaly_perc)
+  
+swe_snowmelt_cor <- cor(swe_snowmelt)
+swe_snowmelt_p.mat <- cor.mtest(swe_snowmelt)$p
+corrplot(swe_snowmelt_cor, method = "ellipse", type = "upper", 
+         addCoef.col = "black", tl.col = "black",  tl.srt=45,
+         p.mat = swe_snowmelt_p.mat, sig.level = 0.05)
+```
+
+```{r, echo = FALSE}
+ggplot(swe_snowmelt, aes(x = swe_anomaly, y = mean_doy)) +
+  geom_point() +
+  theme_classic()
 
 ```
 
