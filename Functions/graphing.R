@@ -63,7 +63,7 @@ plot_anomaly = function(df, title = ""){
   breakDates = seq.Date(from = ymd(paste(startWaterYear,1,1, sep='-')), length.out = endWaterYear - startWaterYear + 1, by = "1 year")
   
   plot = df %>% 
-    ggplot(aes(x = date, y = anomaly)) +
+    ggplot(aes(x = date, y = anomaly_perc)) +
     geom_col(aes(fill = sign), show.legend = FALSE) +
     #scale_y_continuous(limits = c(-20, 100)) +
     scale_fill_manual(values = c("negative" = "red", "positive" = "dark green")) +
@@ -71,10 +71,16 @@ plot_anomaly = function(df, title = ""){
                  sec.axis = sec_axis(~. , name="Water Year",  breaks= breakDates, labels=seq(startWaterYear,endWaterYear,by=1))) +
     labs(
       x = "Date",
-      y = "Anomaly",
+      y = "Anomaly (%)",
       title = sprintf("%s", title)
     ) +
-    theme_classic()
+    theme_classic() +
+    theme(panel.border = element_rect(colour =
+                                        "black", fill=NA, size=2),
+          axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 12),
+          axis.title.y = element_text(size = 12),
+          axis.title.x = element_text(size = 12)) 
   
   
   return(anomaly_plot = plot)
@@ -728,7 +734,11 @@ plot_spi_drought_level = function(spi_df, month, region_time = "", years = "") {
       fill = "Drought Severity",
       title = sprintf("%s SPI Drought Conditions", region_time)
     )+
-    theme_classic()
+    theme_classic() +
+    theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 12),
+          axis.title.y = element_text(size = 12),
+          axis.title.x = element_text(size = 12))
   
   if (years == "all") {
     
@@ -794,6 +804,11 @@ plot_cor_pdsi_spi = function(df, title = "") {
 
 plot_spi_swe_all = function(spi_df, swe_df){
     
+    spi_mar <- merge_ch_spi(spi_df, df_swe = swe_df, months = c(3)) 
+    
+    mar_plot <- plot_cor_swe_spi(spi_mar,
+                                 title = "Winter SWE Anomaly & March SPI")
+  
     spi_apr <- merge_ch_spi(spi_df, df_swe = swe_df, months = c(4)) 
     
     apr_plot <- plot_cor_swe_spi(spi_apr,
@@ -812,8 +827,89 @@ plot_spi_swe_all = function(spi_df, swe_df){
                                              title = "Winter SWE Anomaly & July SPI")
     
     
-    grid <- grid.arrange(apr_plot, may_plot, 
-                 june_plot, july_plot, ncol = 2)
+    grid <- grid.arrange(mar_plot, apr_plot, may_plot, 
+                 june_plot, ncol = 2)
 
     return(grid)
+}
+
+#####################################################################
+#####################################################################
+#' plot_spi_swe_box
+#' 
+#' plots chuska swe anomaly grouped by following spi drought severity
+#'
+#' @param chuska_spi_df df that has combination of month spi and chuska swe
+#' @param month_name name of the month of the spi youre looking at
+#'
+
+plot_spi_swe_box = function(chuska_spi_df, month_name = ""){
+ 
+   boxplot <- chuska_spi_df %>% 
+    ggplot(aes(x = factor(drought, 
+                          levels = c("emergency",
+                                     "warning",
+                                     "alert",
+                                     "normal")), 
+               y = anomaly_perc)) +
+    geom_jitter(aes(color = factor(drought, 
+                                   levels = c("emergency",
+                                              "warning",
+                                              "alert",
+                                              "normal"))
+    ), show.legend = FALSE) +
+    geom_boxplot(aes(color = factor(drought, 
+                                    levels = c("emergency",
+                                               "warning",
+                                               "alert",
+                                               "normal")),
+                     alpha = 0.001), show.legend = FALSE)+
+    
+    scale_color_manual(values = c("#d13111", 
+                                  "#ffa600", 
+                                  "#f1d333", 
+                                  "#16990c")) +
+    labs(
+      x = sprintf("%s Drought Severity", month_name),
+      y = "Chuska Winter SWE Anomaly",
+      color = "Drought"
+    ) +
+    theme_classic()
+
+    return(boxplot)
+}
+
+#####################################################################
+#####################################################################
+#' plot_spi_swe_point
+#' 
+#' plots chuska swe anomaly grouped by following spi drought severity
+#'
+#' @param chuska_spi_df df that has combination of month spi and chuska swe
+#' @param month_name name of the month of the spi youre looking at
+#'
+
+plot_spi_swe_point = function(chuska_spi_df, month_name = "") {
+ 
+   drought_times_graph <- chuska_spi_df %>% 
+    ggplot(aes(x = anomaly_perc, y = spi)) +
+    geom_point(aes(color = factor(drought, 
+                                  levels = c("emergency",
+                                             "warning",
+                                             "alert",
+                                             "normal")))) +
+    scale_color_manual(values = c("#d13111", 
+                                  "#ffa600", 
+                                  "#f1d333", 
+                                  "#16990c")) +
+    geom_smooth(method = "lm", se = FALSE) +
+    labs(
+      x = "Chuska SWE Winter Anomaly",
+      y = sprintf("%s SPI", month_name),
+      color = "Drought Severity"
+    ) +
+    theme_classic() 
+
+  return(drought_times_graph)
+
 }

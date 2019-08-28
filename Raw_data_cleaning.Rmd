@@ -349,3 +349,25 @@ chinle_chirps <- read_chunks("data_download/data",
                              variable = "precipitation")
 write.csv(chinle_chirps, "watersheds/chinle_chirps.csv", row.names = FALSE)
 ```
+
+
+## Chapter CHIRPS
+```{r}
+# add may 2019 to tsaile
+tsaile_chirps_all <- read_chunks("Chapters", 
+                                fill_pattern = "tsaile_chirps*", variable = "precipitation") %>% 
+  arrange(date)
+
+write.csv(tsaile_chirps_all, "Chapters/tsaile_chirps_all.csv", row.names = FALSE)
+```
+
+```{r}
+# put together Crystal chirps
+
+crystal_chirps_all <- read_chunks("Chapters", 
+                                fill_pattern = "CRYSTAL_CHIRPS_*", variable = "precipitation") %>% 
+  arrange(date)
+
+write.csv(crystal_chirps_all, "Chapters/crystal_chirps_all.csv", row.names = FALSE)
+```
+

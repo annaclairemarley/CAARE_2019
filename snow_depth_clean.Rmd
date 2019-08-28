@@ -73,9 +73,7 @@ bm_dpth_daily
 car_an_av <- graph_anwy_metrics(car_depth_wy, mean, title = "Carrizo")
 ch_an_av <- graph_anwy_metrics(ch_depth_wy, mean, title = "Chuska")
 bm_an_av <- graph_anwy_metrics(bm_depth_wy, mean, title = "Black Mesa")
-nm_an_av
-mp_an_av
-dp_an_an
+
 
 #graphs
 
@@ -212,18 +210,18 @@ bm_mn_av_graph
 
 # first make the dataframe
 av_month_depth_all <- car_mn_av %>% 
-  rename(carrizo = depth_mm) %>% 
+  rename("Carrizo" = depth_mm) %>% 
   merge(ch_mn_av, by = "date") %>% 
-  rename(chuska = depth_mm) %>% 
+  rename("Chuska" = depth_mm) %>% 
   merge(bm_mn_av, by = "date") %>% 
-  rename(black_mesa = depth_mm) %>% 
+  rename("Black Mesa" = depth_mm) %>% 
   select(-waterYear, -waterYear.x, -waterYear.y) %>% 
   merge(nm_mn_av, by = "date") %>% 
-  rename(navajo_mt = depth_mm) %>% 
+  rename("Navajo Mt." = depth_mm) %>% 
   merge(mp_mn_av, by = "date") %>% 
-  rename(mt_powell = depth_mm) %>% 
+  rename("Mt. Powell" = depth_mm) %>% 
   merge(dp_mn_av, by = "date") %>% 
-  rename(defiance_plateau = depth_mm) %>% 
+  rename("Defiance Plateau" = depth_mm) %>% 
   select(-waterYear, -waterYear.x, -waterYear.y) %>% 
   remove_rownames() %>% 
   column_to_rownames(var = "date")
@@ -234,8 +232,10 @@ av_month_depth_all <- car_mn_av %>%
 ```{r, echo = FALSE}
 # correlation matrix
 cor <- cor(av_month_depth_all)
-corrplot(cor, method = "ellipse", type = "upper", 
-         addCoef.col = "black", tl.col = "black",  tl.srt=45)
+swe_p.mat <- cor.mtest(av_month_depth_all)$p
+corrplot(cor, method = "square", type = "upper", 
+         addCoef.col = "white", tl.col = "black",  tl.srt=45,
+         p.mat = swe_p.mat, sig.level = 0.05)
 
 ```
 

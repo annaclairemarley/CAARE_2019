@@ -22,7 +22,6 @@ source("Functions/util.R")
 source('Functions/graphing.R')
 ```
 
-
 This Rmarkdown uses data extracted by Suzanne Goldstein from Google EArth Engine
 
 data include:
@@ -30,13 +29,259 @@ data include:
 - monthly mean temperature data from PRISM  
 - anomalies for each mountain region of the Navajo Nation during the period 2002-2018 as compared to the 30-year normal for the period 1981-2010. 
 
-
-```{r, echo = FALSE}
+```{r, echo = FALSE, include = FALSE}
 
 temp_anom <- read_csv("NN_whole/SG_mnthly_PRISM_anom_frm_30yr_norm_81_10.csv") %>% 
   clean_names()
 
+temp <- read_csv("NN_whole/SG_monthly_PRISM.csv") %>% 
+  clean_names()
+
+temp_max <- read_csv("NN_whole/SG_mnthly_max_prism.csv") %>% 
+  clean_names()
+
 ```
+
+```{r, echo = FALSE, include = FALSE}
+# chuska monthly winter swe
+ch_wint_swe <- read_csv("winter_wy/ch_swe_wy_03_19.csv")
+
+# chuska winter anomaly
+ch_wint_anom <- read_csv("Chuska/ch_wint_swe_anom.csv") %>% 
+  select(waterYear, anomaly_perc)
+
+```
+
+```{r, echo = FALSE}
+# chuska monthly anomaly
+ch_mnth_anom <- ch_wint_swe %>% 
+  calc_swe_metrics("month", mean) %>% 
+  calc_month_anom() %>% 
+  arrange(date) 
+
+```
+
+### Mean winter temperature
+```{r, echo = FALSE}
+wint_temp_all <- temp %>% 
+  filter(month(date) %in% c(11,12,1,2,3,4)) %>% 
+  melt(id.vars = "date") %>% 
+  add_water_year() %>% 
+  group_by(waterYear, variable) %>% 
+  summarize(mean_temp = mean(value)) 
+
+ggplot(wint_temp_all, aes(x = waterYear, y = mean_temp)) +
+  geom_line(aes(color = variable)) +
+  labs(x = "Water Year",
+       y = "Mean Winter Temperature (degrees C)") +
+  scale_x_continuous(expand = c(0,0)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_classic()
+
+
+```
+
+## Chuska
+
+### Average winter temperature
+```{r, echo = FALSE}
+# average winter temp
+wint_temp_chuska <- temp %>% 
+  filter(month(date) %in% c(11,12,1,2,3,4)) %>% 
+  select(date, chuska) %>% 
+  add_water_year() %>% 
+  group_by(waterYear) %>% 
+  summarize(mean_temp = mean(chuska)) 
+
+ggplot(wint_temp_chuska, aes(x = waterYear, y = mean_temp)) +
+  geom_line() +
+  labs(x = "Water Year",
+       y = "Mean Winter Temperature (degrees C)") +
+  scale_x_continuous(expand = c(0,0)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_classic()
+
+mean_temp_lm <- lm(mean_temp ~ waterYear, data = wint_temp_chuska)
+summary(mean_temp_lm)
+
+# slope is 0.05 and p value < 0.0001
+```
+- mean winter temperature has been increasing since 1980s
+- slope of the line if 0.05 and p value < 0.0001
+
+### Chuska winter swe anomaly and chuska winter temperature
+```{r, echo = FALSE}
+#chuska winter swe anomaly and mean winter temperature
+ch_temp <- ch_wint_anom %>% 
+  left_join(wint_temp_chuska, by = "waterYear") %>% 
+  rename(swe_anom = anomaly_perc)
+
+ggplot(ch_temp, aes(x = mean_temp, y = swe_anom)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Chuska Mean Winter Temperature (C)",
+       y = "Chuska SWE Winter Anomaly")
+
+cor.test(ch_temp$swe_anom, ch_temp$mean_temp)
+```
+
+- Winter mean temperature and winter swe anomaly are negative correlated (r = -4.1, but not significantly)
+
+### monthly max
+```{r}
+# average of the winter monthly maximums
+wint_av_max_chuska <- temp_max %>% 
+  filter(month(date) %in% c(11,12,1,2,3,4)) %>% 
+  select(date, chuska) %>% 
+  add_water_year() %>% 
+  group_by(waterYear) %>% 
+  summarize(mean_temp_max = mean(chuska)) 
+
+```
+
+```{r, echo = FALSE}
+ggplot(wint_av_max_chuska, aes(x = waterYear, y = mean_temp_max)) +
+  geom_line() +
+  labs(x = "Water Year",
+       y = "Mean of Monthly Maximum Winter Temperatures (degrees C)") +
+  scale_x_continuous(expand = c(0,0)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_classic()
+```
+
+## Actual monthly SWE values compared to mean temperature chuska
+
+```{r, echo = FALSE}
+ch_swe_temp_av <- ch_wint_swe %>% 
+  calc_swe_metrics("month", mean) %>% 
+  left_join(temp, by = "date") %>% 
+  select(date, swe_mm, chuska) %>% 
+  mutate(month = month(date, label = TRUE))
+
+ggplot(ch_swe_temp_av, aes(x = chuska, y = swe_mm)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Mean Monthly Temperature (degrees C)",
+    y = "Mean Monthly SWE (mm)"
+  ) +
+  scale_x_continuous(expand = c(0,0)) +
+  theme_classic()
+
+# correlation
+cor.test(ch_swe_temp_av$swe_mm, ch_swe_temp_av$chuska)
+# r = -0.27, p value = 0.008
+```
+
+### Relationship between Chuska winter swe and month average temperature
+```{r, fig.width=7, echo = FALSE}
+plot_month = function(df, name_month = "", title = "") {
+    
+    filter_month <- df %>% 
+      filter(month == name_month)
+  
+    coef = cor.test(filter_month$swe_mm, filter_month$chuska)$estimate
+    p_value = cor.test(filter_month$swe_mm, filter_month$chuska)$p.value
+   
+    plot <- filter_month %>% 
+      ggplot(aes(x = chuska, y = swe_mm)) +
+      geom_point() +
+      geom_smooth(method = "lm", se = FALSE) +
+      labs(
+        x = "Mean Monthly Temperature (degrees C)",
+        y = "Mean Monthly SWE (mm)",
+        title = sprintf("%s", title),
+        subtitle = sprintf("r = %s | p-value = %s", round(coef, 2), round(p_value,2))
+      ) +
+      scale_x_continuous(expand = c(0,0)) +
+      theme_classic()
+    return(plot)
+}
+
+jan <- plot_month(ch_swe_temp_av, name_month = "Jan", title = "January")
+feb <- plot_month(ch_swe_temp_av, name_month = "Feb", title = "February")
+mar <- plot_month(ch_swe_temp_av, name_month = "Mar", title = "March")
+apr <- plot_month(ch_swe_temp_av, name_month = "Apr", title = "April")
+nov <- plot_month(ch_swe_temp_av, name_month = "Nov", title = "November")
+dec <- plot_month(ch_swe_temp_av, name_month = "Dec", title = "December")
+
+grid.arrange(nov, dec, jan, feb, mar, apr, ncol = 3)
+
+```
+
+
+```{r, echo = FALSE}
+cor.test(ch_swe_temp_av$chuska, ch_swe_temp_av$swe_mm)
+summary(lm(ch_swe_temp_av$swe_mm ~ ch_swe_temp_av$chuska))
+
+```
+
+- Chuska monthly mean temperature and chuska mean monthly SWE have a negative correlation of 
+
+```{r, echo = FALSE}
+ch_swe_temp_av_max <- ch_wint_swe %>% 
+  calc_swe_metrics("month", mean) %>% 
+  left_join(temp_max, by = "date") %>% 
+  select(date, swe_mm, chuska)
+
+ggplot(ch_swe_temp_av_max, aes(x = chuska, y = swe_mm)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Chuska Max Monthly Temp (C)",
+    y = "Chuska Mean Monthly SWE (mm)"
+  ) +
+  scale_x_continuous(expand = c(0,0)) +
+  theme_classic()
+```
+
+```{r, echo = FALSE}
+
+cor.test(ch_swe_temp_av_max$chuska, ch_swe_temp_av_max$swe_mm)
+
+```
+
+
+## Temperature anomaly from 1980-what? normals
+```{r, echo = FALSE}
+# average winter anomaly 
+wint_anom_chuska <- temp_anom %>% 
+  filter(month(date) %in% c(11,12,1,2,3,4)) %>% 
+  select(date, chuska) %>% 
+  add_water_year() %>% 
+  group_by(waterYear) %>% 
+  summarize(mean_anom = mean(chuska)) 
+
+ggplot(wint_anom_chuska, aes(x = waterYear, y = mean_anom)) +
+  geom_line() +
+  theme_classic()
+```
+
+```{r, include=FALSE}
+# read in Chuska Winter swe anomaly
+ch_wint_anom <- read_csv("Chuska/ch_wint_swe_anom.csv") %>% 
+  select(waterYear, anomaly_perc)
+```
+
+```{r, echo = FALSE}
+
+ch_temp <- ch_wint_anom %>% 
+  left_join(wint_anom_chuska, by = "waterYear") 
+
+
+ggplot(ch_temp, aes(x = mean_anom, y = anomaly_perc)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Mean temperature anomaly",
+    y = "Swe Anomaly"
+  )
+
+
+cor.test(ch_temp$anomaly_perc, ch_temp$mean_anom)
+```
+do i want to include temperature?
+
 
 ### Anomalies
 ```{r, echo = FALSE}
@@ -57,7 +302,45 @@ anom_graph
 
 summary(lm(temp_anom$navajo_nation ~ temp_anom$date))
 
+anom_graph_ch <- temp_anom %>% 
+  ggplot(aes(x = date, y = chuska)) +
+  geom_line(color = "red") +
+  geom_smooth(method = "lm") +
+  scale_x_date(expand = c(0,0)) +
+  labs(
+    x = "Year",
+    y = "Temperature Anomaly",
+    title = "Chuska PRISM Temperature Anomaly"
+  ) +
+  theme_classic() 
 
+anom_graph_ch
+
+```
+
+```{r, echo = FALSE}
+
+# relationship between Chuska monthly temperature anomaly and chuska monthly swe anomaly
+ch_temp_swe_anom <- temp_anom %>% 
+  filter(year(date) >= 2003) %>% 
+  filter(month(date) %in% c(11,12,1,2,3,4)) %>% 
+  select(date, chuska) %>% 
+  left_join(ch_mnth_anom, by = "date") %>% 
+  tail(-4) %>% 
+  select(date, waterYear, chuska, anomaly_perc) %>% 
+  rename(temp_anom = chuska) %>% 
+  mutate(swe_anom = anomaly_perc/100) %>% 
+  select(-anomaly_perc)
+
+cor.test(ch_temp_swe_anom$temp_anom, ch_temp_swe_anom$swe_anom)
+
+```
+
+```{r}
+# visualize it
+ggplot(ch_temp_swe_anom, aes(x = temp_anom, swe_anom)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
 
 ```
 

@@ -1,0 +1,572 @@
+---
+title: "SPI_chapters"
+author: "AnnaClaire Marley"
+date: "8/15/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This RMarkdown analyzes SPI for Chuska and the chapters bordering it.
+
+```{r, include = FALSE}
+# load the packages
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(gridExtra)
+library(grid)
+library(dataRetrieval)
+library(reshape2)
+library(corrplot)
+library(precintcon)
+library(onewaytests)
+library(car)
+source("Functions/util.R")
+source('Functions/graphing.R')
+```
+
+```{r, echo = FALSE}
+# read in chirps data for all the chapters
+
+chinle_ch_chirps <- read_csv("Chapters/CHINLE_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+cove_chirps <- read_csv("Chapters/COVE_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+crystal_chirps <- read_csv("Chapters/crystal_chirps_all.csv")
+fort_defiance_ch_chirps <- read_csv("Chapters/FORT%20DEFIANCE_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+lukachukai_chirps <- read_csv("Chapters/LUKACHUKAI_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+mexican_springs_chirps <- read_csv("Chapters/MEXICAN%20SPRINGS_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+nashitti_chirps <- read_csv("Chapters/NASHITTI_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+red_lake_chirps <- read_csv("Chapters/RED%20LAKE_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+red_valley_chirps <- read_csv("Chapters/RED%20VALLEY_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+round_rock_chirps <- read_csv("Chapters/ROUND%20ROCK_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+sanostee_chirps <- read_csv("Chapters/SANOSTEE_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+sawmill_chirps <- read_csv("Chapters/SAWMILL_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+sheep_springs_chirps <- read_csv("Chapters/SHEEP%20SPRINGS_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+tohatchi_chirps <- read_csv("Chapters/TOHATCHI_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+tsaile_chirps <- read_csv("Chapters/tsaile_chirps_all.csv") 
+twin_lakes_chirps <- read_csv("Chapters/TWIN%20LAKES_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+two_grey_hills_chirps <- read_csv("Chapters/TWO%20GREY%20HILLS_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+```
+
+```{r, echo = FALSE}
+# read in chuska chirps
+chuska_chirps <- read_csv("Chuska/Chuska_CHIRPS_daily_1981-01-01_2019-07-17.csv")
+
+# read in chuska winter anom - this is for Nov-April
+ch_wint_anom <- read_csv("Chuska/ch_wint_swe_anom.csv") %>% 
+  select(waterYear, anomaly_perc)
+
+```
+
+```{r, echo = FALSE}
+# Chuska monthly total precip
+chuska_precip_total <- chuska_chirps %>% 
+  group_by(date = floor_date(Date, "month")) %>% 
+  summarize(month_total = sum(precipitation))
+
+# Chuska monthly average precip
+chuska_precip_mean <- chuska_chirps %>% 
+  group_by(date = floor_date(Date, "month")) %>% 
+  summarize(month_total = mean(precipitation))
+
+# change precip to spi
+chuska_spi <- precip_to_spi(chuska_chirps) 
+
+```
+
+
+```{r, echo = FALSE}
+## make chuska winter anomaly be November-March
+chuska_swe <- read_csv("winter_wy/ch_swe_wy_03_19.csv")
+chuska_swe_mnth_av <- calc_swe_metrics(chuska_swe, "month", mean)
+chuska_mnth_anom <- calc_month_anom(chuska_swe_mnth_av) %>% 
+  arrange(date)
+
+# chuska winter swe anomaly w/o april
+chuska_swe_wint_anom_napr <- chuska_swe_mnth_av %>% 
+  filter(month(date) != 4) %>% 
+  group_by(waterYear) %>% 
+  summarize(mean_swe = mean(swe_mm)) %>% 
+  ungroup() %>% 
+  mutate(anomaly = (mean_swe - mean(mean_swe))) %>% 
+  mutate(anomaly_perc = anomaly/mean(mean_swe)) %>% 
+  select(waterYear, anomaly_perc)
+
+```
+
+```{r,echo = FALSE}
+# join together chuska monthly average swe and total monthly precip
+chuska_swe_precip <- chuska_swe_mnth_av %>% 
+  left_join(chuska_precip_total, by = "date")
+
+ggplot(chuska_swe_precip, aes(x = month_total, y = swe_mm)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs( x = "Total Monthly Precipitation (mm)",
+        y = "Mean Monthly SWE (mm)",
+        title = "Chuska") +
+  theme_classic()
+
+# correlation monthly average swe, total precip
+cor.test(chuska_swe_precip$month_total, chuska_swe_precip$swe_mm)
+# r = 0.308, p value = 0.002
+
+# join together chuska monthly average swe and mean monthly precip
+chuska_swe_precip_mean <- chuska_swe_mnth_av %>% 
+  left_join(chuska_precip_mean, by = "date")
+
+ggplot(chuska_swe_precip_mean, aes(x = month_total, y = swe_mm)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs( x = "Mean Monthly Precipitation (mm)",
+        y = "Mean Monthly SWE (mm)",
+        title = "Chuska") +
+  theme_classic()
+
+# correlation monthly average swe, total precip
+cor.test(chuska_swe_precip_mean$month_total, chuska_swe_precip_mean$swe_mm)
+# r = 0.314, p value = 0.001
+
+```
+
+
+```{r, echo = FALSE}
+# april spi
+chuska_spi_apr <- chuska_spi %>% 
+  filter(month(date) == 4 ) %>% 
+  add_water_year()
+
+# compare chuska spi and chuska swe anom
+ch_wint_spi_apr <- ch_wint_anom %>% 
+  left_join(chuska_spi_apr, by = "waterYear")
+
+ggplot(ch_wint_spi_apr, aes(x = anomaly_perc, y = spi)) +
+  geom_point(aes(size = waterYear)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Chuska winter SWE anomaly",
+       y = "Chuska April SPI")
+
+cor.test(ch_wint_spi_apr$anomaly_perc, ch_wint_spi_apr$spi)
+# r = 0.5, p value = 0.07
+
+```
+
+```{r, echo = FALSE}
+# march spi
+chuska_spi_mar <- chuska_spi %>% 
+  filter(month(date) == 3 ) %>% 
+  add_water_year()
+
+# compare chuska spi and chuska swe anom
+ch_wint_spi_mar <- chuska_swe_wint_anom_napr %>% 
+  left_join(chuska_spi_mar, by = "waterYear")
+
+ggplot(ch_wint_spi_mar, aes(x = anomaly_perc, y = spi)) +
+  geom_point(aes(size = waterYear)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Chuska winter SWE anomaly",
+       y = "Chuska March SPI")
+
+cor.test(ch_wint_spi_mar$anomaly_perc, ch_wint_spi_mar$spi)
+# r = 0.5, p value = 0.06
+
+```
+
+```{r, echo = FALSE}
+# list of chirps dataframes for functions below
+list_chirps = list(chinle_ch_chirps, cove_chirps, crystal_chirps,
+                   fort_defiance_ch_chirps, lukachukai_chirps, 
+                   mexican_springs_chirps, nashitti_chirps, red_lake_chirps, 
+                red_valley_chirps, round_rock_chirps, sanostee_chirps, sawmill_chirps, 
+                sheep_springs_chirps,tohatchi_chirps, tsaile_chirps, twin_lakes_chirps,
+                two_grey_hills_chirps)
+```
+
+
+```{r, echo = FALSE}
+# make a function to read turn all of the chirps data into spi
+
+spi_list <- lapply(list_chirps, precip_to_spi) 
+
+# spi dataframes & rename
+chinle_ch_spi <- spi_list[[1]] %>% 
+  rename("CHINLE" = spi)
+cove_spi <- spi_list[[2]]  %>% 
+  rename("COVE" = spi)
+crystal_spi <- spi_list[[3]] %>% 
+  rename("CRYSTAL" = spi)
+fort_defiance_ch_spi <- spi_list[[4]] %>% 
+  rename("FORT DEFIANCE" = spi)
+lukachukai_spi <- spi_list[[5]] %>% 
+  rename("LUKACHUKAI" = spi)
+mexican_springs_spi <- spi_list[[6]] %>% 
+  rename("MEXICAN SPRINGS" = spi)
+nashitti_spi <- spi_list[[7]] %>% 
+  rename("NASHITTI" = spi)
+red_lake_spi <- spi_list[[8]] %>% 
+  rename("RED LAKE" = spi)
+red_valley_spi <- spi_list[[9]]  %>% 
+  rename("RED VALLEY" = spi)
+round_rock_spi <- spi_list[[10]] %>% 
+  rename("ROUND ROCK" = spi)
+sanostee_spi <- spi_list[[11]] %>% 
+  rename("SANOSTEE" = spi)
+sawmill_spi <- spi_list[[12]] %>% 
+  rename("SAWMILL" = spi)
+sheep_springs_spi <- spi_list[[13]] %>% 
+  rename("SHEEP SPRINGS" = spi)
+tohatchi_spi <- spi_list[[14]]  %>% 
+  rename("TOHATCHI" = spi)
+tsaile_spi <- spi_list[[15]]  %>% 
+  rename("TSAILE/WHEATFIELDS" = spi)
+twin_lakes_spi <- spi_list[[16]]  %>% 
+  rename("TWIN LAKES" = spi)
+two_grey_hills_spi <- spi_list[[17]]  %>% 
+  rename("TWO GREY HILLS" = spi)
+
+spis_df = list(chinle_ch_spi, cove_spi, crystal_spi, fort_defiance_ch_spi,
+               lukachukai_spi, mexican_springs_spi, nashitti_spi, red_lake_spi,
+               red_valley_spi, round_rock_spi, sanostee_spi, sawmill_spi, 
+               sheep_springs_spi, tohatchi_spi, tsaile_spi, twin_lakes_spi,
+               two_grey_hills_spi)
+```
+
+```{r, echo = FALSE}
+# combine all the spis into one dataframe
+spi_chapters <- spis_df %>% 
+  reduce(left_join, by = "date") %>% 
+  select(-contains("sign")) %>% 
+  add_water_year()
+
+```
+
+```{r, echo = FALSE}
+# quickly see how well they correlate with eachother
+chapters_corr <- spi_chapters %>% 
+  column_to_rownames("date") %>% 
+  cor()
+
+corrplot(chapters_corr, method = "ellipse", type = "upper", 
+         addCoef.col = "black", tl.col = "black",  tl.srt=45)
+```
+
+```{r, echo = FALSE}
+# filter to certain months 
+spi_chapters_mar <- spi_chapters %>% 
+  filter(month(date) == 3)
+
+spi_chapters_apr <- spi_chapters %>% 
+  filter(month(date) == 4)
+
+spi_chapters_may <- spi_chapters %>% 
+  filter(month(date) == 5)
+
+```
+
+```{r, echo = FALSE}
+# get march, april, and may spi correlations with chuska swe anom
+chapt_ch_mar <- chapt_chusk_cor(spi_chapters_mar) 
+chapt_ch_apr <- chapt_chusk_cor(spi_chapters_apr)
+chapt_ch_may <- chapt_chusk_cor(spi_chapters_may)
+```
+
+```{r, echo = FALSE}
+# put all the correlations into one dataframe
+# so this shows the correlations between each chapter's march, april and may spi with chuska winter swe anomaly #
+chapter_chuska_cor <- chapt_ch_mar %>% 
+  rename(march = ch_swe_anom) %>% 
+  left_join(chapt_ch_apr, by = "regions") %>% 
+  rename(april = ch_swe_anom) %>% 
+  left_join(chapt_ch_may) %>% 
+  rename(may = ch_swe_anom) %>% 
+  rename("Chapter_Na" = regions) %>% 
+  filter(Chapter_Na != "ch_swe_anom")
+```
+
+```{r, echo = FALSE}
+# let's see who has higher correlations
+boxplot <- chapter_chuska_cor %>% 
+  melt(id.vars = "Chapter_Na") %>% 
+  ggplot(aes(x = variable, y = value)) +
+  geom_boxplot()
+boxplot
+# highest median correlation is in march
+
+# however, the march correlation is bad because its using november-april winter anomaly when april hasnt happened yet for march spi
+```
+
+### March spi without april swe 
+```{r, echo = FALSE}
+#now let's look at chuska winter anom correlations without april
+chapt_ch_mar_napr <- chapt_chusk_cor(spi_chapters_mar, 
+                                     anom = chuska_swe_wint_anom_napr) 
+
+# let's compare the march values
+march_cor_napr <- chapt_ch_mar %>% 
+  rename(march = ch_swe_anom) %>% 
+  left_join(chapt_ch_mar_napr, by = "regions") %>% 
+  rename(march_napril = ch_swe_anom) %>% 
+  rename("Chapter_Na" = regions) %>% 
+  filter(Chapter_Na != "ch_swe_anom")
+
+# let's see who has higher correlations
+boxplot_marches <- march_cor_napr %>% 
+  melt(id.vars = "Chapter_Na") %>% 
+  ggplot(aes(x = variable, y = value)) +
+  geom_boxplot()
+boxplot_marches
+```
+
+```{r}
+# chuska winter swe without april and march spi
+chuska_spi_mar_napr <- spi_chapters_mar %>% 
+  filter(waterYear >= 2004) %>% 
+  select(-date) %>% 
+  melt(id.vars = "waterYear") %>% 
+  rename(chapter = variable,
+         spi = value) %>% 
+  left_join(chuska_swe_wint_anom_napr, by = "waterYear") %>% 
+  add_drought_severity()
+```
+
+```{r}
+# visualize it
+plot_spi_swe_point(chuska_spi_mar_napr, month_name = "March") +
+  theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 12),
+          axis.title.y = element_text(size = 12),
+          axis.title.x = element_text(size = 12))
+
+```
+
+
+```{r, echo = FALSE}
+
+plot_spi_swe_box(chuska_spi_mar_napr, 
+                 month_name = "March") +
+  theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 12),
+          axis.title.y = element_text(size = 12),
+          axis.title.x = element_text(size = 12))
+```
+
+```{r}
+cor.test(chuska_spi_mar_napr$anomaly_perc, chuska_spi_mar_napr$spi)
+```
+
+```{r, echo = FALSE}
+# get april p values
+march_pvalues <- chuska_swe_wint_anom_napr %>% 
+    left_join(spi_chapters_mar, by = "waterYear") %>% 
+    rename(ch_swe_anom = anomaly_perc) %>% 
+    select(-date) %>% 
+    column_to_rownames("waterYear") %>% 
+    cor.mtest()
+
+march_swe_pvalues <- march_pvalues$p[,1]
+
+chapt_ch_march <- chapt_ch_mar_napr %>% 
+  mutate(pvalues = round(march_swe_pvalues, 2))
+
+# which chapters have statistically significant p values
+stat_sig_march <- chapt_ch_march %>% 
+  filter(pvalues <= 0.05)
+```
+
+```{r, echo = FALSE}
+# stats
+drought_swe_levels <- chuska_spi_mar_napr %>% 
+  filter(anomaly_perc >= 0.9) %>% 
+  count(drought) %>% 
+  mutate(perc = n/sum(n))
+
+# drought emergencies
+drought_emergency <- chuska_spi_mar_napr %>% 
+  filter(drought == "emergency")
+
+#variances
+drought_variances <- chuska_spi_mar_napr %>% 
+  group_by(drought) %>% 
+  summarize(standard_deviation = round(sd(anomaly_perc),3),
+            variance = round(var(anomaly_perc),3)) %>% 
+  arrange(variance)
+
+# variance test
+drought_levene <- leveneTest(anomaly_perc ~ drought, 
+                             data = chuska_spi_mar_napr)
+```
+
+```{r, echo = FALSE}
+chuska_spi_mar_napr_positive <- chuska_spi_mar_napr %>% 
+  rename(swe_anom = anomaly_perc) %>% 
+  swe_spi_same(type = "positive")
+chuska_spi_mar_napr_negative <- chuska_spi_mar_napr %>% 
+  rename(swe_anom = anomaly_perc) %>%
+  swe_spi_same(type = "negative")
+chuska_spi_mar_napr_negative <- chuska_spi_mar_napr %>% 
+  rename(swe_anom = anomaly_perc) %>%
+  swe_spi_same(type = "all")
+```
+
+```{r, echo = FALSE}
+
+cor.test(chuska_spi_mar_napr$anomaly_perc, chuska_spi_mar_napr$spi)
+
+```
+
+
+### April
+```{r, echo = FALSE}
+# get april p values
+april_pvalues <- ch_wint_anom %>% 
+    left_join(spi_chapters_apr, by = "waterYear") %>% 
+    rename(ch_swe_anom = anomaly_perc) %>% 
+    select(-date) %>% 
+    column_to_rownames("waterYear") %>% 
+    cor.mtest()
+
+apr_swe_pvalues <- april_pvalues$p[,1]
+
+chapt_ch_apr <- chapt_ch_apr %>% 
+  mutate(pvalues = round(apr_swe_pvalues, 2))
+
+# which chapters have statistically significant p values
+stat_sig_apr <- chapt_ch_apr %>% 
+  filter(pvalues <= 0.05)
+```
+
+```{r, echo = FALSE}
+# chuska winter swe and march spi
+chuska_spi_apr <- spi_chapters_apr %>% 
+  filter(waterYear >= 2004) %>% 
+  select(-date) %>% 
+  melt(id.vars = "waterYear") %>% 
+  rename(chapter = variable,
+         spi = value) %>% 
+  left_join(ch_wint_anom, by = "waterYear") %>% 
+  mutate(swe_anom = anomaly_perc) %>% 
+  add_drought_severity()
+
+```
+
+```{r, echo = FALSE}
+
+plot_spi_swe_box(chuska_spi_apr, 
+                 month_name = "April")
+```
+
+```{r, echo = FALSE}
+# visualize it
+plot_spi_swe_point(chuska_spi_apr, month_name = "April")
+
+```
+
+```{r, echo = FALSE}
+
+cor.test(chuska_spi_apr$swe_anom, chuska_spi_apr$spi)
+
+```
+
+```{r, echo = FALSE, error = TRUE}
+# stats
+drought_swe_levels_apr <- chuska_spi_apr %>% 
+  add_drought_severity() %>% 
+  filter(swe_anom <= -0.9) %>% 
+  count(drought) %>% 
+  mutate(perc = n/sum(n))
+
+# drought emergencies
+drought_emergency_apr <- chuska_spi_apr %>% 
+  filter(drought == "emergency")
+
+#variances
+drought_variances <- chuska_spi_mar %>% 
+  group_by(drought) %>% 
+  summarize(standard_deviation = round(sd(swe_anom),3),
+            variance = round(var(swe_anom),3)) %>% 
+  arrange(variance)
+
+# variance test
+drought_levene <- leveneTest(swe_anom ~ drought, 
+                             data = chuska_spi_mar)
+```
+
+### March
+```{r, echo = FALSE}
+# get march p values
+march_pvalues <- ch_wint_anom %>% 
+    left_join(spi_chapters_mar, by = "waterYear") %>% 
+    rename(ch_swe_anom = anomaly_perc) %>% 
+    select(-date) %>% 
+    column_to_rownames("waterYear") %>% 
+    cor.mtest()
+
+march_swe_pvalues <- march_pvalues$p[,1]
+
+chapt_ch_mar <- chapt_chusk_cor(spi_chapters_mar) %>% 
+  mutate(pvalues = round(march_swe_pvalues, 2))
+
+# which chapters have statistically significant p values
+stat_sig_march <- chapt_ch_mar %>% 
+  filter(pvalues <= 0.05)
+
+
+```
+
+```{r, echo = FALSE}
+# chuska winter swe and march spi
+chuska_spi_mar <- spi_chapters_mar %>% 
+  filter(waterYear >= 2004) %>% 
+  select(-date) %>% 
+  melt(id.vars = "waterYear") %>% 
+  rename(chapter = variable,
+         spi = value) %>% 
+  left_join(ch_wint_anom, by = "waterYear") %>% 
+  add_drought_severity()
+
+```
+
+```{r, echo = FALSE}
+# visualize it
+plot_spi_swe_point(chuska_spi_mar, month_name = "March")
+
+```
+
+```{r, echo = FALSE, error = TRUE}
+
+cor.test(chuska_spi_mar$swe_anom, chuska_spi_mar$spi)
+
+```
+
+```{r, echo = FALSE}
+plot_spi_swe_box(chuska_spi_mar, 
+                 month_name = "March")
+
+
+```
+
+```{r, echo = FALSE, error = TRUE}
+# stats
+drought_swe_levels <- chuska_spi_mar %>% 
+  filter(swe_anom <= -0.9) %>% 
+  count(drought) %>% 
+  mutate(perc = n/sum(n))
+
+# drought emergencies
+drought_emergency <- chuska_spi_mar %>% 
+  filter(drought == "emergency")
+
+#variances
+drought_variances <- chuska_spi_mar %>% 
+  group_by(drought) %>% 
+  summarize(standard_deviation = round(sd(swe_anom),3),
+            variance = round(var(swe_anom),3)) %>% 
+  arrange(variance)
+
+# variance test
+drought_levene <- leveneTest(swe_anom ~ drought, 
+                             data = chuska_spi_mar)
+```
+

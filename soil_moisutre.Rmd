@@ -1,0 +1,128 @@
+---
+title: "Soil Moisture"
+author: "AnnaClaire Marley"
+date: "8/19/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE}
+# read in all the chapters
+chinle_soil <- read_csv("Chapters/CHINLE_Soil_Moistrue_1981-01-01_2019-07-17.csv")
+cove_soil <- read_csv("Chapters/CRYSTAL_Soil_Moistrue_1981-01-01_2019-07-17.csv")
+crystal_soil <- read_csv("Chapters/CRYSTAL_Soil_Moistrue_1981-01-01_2019-07-17.csv")
+fort_defiance_soil <- read_csv("Chapters/FORT%20DEFIANCE_Soil_Moistrue_1981-01-01_2019-07-17.csv")
+lukachukai_soil <- read_csv("Chapters/LUKACHUKAI_Soil_Moistrue_1981-01-01_2019-07-17.csv")
+mexican_springs_soil <- read_csv("Chapters/MEXICAN%20SPRINGS_Soil_Moistrue_1981-01-01_2019-07-17.csv")
+nashitti_soil <- read_csv("Chapters/NASHITTI_Soil_Moistrue_1981-01-01_2019-07-17.csv")
+red_lake_soil <- read_csv("Chapters/RED%20LAKE_Soil_Moistrue_1981-01-01_2019-07-17.csv")
+red_valley_soil <- read_csv("Chapters/RED%20VALLEY_Soil_Moistrue_1981-01-01_2019-07-17.csv")
+
+
+```
+
+```{r, echo = FALSE}
+# function to clean up files
+clean_soil = function(df) {
+  df <- df %>% 
+  mutate(date = ymd(as.Date(Date))) %>% 
+  select(-Date) %>% 
+  group_by(date = floor_date(date, "month")) %>% 
+  summarize(SoilMoisture = mean(SoilMoisture))
+  return(df)
+}
+
+chinle_soil_clean <- clean_soil(chinle_soil) %>% 
+  rename(chinle = SoilMoisture)
+cove_soil_clean <- clean_soil(cove_soil) %>% 
+  rename(cove = SoilMoisture)
+crystal_soil_clean <- clean_soil(crystal_soil) %>% 
+  rename(crystal = SoilMoisture)
+fort_defiance_soil_clean <- clean_soil(fort_defiance_soil) %>% 
+  rename(fort_defiance = SoilMoisture)
+lukachukai_soil_clean <- clean_soil(lukachukai_soil) %>% 
+  rename(lukachukai = SoilMoisture)
+mexican_springs_soil_clean <- clean_soil(mexican_springs_soil) %>% 
+  rename(mexican_springs = SoilMoisture)
+nashitti_soil_clean <- clean_soil(nashitti_soil) %>% 
+  rename(nashitti = SoilMoisture)
+red_lake_soil_clean <- clean_soil(red_lake_soil) %>% 
+  rename(red_lake = SoilMoisture)
+red_valley_soil_clean <- clean_soil(red_valley_soil) %>% 
+  rename(red_valley = SoilMoisture)
+
+```
+
+```{r}
+
+soil_moisture_chapters <- list(chinle_soil_clean, cove_soil_clean, crystal_soil_clean, fort_defiance_soil_clean,
+                               lukachukai_soil_clean, mexican_springs_soil_clean, nashitti_soil_clean,
+                               red_lake_soil_clean, red_valley_soil_clean)
+```
+
+
+```{r, echo = FALSE}
+# read in chuska winter anom - this is for Nov-April
+ch_wint_anom <- read_csv("Chuska/ch_wint_swe_anom.csv") %>% 
+  select(waterYear, anomaly_perc)
+```
+
+```{r, echo = FALSE}
+# combine all the spis into one dataframe
+soil_chapters <- soil_moisture_chapters %>% 
+  reduce(left_join, by = "date") %>% 
+  add_water_year()
+
+soil_ch_melt <- soil_chapters %>% 
+  melt(id.vars = "date")
+
+ggplot(soil_chapters, aes(x = date, y = cove)) +
+  geom_line()
+
+ggplot(soil_ch_melt, aes(x = date, y = value)) +
+  geom_line(aes(color = variable))
+
+```
+
+```{r, echo = FALSE}
+# filter to certain months 
+soil_chapters_mar <- soil_chapters %>% 
+  filter(month(date) == 3)
+
+soil_chapters_apr <- soil_chapters %>% 
+  filter(month(date) == 4)
+
+soil_chapters_may <- soil_chapters %>% 
+  filter(month(date) == 5)
+
+```
+
+```{r, echo = FALSE}
+#check correlation with chuska anom
+chapt_chusk_cor = function(df, anom = ch_wint_anom){
+  df_ch = anom %>% 
+    left_join(df, by = "waterYear") %>% 
+    rename(ch_swe_anom = anomaly_perc) %>% 
+    select(-date) %>% 
+    column_to_rownames("waterYear") %>% 
+    cor() %>% 
+    as.data.frame() %>% 
+    select(ch_swe_anom) %>% 
+    rownames_to_column(var = "regions")
+  
+  return(df_ch)
+}
+
+```
+
+
+```{r, echo = FALSE}
+# get march, april, and may spi correlations with chuska swe anom
+chapt_ch_mar <- chapt_chusk_cor(soil_chapters_mar) 
+chapt_ch_apr <- chapt_chusk_cor(soil_chapters_apr)
+chapt_ch_may <- chapt_chusk_cor(soil_chapters_may)
+```
+

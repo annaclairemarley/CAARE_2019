@@ -129,6 +129,22 @@ ggplot(nn_precip_mnth, aes(x = date, y = precipitation)) +
 
 ```{r, echo = FALSE, fig.width=7}
 # graph it
+precip_anomaly_jan <- precip_intra_month_anomaly %>% 
+  filter(month(date) %in% c(1)) %>% 
+  ggplot(aes(x = date, y = anomaly_ratio)) +
+  geom_col(aes(fill = sign)) +
+  labs(title = "January Anomaly") +
+  scale_fill_manual(values = c("negative" = "red", "positive" = "dark green")) +
+  theme_classic()
+
+precip_anomaly_feb <- precip_intra_month_anomaly %>% 
+  filter(month(date) %in% c(2)) %>% 
+  ggplot(aes(x = date, y = anomaly_ratio)) +
+  geom_col(aes(fill = sign)) +
+  labs(title = "February Anomaly") +
+  scale_fill_manual(values = c("negative" = "red", "positive" = "dark green")) +
+  theme_classic()
+
 precip_anomaly_march <- precip_intra_month_anomaly %>% 
   filter(month(date) %in% c(3)) %>% 
   ggplot(aes(x = date, y = anomaly_ratio)) +
@@ -139,14 +155,15 @@ precip_anomaly_march <- precip_intra_month_anomaly %>%
 
 precip_anomaly_apr <- precip_intra_month_anomaly %>% 
   filter(month(date) %in% c(4)) %>% 
-  ggplot(aes(x = date, y = anomaly_ratio)) +
+  ggplot(aes(x = date, y = anomaly_ratio), show.) +
   geom_col(aes(fill = sign)) +
   labs(title = "April Anomaly") +
   scale_fill_manual(values = c("negative" = "red", "positive" = "dark green")) +
   theme_classic()
 
 
-grid.arrange(precip_anomaly_march, precip_anomaly_apr, ncol = 2)
+grid.arrange(precip_anomaly_jan, precip_anomaly_feb, 
+             precip_anomaly_march, precip_anomaly_apr, ncol = 2)
 ```
 
 
@@ -155,6 +172,11 @@ grid.arrange(precip_anomaly_march, precip_anomaly_apr, ncol = 2)
 # change precipitation to SPI
 nn_spi <- precip_to_spi(nn_chrps_precip)
 
+nn_spi_test <- nn_spi %>% 
+  add_drought_severity() %>% 
+  filter(drought == "emergency") %>% 
+  arrange(spi)
+
 # check something
 
 ```
@@ -162,7 +184,7 @@ nn_spi <- precip_to_spi(nn_chrps_precip)
 ```{r, echo = FALSE}
 # look at it
 plot_spi(nn_spi, month = all_months, title = "", years = "all") 
-
+plot_spi(nn_spi, month = c(4), title = "", years = "all") 
 # the linear model info:
 nn_spi_lm <- lm(nn_spi$spi ~ nn_spi$date)
 summary(nn_spi_lm)
@@ -408,6 +430,30 @@ corrplot(cor_spi_chirps_grid, method = "ellipse", type = "upper",
 ```
 
 
+#### March SPI and Chuska Watershed Anomaly Correlations
+```{r, echo = FALSE}
+# April SPI combined with chuska winter anomaly
+ws_ch_mar <- watersheds_spi %>% 
+  filter(month(date) == 3) %>% 
+  add_water_year() %>% 
+  select(-date) %>% 
+  filter(waterYear >= 2004) %>% 
+  left_join(ch_wint_anom, by = "waterYear") %>% 
+  rename(chuska_anom = anomaly_perc) %>% 
+  column_to_rownames(var = "waterYear")
+```
+
+```{r, echo = FALSE}
+# make correlation matrix for april 
+cor_spi_ch_mar <- cor(ws_ch_mar)
+ch_mar_p.mat <- cor.mtest(ws_ch_mar)$p # get p values
+
+# makes correlations that hav an insignificant p value have a cross
+corrplot(cor_spi_ch_mar, method = "ellipse", type = "upper", 
+         addCoef.col = "black", tl.col = "black",  tl.srt=45)
+```
+
+
 #### April SPI and Chuska Watershed Anomaly Correlations
 ```{r, echo = FALSE}
 # April SPI combined with chuska winter anomaly
@@ -567,6 +613,15 @@ summary(chaco_spi_lm)
 ```
 
 #### Chuska Monthly Winter SWE Anomaly vs SPI
+
+```{r}
+ chaco_spi_mar <- merge_ch_spi(chaco_spi, df_swe = ch_wint_anom, months = c(3)) 
+    
+    chaco_spi_mar_plot <- plot_cor_swe_spi(chaco_spi_mar,
+                                            title = "Winter SWE Anomaly & March SPI")
+
+```
+
 
 ```{r, echo = FALSE, message = FALSE}
 # let's look at the correlations between SPI and chuska swe anom for April-July SPI 
@@ -729,6 +784,7 @@ plot_spi_drought_level(chinle_spi,
 
 - drought emergency occured in 2006, 2012, 2018
 
+
 ```{r, echo = FALSE}
 
 chinle_drought_times_all <- chinle_spi_apr %>% 
@@ -743,8 +799,93 @@ chinle_drought_times
 
 ```
 
+## March
+
+```{r, echo = FALSE}
+# function for calculating march
+calc_all_drought = function(df, watershed_name = "", month_no = c(3)) {
+  spi <- merge_ch_spi(df, df_swe = ch_wint_anom, months = month_no) 
+  drought <- spi %>% 
+    select(waterYear, spi, swe_anom) %>% 
+    add_drought_severity() %>% 
+    mutate(watershed = watershed_name) %>% 
+    select(waterYear, watershed, spi, swe_anom, drought)
+  return(drought)
+}
+
+mid_sj_mar <- calc_all_drought(mid_sj_spi, watershed_name = "Middle San Juan")
+chinle_mar <- calc_all_drought(chinle_spi, watershed_name = "Chinle")
+chaco_mar <- calc_all_drought(chaco_spi, watershed_name = "Chaco")
+up_pue_mar <- calc_all_drought(up_pue_spi, watershed_name = "Upper Puerco")
+
+drought_times_mar <- rbind(mid_sj_mar, chinle_mar, chaco_mar, up_pue_mar)
+```
+
+```{r}
+drought_times_graph_mar <- drought_times_mar %>% 
+  ggplot(aes(x = swe_anom, y = spi)) +
+  geom_point(aes(color = factor(drought, 
+                             levels = c("emergency",
+                                        "warning",
+                                        "alert",
+                                        "normal")),
+                 shape = watershed)) +
+  scale_color_manual(values = c("#d13111", 
+                                  "#ffa600", 
+                                  "#f1d333", 
+                                  "#16990c")) +
+  labs(
+    x = "Chuska SWE Winter Anomaly",
+    y = "March SPI",
+    color = "Drought Severity"
+  ) +
+  theme_classic() 
+drought_times_graph_mar
+```
+
+```{r}
+
+cor.test(drought_times_mar$swe_anom, drought_times_mar$spi)
+
+```
 
 
+```{r, echo = FALSE}
+drought_times_boxplot_mar <- drought_times_mar %>% 
+  ggplot(aes(x = factor(drought, 
+                             levels = c("emergency",
+                                        "warning",
+                                        "alert",
+                                        "normal")), 
+                        y = swe_anom)) +
+  geom_boxplot(aes(color = factor(drought, 
+                             levels = c("emergency",
+                                        "warning",
+                                        "alert",
+                                        "normal"))
+                   ), show.legend = FALSE)+
+  geom_jitter(aes(color = factor(drought, 
+                             levels = c("emergency",
+                                        "warning",
+                                        "alert",
+                                        "normal"))
+                   ), show.legend = FALSE) +
+  scale_color_manual(values = c("#d13111", 
+                                  "#ffa600", 
+                                  "#f1d333", 
+                                  "#16990c")) +
+  labs(
+    x = "March Drought Severity",
+    y = "Chuska Winter Swe Anomaly",
+    color = "Drought"
+  ) +
+  theme_classic()
+
+drought_times_boxplot_mar
+```
+
+
+## April
 ```{r, echo = FALSE}
 ## Make a dataframe of the percent right
 watersheds = c("Middle San Juan", "Chaco", "Upper Puerco", "Chinle")
@@ -767,8 +908,6 @@ ws_same_sign = data.frame(watershed = c(watersheds),
                           april_total = c(total_apr))
 
 ws_same_sign
-
-
 ```
 
 
@@ -830,6 +969,11 @@ drought_times_graph <- drought_times_all %>%
 drought_times_graph
 ```
 
+```{r}
+cor.test(drought_times_all$swe_anom, drought_times_all$spi)
+
+```
+
 
 ```{r, echo = FALSE}
 drought_times_boxplot <- drought_times_all %>% 
@@ -870,19 +1014,19 @@ drought_times_boxplot_all <- drought_times_all %>%
                                         "warning",
                                         "alert",
                                         "normal"))
-                   ))+
+                   ), show.legend = FALSE)+
   geom_jitter(aes(color = factor(drought, 
                              levels = c("emergency",
                                         "warning",
                                         "alert",
                                         "normal"))
-                   )) +
+                   ), show.legend = FALSE) +
   scale_color_manual(values = c("#d13111", 
                                   "#ffa600", 
                                   "#f1d333", 
                                   "#16990c")) +
   labs(
-    x = "Watershed",
+    x = "April Drought Severity",
     y = "Chuska Winter Swe Anomaly",
     color = "Drought"
   ) +

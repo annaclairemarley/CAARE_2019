@@ -329,6 +329,18 @@ mp_monthly <- calc_swe_metrics(mp_wint_wy, "month", mean)
 dp_monthly <- calc_swe_metrics(dp_wint_wy, "month", mean)
 ```
 
+
+```{r, echo = FALSE}
+# chuska monthly april
+ch_april <- ch_monthly %>% 
+  filter(month(date) == 4) %>% 
+  ggplot(aes(x = waterYear, y = swe_mm)) +
+  geom_point() +
+  geom_line()
+
+```
+
+
 ```{r,fig.width=20,fig.height=5, echo= FALSE}
 # graph it
 carr_mn_graph <- graph_with_wateryear(carr_monthly, "Carrizo")
@@ -502,6 +514,27 @@ ggplot(median_swe, aes(x = factor(month,
   scale_color_manual(values=c("#D53E4F", "#FC8D59", "#FEE08B", "#E6F598", "#99D594", "#3288BD")) +
   theme_classic()
 
+
+```
+
+```{r, echo = FALSE}
+
+# plot it for the paper
+ggplot(median_swe, aes(x = factor(month,
+                                  levels = c("Nov","Dec","Jan",
+                                             "Feb", "Mar", "Apr")), 
+                       y = med, group = variable)) +
+  geom_point(aes(shape = variable), size = 2.5) +
+  geom_line() +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(x = "Month",
+       y = "SWE (mm)",
+       shape = "Region") +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        axis.title.x = element_text(size = 12))
 
 ```
 
@@ -811,6 +844,64 @@ dp_max_weekly_yr <- dp_weekly %>%
 
 ```
 
+```{r, echo = FALSE}
+
+ggplot(mp_max_weekly_yr, aes(x = waterYear, y = swe_mm)) +
+  geom_point()+
+  geom_line()
+
+```
+
+
+```{r, echo = FALSE}
+# look at the variation in week of max for all of the regions
+
+car_max <- car_max_weekly_yr %>% 
+  rename(carrizo = wk_of_wy)
+ch_max <- ch_max_weekly_yr %>% 
+  rename(chuska = wk_of_wy)
+bm_max <- bm_max_weekly_yr%>% 
+  rename(black_mesa = wk_of_wy)
+mp_max <- mp_max_weekly_yr%>% 
+  rename(mt_powell = wk_of_wy)
+nm_max <- nm_max_weekly_yr%>% 
+  rename(navajot_mt = wk_of_wy)
+dp_max <- dp_max_weekly_yr%>% 
+  rename(defiance_plateau = wk_of_wy)
+
+all_mts_max_timing = list(car_max, ch_max, bm_max, mp_max, nm_max, dp_max)
+
+# list of the dataframes
+
+
+all_mts_max_timing_variance <- all_mts_max_timing %>% 
+  reduce(left_join, by = "waterYear") %>% 
+  select(-contains("date"), -contains("swe_mm")) %>% 
+  melt(id.vars = "waterYear") %>% 
+  group_by(variable) %>% 
+  summarize(variance = var(value)) %>% 
+  arrange(-variance)
+  
+ # add to make boxplot 
+ # 
+#  ggplot(aes(x = fct_reorder(variable, value, .desc = TRUE), y = value)) +
+ # geom_boxplot()
+
+
+
+```
+
+
+```{r}
+# what month does the max weeek usually occur for chuska?
+mnth_mzx <- ch_max_weekly_yr %>% 
+  mutate(month = month(date)) %>% 
+  count(month) %>% 
+  mutate(perc = n/sum(n))
+  
+
+```
+
 
 ```{r, fig.width = 10, echo = FALSE}
 
@@ -998,7 +1089,11 @@ wk_all_anom <- wk_sum_all %>%
   calc_month_anom() 
   
 
-wk_all_anom_plot <- plot_anomaly(wk_all_anom)
+wk_all_anom_plot <- plot_anomaly(wk_all_anom) +
+   theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 12),
+          axis.title.y = element_text(size = 12),
+          axis.title.x = element_text(size = 12))
 wk_all_anom_plot
 
 ```

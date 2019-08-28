@@ -701,3 +701,21 @@ add_drought_severity = function(df){
   
   return(df)
 }
+
+#####################################################################
+#####################################################################
+
+#check correlation with chuska anom
+chapt_chusk_cor = function(df, anom = ch_wint_anom){
+  df_ch = anom %>% 
+    left_join(df, by = "waterYear") %>% 
+    rename(ch_swe_anom = anomaly_perc) %>% 
+    select(-date) %>% 
+    column_to_rownames("waterYear") %>% 
+    cor() %>% 
+    as.data.frame() %>% 
+    select(ch_swe_anom) %>% 
+    rownames_to_column(var = "regions")
+  
+  return(df_ch)
+}
