@@ -6,7 +6,8 @@ const TIMEOUT_SECONDS = 60;
 const regionType = {
     AGENCY: 'a',
     CHAPTER: 'c',
-    FUSION_TABLE: 'ft'
+    FUSION_TABLE: 'ft',
+    MOUNTAIN_RANGE: 'mr'
 }
 const regions = {
     "agencies": [
@@ -125,6 +126,14 @@ const regions = {
         "WHITECONE",
         "WHITEHORSE LAKE",
         "WIDE RUINS"
+    ],
+    "mountainRanges": [
+        "Black Mesa",
+        "Carrizo",
+        "Chuska",
+        "Defiance Plateau",
+        "Mount Powell",
+        "Navajo Mountain"
     ]
 }
 puppeteer.launch({headless: false}).then(browser => {
@@ -156,6 +165,10 @@ puppeteer.launch({headless: false}).then(browser => {
                 geom_geoms = "projects/climate-engine/featureCollections/shp_simplified/ClimateEngine_Navajo_Nation_Chapters";
                 geom_regions = "navajo_nation_chapters";
                 break;
+            case regionType.MOUNTAIN_RANGE:
+                geom_geoms = "projects/earthengine-legacy/assets/projects/climate-engine/featureCollections/shp_orig/MtnRanges";
+                geom_regions = "navajo_nation_mtn";
+                break
             case regionType.FUSION_TABLE:
                 geom_geoms = fusionID;
                 geom_types = "custom_fusiontable";
@@ -383,9 +396,14 @@ puppeteer.launch({headless: false}).then(browser => {
     // getData(regions.chapters, true, "2003-09-01", "2019-07-17", "pdsi", "Date,Palmer Drounght Severity Index").then(() => {
     //     browser.close();
     // }).catch(e => console.log(e));
-    getData(["Chinle"], regionType.FUSION_TABLE,"2003-06-03", "2019-07-17", "CHIRPS_daily", ["1N3bhhM8UdDecnO82iTGGSHZip6pJTkhU1G_UZQd7"], "Date,Precipitation").then(() => {
+    // getData(["Chinle"], regionType.FUSION_TABLE,"2003-06-03", "2019-07-17", "CHIRPS_daily", ["1N3bhhM8UdDecnO82iTGGSHZip6pJTkhU1G_UZQd7"], "Date,Precipitation").then(() => {
+    //     browser.close();
+    // }).catch(e => console.log(e));
+
+    getData(regions.mountainRanges, regionType.MOUNTAIN_RANGE, "2019-11-01", "2020-04-30", "swe", "SWE (mm)").then(() => {
         browser.close();
     }).catch(e => console.log(e));
     
     
 });
+
