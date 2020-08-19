@@ -7,7 +7,8 @@ const regionType = {
     AGENCY: 'a',
     CHAPTER: 'c',
     FUSION_TABLE: 'ft',
-    MOUNTAIN_RANGE: 'mr'
+    MOUNTAIN_RANGE: 'mr',
+    POINT: 'point'
 }
 const regions = {
     "agencies": [
@@ -143,7 +144,7 @@ puppeteer.launch({headless: false}).then(browser => {
      * @param {string} startDate  Of format yyyy-mm-dd
      * @param {string} endDate    Of format yyyy-mm-dd
      * @param {string} variable   A string that is: pdsi, swe or snow_Depth (snow depth)
-     * @param {string} region     Name of region. Must be in regions list, or the name of a region in the given fusion table
+     * @param {string} region     Name of region. Must be in regions list, or the name of a region in the given fusion table, or a (longitude, latitude) pair if point type is specified
      * @param {string} type       A regionType enum telling the type of the area 
      * @param {string} fusionID   If the regionType is FUSION_TABLE, this must be set to the fusion table ID
      */
@@ -175,6 +176,17 @@ puppeteer.launch({headless: false}).then(browser => {
                 geom_meta_types = "custom_fusiontable";
                 geom_columnnames = "Name";
                 geom_regions = "";
+                break;
+            case regionType.POINT:
+                geom_geoms = regionName; //Already orrectly encoded from array by line 155
+                geom_types = "point";
+                geom_meta_types = "point";
+                regionName = "";
+                geom_columnnames = "";
+                geom_regions = "";
+                break;
+
+
 
         }
         switch(variable) {
@@ -208,7 +220,6 @@ puppeteer.launch({headless: false}).then(browser => {
                 variableTS = "precipitation";
                 statisticTS = "Total";
         }
-
 
         const page = await browser.newPage();
         await page.setDefaultNavigationTimeout(1000 * TIMEOUT_SECONDS); 
@@ -313,7 +324,7 @@ puppeteer.launch({headless: false}).then(browser => {
 
     /**
      * Gets data for chapters or agencies in the navajo nation and saves it in the data folder.
-     * @param {array[string]} regionNames Array of region names to download data for. Names must be as they appear in the regions array
+     * @param {array[string]} regionNames Array of region names to download data for. Names must be as they appear in the regions array. IF type of region is specified as point, should be list of coordinate pairs (longitude, latitude)
      * @param {string} type               The type of the region. Must be one of the enums of regionType
      * @param {string} startDate          The start date for data in format yyyy-mm-dd
      * @param {string} endDate            The end date for the data in format yyy-mm-dd (Inclusive)
@@ -350,9 +361,9 @@ puppeteer.launch({headless: false}).then(browser => {
         //Select regions
         regionsToUse = regionNames;
         currentEndDate = null;
-        for (regionIndex in regionsToUse) {
-            data = []
-            header = ""
+        for (let regionIndex in regionsToUse) {
+            data = [];
+            header = "";
             try {
                 for (timeframeIndex in timeSegments) {
                     let csv = null;
@@ -388,21 +399,32 @@ puppeteer.launch({headless: false}).then(browser => {
         
     }
 
+
+    //Retrieving agency example
     // getData(regions.agencies, false, "2003-09-01", "2019-07-17", "pdsi", "Date,Palmer Drounght Severity Index").then(() => {
     //     browser.close();
     // }).catch(e => console.log(e));
     // Alternate usage:
     
+    //Retrieving chapter example
     // getData(regions.chapters, true, "2003-09-01", "2019-07-17", "pdsi", "Date,Palmer Drounght Severity Index").then(() => {
     //     browser.close();
     // }).catch(e => console.log(e));
+
+    //retrieving fusion table example
     // getData(["Chinle"], regionType.FUSION_TABLE,"2003-06-03", "2019-07-17", "CHIRPS_daily", ["1N3bhhM8UdDecnO82iTGGSHZip6pJTkhU1G_UZQd7"], "Date,Precipitation").then(() => {
     //     browser.close();
     // }).catch(e => console.log(e));
 
-    getData(regions.mountainRanges, regionType.MOUNTAIN_RANGE, "2019-11-01", "2020-04-30", "swe", "SWE (mm)").then(() => {
-        browser.close();
-    }).catch(e => console.log(e));
+    //retrieving mountain range example
+    // getData(regions.mountainRanges, regionType.MOUNTAIN_RANGE, "2019-11-01", "2020-04-30", "swe", "SWE (mm)").then(() => {
+    //     browser.close();
+    // }).catch(e => console.log(e));
+
+    //Retirieving point example
+    // getData([[-109.1489, 36.1167]], regionType.POINT, "2019-11-01", "2020-04-30", "swe", "SWE (mm)").then(() => {
+    //     browser.close();
+    // }).catch(e => console.log(e));
     
     
 });
